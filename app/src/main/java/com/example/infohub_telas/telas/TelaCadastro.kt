@@ -102,6 +102,31 @@ fun TelaCadastro() {
                 },
                 shape = RoundedCornerShape(28.dp)
             )
+
+            // Campo Confirmar Senha
+            OutlinedTextField(
+                value = confirmarSenha,
+                onValueChange = { confirmarSenha = it },
+                placeholder = { Text("Confirmar Senha*") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                singleLine = true,
+                visualTransformation = if (mostrarConfirmarSenha) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = { mostrarConfirmarSenha = !mostrarConfirmarSenha }) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (mostrarConfirmarSenha) R.drawable.olho_aberto else R.drawable.olho_fechado
+                            ),
+                            contentDescription = "Mostrar senha"
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(28.dp)
+            )
+
         }
     }
 }
