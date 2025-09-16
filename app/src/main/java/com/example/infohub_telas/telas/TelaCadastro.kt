@@ -106,7 +106,7 @@ fun TelaCadastro() {
                     if (isPessoaFisicaSelected) {
                         Box(
                             modifier = Modifier
-                                .width(60.dp)
+                                .width(90.dp)
                                 .height(3.dp)
                                 .background(primaryOrange, RoundedCornerShape(2.dp))
                         )
@@ -259,7 +259,7 @@ fun TelaCadastro() {
                 .align(Alignment.BottomCenter)
                 .offset(y = 0.dp) // Ajustado para ficar bem na base
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(20.dp)
                 .background(primaryOrange, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
         )
     }
