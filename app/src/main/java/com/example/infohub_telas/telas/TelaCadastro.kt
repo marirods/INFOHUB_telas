@@ -1,5 +1,6 @@
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -127,6 +128,33 @@ fun TelaCadastro() {
                 shape = RoundedCornerShape(28.dp)
             )
 
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Botão Entrar
+        Button(
+            onClick = { },
+            modifier = Modifier
+                .width(220.dp)
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            Text(text = "Entrar", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Texto de login
+        Row {
+            Text(text = "Tem uma conta? ", fontSize = 14.sp, color = Color.Black)
+            Text(
+                text = "Faça login",
+                fontSize = 14.sp,
+                color = Color(0xFF25992E),
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { }
+            )
         }
     }
 }
