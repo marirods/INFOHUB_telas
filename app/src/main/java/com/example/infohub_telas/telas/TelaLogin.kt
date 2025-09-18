@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,16 +23,45 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.model.LoginUsuario
+import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaLogin() {
+fun TelaLogin(navController: NavHostController?) {
+
+
+    //Variaveis para usar o outlined
+
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
-    // O padrão agora é senha oculta, então mostrarSenha começa como false.
+
+
+    //Variaveis para a entrada do usuario
     var mostrarSenha by remember { mutableStateOf(false) }
+
+
+    fun validar(): Boolean {
+        val emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches()  // Verifica se o email é válido
+        val senhaValida = senha.length >= 1  // Verifica se a senha tem pelo menos 1 caractere
+
+        // Retorna true se ambos forem válidos
+        return emailValido && senhaValida
+    }
+
+
+    var mostrarTelaSucesso by remember {
+        mutableStateOf(value = false)
+    }
+
+    val UserApi = RetrofitFactory().getInfoHub_UserService()
 
     // Cores do layout
     val primaryOrange = Color(0xFFF9A01B) // Cor laranja ajustada para F9A01B
@@ -171,10 +201,28 @@ fun TelaLogin() {
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
-                    onClick = { },
                     modifier = Modifier
                         .width(220.dp)
                         .height(56.dp),
+                    onClick = {
+                        //Criar um cliente com dados informados
+                        if(validar()){
+                            val user = LoginUsuario(
+                                email = email,
+                                senha_hash = senha
+                            )
+
+
+                            //requisição POST para a API
+
+                            GlobalScope.launch(Dispatchers.IO){
+                                val novoCliente = UserApi.cadastrarUsuario(user).await()
+                                mostrarTelaSucesso = true
+                            }
+                        }else{
+                            print("***************** DADOS INCORRETOS **************")
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = buttonGreen
                     ),
@@ -217,6 +265,6 @@ fun TelaLogin() {
 @Composable
 private fun TelaLoginPreview() {
     InfoHub_telasTheme {
-        TelaLogin()
+        TelaLogin(navController = null )
     }
 }
