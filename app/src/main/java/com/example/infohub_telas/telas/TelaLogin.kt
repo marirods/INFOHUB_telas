@@ -108,7 +108,7 @@ fun TelaLogin() {
                     value = email,
                     onValueChange = { email = it },
                     placeholder = {
-                        Text("E-mail ou CPF", color = Color.Gray)
+                        Text("E-mail ou CPF", color = Color.DarkGray)
                     },
                     modifier = Modifier
                         .fillMaxWidth(),
@@ -127,7 +127,7 @@ fun TelaLogin() {
                 OutlinedTextField(
                     value = senha,
                     onValueChange = { senha = it },
-                    placeholder = { Text("Senha", color = Color.Gray) },
+                    placeholder = { Text("Senha", color = Color.DarkGray) },
                     modifier = Modifier
                         .fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
