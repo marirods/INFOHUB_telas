@@ -21,6 +21,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.infohub_telas.R
+import com.example.infohub_telas.service.InfoHub_User
+import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,6 +45,10 @@ fun TelaCadastro() {
     val darkerOrange = Color(0xFFE67E22) // Um tom mais escuro para destaque
     val lightGray = Color(0xFFF0F0F0) // Cor de fundo clara
     val textFieldBackground = Color.White // Fundo dos campos de texto
+
+
+val UserApi = RetrofitFactory().getInfoHub_UserService()
+
 
     Box(
         modifier = Modifier
