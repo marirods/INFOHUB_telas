@@ -34,8 +34,7 @@ fun TelaCadastroJuridico() {
     var mostrarSenha by remember { mutableStateOf(false) }
     var mostrarConfirmarSenha by remember { mutableStateOf(false) }
 
-    var isPessoaFisicaSelected by remember { mutableStateOf(true) }
-    var isPessoaJuridicaSelected by remember { mutableStateOf(false) }
+    var tipoPessoa by remember { mutableStateOf("juridica") } // "fisica" ou "juridica"
 
     val primaryOrange = Color(0xFFFF8C00)
     val lightGray = Color(0xFFF0F0F0)
@@ -79,6 +78,7 @@ fun TelaCadastroJuridico() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // --- SEÇÃO DE SELEÇÃO PESSOA FÍSICA / JURÍDICA ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -90,23 +90,31 @@ fun TelaCadastroJuridico() {
                     Text(
                         text = "Pessoa Física",
                         fontSize = 18.sp,
-                        fontWeight = if (isPessoaFisicaSelected) FontWeight.Bold else FontWeight.Medium,
-                        color =  Color.Gray,
-                        modifier = Modifier.clickable { isPessoaFisicaSelected = false }
+                        fontWeight = if (tipoPessoa == "fisica") FontWeight.Bold else FontWeight.Medium,
+                        color = if (tipoPessoa == "fisica") Color.Gray else Color.Gray,
+                        modifier = Modifier.clickable { tipoPessoa = "fisica" }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-
+                    if (tipoPessoa == "fisica") {
+                        Box(
+                            modifier = Modifier
+                                .width(90.dp)
+                                .height(3.dp)
+                                .background(primaryOrange, RoundedCornerShape(2.dp))
+                        )
+                    }
                 }
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "Pessoa Jurídica",
                         fontSize = 18.sp,
-                        fontWeight = if (isPessoaJuridicaSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isPessoaJuridicaSelected) Color.Black else Color.Black,
-                        modifier = Modifier.clickable { isPessoaJuridicaSelected = true }
+                        fontWeight = if (tipoPessoa == "juridica") FontWeight.Bold else FontWeight.Medium,
+                        color =  Color.Black,
+                        modifier = Modifier.clickable { tipoPessoa = "juridica" }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    if (!isPessoaJuridicaSelected) {
+                    if (tipoPessoa == "juridica") {
                         Box(
                             modifier = Modifier
                                 .width(90.dp)
@@ -159,7 +167,7 @@ fun TelaCadastroJuridico() {
                     )
                 )
 
-                SenhaTextField(
+                NovaSenhaTextField(
                     value = senha,
                     onValueChange = { novaSenha -> senha = novaSenha },
                     mostrarSenha = mostrarSenha,
@@ -173,7 +181,7 @@ fun TelaCadastroJuridico() {
                     )
                 )
 
-                SenhaTextField(
+                NovaSenhaTextField(
                     value = confirmarSenha,
                     onValueChange = { novaSenha -> confirmarSenha = novaSenha },
                     mostrarSenha = mostrarConfirmarSenha,
