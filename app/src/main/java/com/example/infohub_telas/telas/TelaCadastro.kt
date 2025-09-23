@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import TelaLogin
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -18,12 +19,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.model.Usuario
 import com.example.infohub_telas.service.RetrofitFactory
+import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -378,3 +382,14 @@ fun SenhaTextField(
         shape = RoundedCornerShape(28.dp)
     )
 }
+
+
+@Preview(showSystemUi = true)
+@Composable
+fun TelaCadastroPreview() {
+    InfoHub_telasTheme {
+        TelaCadastro(navController = rememberNavController())
+    }
+}
+
+

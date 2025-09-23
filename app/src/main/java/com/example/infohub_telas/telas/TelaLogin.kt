@@ -13,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -24,6 +26,8 @@ import com.example.infohub_telas.R
 import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.service.RetrofitFactory
+import com.example.infohub_telas.telas.TelaCadastroJuridico
+import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -59,7 +63,7 @@ fun TelaLogin(navController: NavHostController? = null) {
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- Cabeçalho com imagem ---
+
             Box(
                 modifier = Modifier.fillMaxWidth().weight(0.4f),
                 contentAlignment = Alignment.Center
@@ -80,11 +84,21 @@ fun TelaLogin(navController: NavHostController? = null) {
                     .padding(horizontal = 32.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Text(
+                    text = "BEM VINDO DE VOLTA!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp,
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                )
+
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("E-mail", color = Color.DarkGray) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 30.dp),
                     shape = RoundedCornerShape(28.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = textColor,
@@ -187,5 +201,13 @@ fun TelaLogin(navController: NavHostController? = null) {
                 }
             }
         }
+    }
+}
+
+@Preview(showSystemUi = true)
+@Composable
+fun TelaLoginPreview() {
+    InfoHub_telasTheme {
+        TelaLogin()
     }
 }
