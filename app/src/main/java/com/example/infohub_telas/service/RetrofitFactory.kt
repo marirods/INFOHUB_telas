@@ -6,9 +6,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
 
 
+
+
 class RetrofitFactory {
 
-        private val BASE_URL = "https://srv945707.hstgr.cloud/api/"
+        private val BASE_URL = "http://10.0.2.2:8080/v1/infohub/"
+
+
         private val retrofitFactory =
             Retrofit
                 .Builder()
