@@ -28,6 +28,7 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 fun TelaCadastroJuridico() {
     var nome by remember { mutableStateOf("") }
     var cnpj by remember { mutableStateOf("") }
+    var telefone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var confirmarSenha by remember { mutableStateOf("") }
@@ -145,6 +146,18 @@ fun TelaCadastroJuridico() {
                     value = cnpj,
                     onValueChange = { novoCpf -> cnpj = novoCpf },
                     placeholder = "CNPJ*",
+                    keyboardType = KeyboardType.Number,
+                    textFieldColors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Gray,
+                        unfocusedBorderColor = Color.Gray,
+                        focusedContainerColor = textFieldBackground,
+                        unfocusedContainerColor = textFieldBackground
+                    )
+                )
+                MeuCustomTextField(
+                    value = telefone,
+                    onValueChange = { novoTelefone -> telefone = novoTelefone },
+                    placeholder = "Telefone*",
                     keyboardType = KeyboardType.Number,
                     textFieldColors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Gray,
