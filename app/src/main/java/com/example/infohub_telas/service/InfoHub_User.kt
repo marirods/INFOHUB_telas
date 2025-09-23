@@ -1,6 +1,7 @@
 package com.example.infohub_telas.service
 
 
+import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.model.Usuario
 import retrofit2.Call
@@ -15,6 +16,7 @@ interface InfoHub_User {
     fun cadastrarUsuario(@Body usuario: Usuario): Call<Usuario>
 
     @POST("login")
-    fun logarUsuario(@Body login : LoginUsuario): Call<LoginUsuario>
+    @Headers("Content-Type: application/json")
+    fun logarUsuario(@Body login : LoginUsuario): Call<LoginResponse>
 
 }
