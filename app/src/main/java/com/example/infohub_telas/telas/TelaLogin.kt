@@ -28,46 +28,32 @@ import com.example.infohub_telas.R
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import retrofit2.await
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaLogin(navController: NavHostController?) {
 
-
-    //Variaveis para usar o outlined
-
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
-
-
-    //Variaveis para a entrada do usuario
     var mostrarSenha by remember { mutableStateOf(false) }
 
-
     fun validar(): Boolean {
-        val emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches()  // Verifica se o email é válido
-        val senhaValida = senha.length >= 1  // Verifica se a senha tem pelo menos 1 caractere
-
-        // Retorna true se ambos forem válidos
+        val emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        val senhaValida = senha.isNotEmpty()
         return emailValido && senhaValida
     }
 
-
-    var mostrarTelaSucesso by remember {
-        mutableStateOf(value = false)
-    }
-
+    var mostrarTelaSucesso by remember { mutableStateOf(false) }
     val UserApi = RetrofitFactory().getInfoHub_UserService()
 
     // Cores do layout
-    val primaryOrange = Color(0xFFF9A01B) // Cor laranja ajustada para F9A01B
+    val primaryOrange = Color(0xFFF9A01B)
     val buttonGreen = Color(0xFF25992E)
     val textColor = Color.Black
-    val linkColor = Color(0xFF25992E) // Cor do "Cadastre-se aqui" também ajustada
+    val linkColor = Color(0xFF25992E)
 
     Box(
         modifier = Modifier
@@ -80,7 +66,7 @@ fun TelaLogin(navController: NavHostController?) {
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .offset(x = (-30).dp, y = (-20).dp) // Ajuste a posição para fora da tela
+                .offset(x = (-30).dp, y = (-20).dp)
                 .size(100.dp)
         )
 
@@ -89,16 +75,15 @@ fun TelaLogin(navController: NavHostController?) {
             contentDescription = null,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = 30.dp, y = (-20).dp) // Ajuste a posição para fora da tela
+                .offset(x = 30.dp, y = (-20).dp)
                 .size(150.dp)
         )
 
         Column(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- Seção superior (Imagem da pessoa com carrinho) ---
+            // --- Seção superior ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,15 +91,14 @@ fun TelaLogin(navController: NavHostController?) {
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.login_comprass), // Nome do seu drawable
+                    painter = painterResource(id = R.drawable.login_comprass),
                     contentDescription = "LOGIN",
-                    modifier = Modifier
-                        .size(240.dp),
+                    modifier = Modifier.size(240.dp),
                     contentScale = ContentScale.Fit
                 )
             }
 
-            // --- Seção inferior (Fundo laranja com campos e botões) ---
+            // --- Seção inferior ---
             Column(
                 modifier = Modifier
                     .background(color = primaryOrange)
@@ -137,11 +121,8 @@ fun TelaLogin(navController: NavHostController?) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = {
-                        Text("E-mail ou CPF", color = Color.DarkGray)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    placeholder = { Text("E-mail ou CPF", color = Color.DarkGray) },
+                    modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = textColor,
                         unfocusedBorderColor = textColor,
@@ -158,8 +139,7 @@ fun TelaLogin(navController: NavHostController?) {
                     value = senha,
                     onValueChange = { senha = it },
                     placeholder = { Text("Senha", color = Color.DarkGray) },
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = textColor,
                         unfocusedBorderColor = textColor,
@@ -169,15 +149,12 @@ fun TelaLogin(navController: NavHostController?) {
                     ),
                     shape = RoundedCornerShape(28.dp),
                     singleLine = true,
-                    // A lógica para mostrar/ocultar a senha já estava correta,
-                    // o estado 'mostrarSenha' controla se a transformação é aplicada.
                     visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
                         IconButton(onClick = { mostrarSenha = !mostrarSenha }) {
                             Icon(
                                 painter = painterResource(
-                                    // O ícone correto é selecionado baseado no estado mostrarSenha
                                     id = if (mostrarSenha) R.drawable.olho_aberto else R.drawable.olho_fechado
                                 ),
                                 contentDescription = "Mostrar/Ocultar senha",
@@ -205,27 +182,36 @@ fun TelaLogin(navController: NavHostController?) {
                         .width(220.dp)
                         .height(56.dp),
                     onClick = {
-                        //Criar um cliente com dados informados
-                        if(validar()){
+                        if (validar()) {
                             val user = LoginUsuario(
                                 email = email,
                                 senha_hash = senha
                             )
 
+                            // Requisição POST para a API de login
+                            UserApi.logarUsuario(user).enqueue(object : Callback<LoginUsuario> {
+                                override fun onResponse(
+                                    call: Call<LoginUsuario>,
+                                    response: Response<LoginUsuario>
+                                ) {
+                                    if (response.isSuccessful) {
+                                        mostrarTelaSucesso = true
+                                        println("Login realizado com sucesso: ${response.body()}")
+                                        // TODO: Navegar para próxima tela (home, dashboard, etc.)
+                                    } else {
+                                        println("Erro no login: ${response.code()} - ${response.message()}")
+                                    }
+                                }
 
-                            //requisição POST para a API
-
-                            GlobalScope.launch(Dispatchers.IO){
-                                val novoCliente = UserApi.cadastrarUsuario(user).await()
-                                mostrarTelaSucesso = true
-                            }
-                        }else{
-                            print("***************** DADOS INCORRETOS **************")
+                                override fun onFailure(call: Call<LoginUsuario>, t: Throwable) {
+                                    println("Falha na conexão: ${t.message}")
+                                }
+                            })
+                        } else {
+                            println("***************** DADOS INCORRETOS **************")
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = buttonGreen
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = buttonGreen),
                     shape = RoundedCornerShape(28.dp)
                 ) {
                     Text(
@@ -250,10 +236,13 @@ fun TelaLogin(navController: NavHostController?) {
                     )
                     Text(
                         text = "Cadastre-se aqui",
-                        color = linkColor, // Usa a cor laranja ajustada
+                        color = linkColor,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { /* TODO: Navegar para tela de cadastro */ }
+                        modifier = Modifier.clickable {
+                            // TODO: Navegar para tela de cadastro
+                            // navController?.navigate("cadastro")
+                        }
                     )
                 }
             }
@@ -265,6 +254,6 @@ fun TelaLogin(navController: NavHostController?) {
 @Composable
 private fun TelaLoginPreview() {
     InfoHub_telasTheme {
-        TelaLogin(navController = null )
+        TelaLogin(navController = null)
     }
 }
