@@ -1,5 +1,7 @@
 package com.example.infohub_telas.telas
 
+import androidx.compose.ui.tooling.preview.Preview
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,9 +21,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,18 +34,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-
-fun TelaRedefinicaoSenha() {
+fun TelaCriarNovaSenha() {
     var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    var confirmarSenha by remember { mutableStateOf("") }
+    var confirmarSenhaVisivel by remember { mutableStateOf(false) }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -55,23 +64,23 @@ fun TelaRedefinicaoSenha() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(420.dp)
+                    .height(560.dp)
                     .background(Color(0xFFFFD966))
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.elipse_vermelha),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(150.dp)
-                        .offset(x = (-41).dp, y = 80.dp)
+                        .size(120.dp)
+                        .offset(x = (-40).dp, y = 60.dp)
                         .align(Alignment.TopStart)
                 )
                 Image(
                     painter = painterResource(id = R.drawable.amarela_elipse),
                     contentDescription = null,
                     modifier = Modifier
-                        .size(300.dp)
-                        .offset(x = (6).dp, y = (-10).dp)
+                        .size(250.dp)
+                        .offset(x = 0.dp, y = (-20).dp)
                         .align(Alignment.TopEnd)
                 )
                 Image(
@@ -79,16 +88,16 @@ fun TelaRedefinicaoSenha() {
                     contentDescription = null,
                     modifier = Modifier
                         .size(260.dp)
-                        .offset(x = (6).dp, y = (-10).dp)
+                        .offset(x = 0.dp, y = (-10).dp)
                         .align(Alignment.TopEnd)
                 )
                 Image(
                     painter = painterResource(id = R.drawable.mulher_lendo),
                     contentDescription = "",
                     modifier = Modifier
-                        .size(230.dp)
+                        .size(200.dp)
                         .align(Alignment.TopCenter)
-                        .offset(y = 70.dp)
+                        .offset(y = 50.dp)
                 )
 
                 Spacer(modifier = Modifier.height(40.dp))
@@ -99,17 +108,64 @@ fun TelaRedefinicaoSenha() {
                         .align(Alignment.BottomCenter)
                         .offset(y = (0).dp)
                         .padding(horizontal = 24.dp)
-                        .padding(top = 140.dp)
+                        .padding(bottom = 24.dp)
                 ) {
                     Text(
-                        text = "Recuperar Senha",
+                        text = "Criar nova senha",
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 23.sp,
                         color = Color.Black,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Preencha o campo abaixo com o seu e-mail:",
+                        text = "Preencha o campo abaixo com a sua nova senha:",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black,
+                        lineHeight = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { novoValor -> email = novoValor },
+                        placeholder = { Text("Nova senha*") },
+                        modifier = Modifier
+                            .padding(vertical = 6.dp)
+                            .fillMaxWidth(),
+                        visualTransformation = if (confirmarSenhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            IconButton(onClick =  {confirmarSenhaVisivel = !confirmarSenhaVisivel}){
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (confirmarSenhaVisivel) R.drawable.olho_aberto else R.drawable.olho_fechado
+                                    ),
+                                    contentDescription = "Mostrar/Ocultar senha"
+                                )
+                            }
+                        },
+
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Gray,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(28.dp)
+
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Confirmar nova senha",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 23.sp,
+                        color = Color.Black,
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Confirme sua nova senha:",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
@@ -117,65 +173,75 @@ fun TelaRedefinicaoSenha() {
                     )
                     Spacer(modifier = Modifier.height(3.dp))
 
+
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { novoValor -> email = novoValor },
-                        placeholder = { Text("Email*") },
+                        value = senha,
+                        onValueChange = { novoValor -> senha = novoValor },
+                        placeholder = { Text("Nova senha*") },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            .padding(vertical = 6.dp)
+                            .fillMaxWidth(),
+                        visualTransformation = if (confirmarSenhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            IconButton(onClick =  {confirmarSenhaVisivel = !confirmarSenhaVisivel}){
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (confirmarSenhaVisivel) R.drawable.olho_aberto else R.drawable.olho_fechado
+                                    ),
+                                    contentDescription = "Mostrar/Ocultar senha"
+                                )
+                            }
+                        },
+
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Gray,
                             unfocusedBorderColor = Color.Gray,
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White
                         ),
-                        shape = RoundedCornerShape(28.dp),
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = "Ícone do e-mail",
-                                tint = Color.Gray,
-                                modifier = Modifier
-                                    .padding(start = 18.dp)
-                                    .size(24.dp)
-
-                            )
-                        }
+                        shape = RoundedCornerShape(28.dp)
                     )
+
+
                 }
+
+
             }
-
-
-            Spacer(modifier = Modifier.height(32.dp))
-
             Button(
                 onClick = {},
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .height(56.dp)
+                    .height(60.dp)
                     .align(Alignment.CenterHorizontally),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E))
             ) {
                 Text(
-                    text = "Recuperar",
+                    text = "Entrar",
                     color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
+
+
+
+
+//            Spacer(modifier = Modifier.height(32.dp))
+
+
+
         }
+
     }
 }
-
 
 @Preview(showSystemUi = true)
 @Composable
-fun TelaRedefinicaoSenhaPreview(){
+fun TelaCriarNovaSenhaPreview() {
     InfoHub_telasTheme {
-        TelaRedefinicaoSenha()
+        TelaCriarNovaSenha()
     }
 }
+
