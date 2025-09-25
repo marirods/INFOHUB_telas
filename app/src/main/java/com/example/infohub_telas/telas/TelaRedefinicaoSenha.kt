@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +42,7 @@ import androidx.compose.material3.OutlinedTextField
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TelaRedefinicaoSenha() {
-    var telefone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -47,7 +50,7 @@ fun TelaRedefinicaoSenha() {
     ) {
         Column {
 
-            // Fundo amarelo
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -105,7 +108,7 @@ fun TelaRedefinicaoSenha() {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Preencha o campo abaixo com o seu telefone",
+                        text = "Preencha o campo abaixo com o seu e-mail:",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                         color = Color.Black,
@@ -114,21 +117,32 @@ fun TelaRedefinicaoSenha() {
                     Spacer(modifier = Modifier.height(3.dp))
 
                     OutlinedTextField(
-                        value = telefone,
-                        onValueChange = { novoValor -> telefone = novoValor },
-                        placeholder = { Text("Telefone") },
+                        value = email,
+                        onValueChange = { novoValor -> email = novoValor },
+                        placeholder = { Text("Email*") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.Gray,
                             unfocusedBorderColor = Color.Gray,
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White
                         ),
-                        shape = RoundedCornerShape(28.dp)
+                        shape = RoundedCornerShape(28.dp),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = "Ícone do e-mail",
+                                tint = Color.Gray,
+                                modifier = Modifier
+                                    .padding(start = 18.dp)
+                                    .size(24.dp)
+
+                            )
+                        }
                     )
                 }
             }
@@ -137,7 +151,7 @@ fun TelaRedefinicaoSenha() {
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { /* ação */ },
+                onClick = {},
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(56.dp)
