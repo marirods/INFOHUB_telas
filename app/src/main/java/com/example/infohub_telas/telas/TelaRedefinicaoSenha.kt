@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,12 +39,14 @@ import androidx.compose.ui.unit.sp
 import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 
 fun TelaRedefinicaoSenha() {
     var email by remember { mutableStateOf("") }
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -117,9 +120,19 @@ fun TelaRedefinicaoSenha() {
                     )
                     Spacer(modifier = Modifier.height(3.dp))
 
+
+                    // Mari vou comentar aqui pra depois voce usar no projeto ta
+                    // Aqui voce vai criar o arquivo ( auth ) para salvar as variavesi do shared preferences
+                    // Quando for criar um arquivo em outro lugar nao se assuste com o context precisa criar uma variavel la em cima ta
+                    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { novoValor -> email = novoValor },
+                        onValueChange = { novoValor ->
+                            email = novoValor // Esse novoValor vai ser o valor que vai passar para o arquivo aq d baixo kk
+
+                            // Mari aqui vc vai salvar o novo lar la dentro do arquivo que voce criou
+                            prefs.edit().putString("email",novoValor).apply()
+                        },
                         placeholder = { Text("Email*") },
                         modifier = Modifier
                             .fillMaxWidth()

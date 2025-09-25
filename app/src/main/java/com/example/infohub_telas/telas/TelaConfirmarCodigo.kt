@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,11 +39,17 @@ import androidx.compose.ui.unit.sp
 import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TelaConfirmarCodigo() {
     var codigo by remember { mutableStateOf("") }
+    // mari, aqui vou puxar o email da outra tela para voce usar no seu componente
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val emailSalvo = prefs.getString("email", "") ?: ""
+    // calmaa, tem aqla interrogacao para se nao tiver nada vai vim nulo
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +87,7 @@ fun TelaConfirmarCodigo() {
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = "Código enviado para:",
+            text = "Código enviado para:$emailSalvo",
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
             color = Color.Black,
@@ -91,17 +98,17 @@ fun TelaConfirmarCodigo() {
 
 
 //
-//            OutlinedTextField(
-//                value = codigo,
-//                onValueChange = { codigo = it },
-//                label = { Text("Código") },
-//                singleLine = true,
-//                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-//                modifier = Modifier.fillMaxWidth()
-//            )
-//
-//            Spacer(modifier = Modifier.height(16.dp))
-//
+            OutlinedTextField(
+                value = codigo,
+                onValueChange = { codigo = it },
+                label = { Text("Código") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
 //            Button(
 //                onClick = { /* ação */ },
 //                modifier = Modifier.fillMaxWidth(),
