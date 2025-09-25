@@ -19,4 +19,13 @@ interface InfoHub_User {
     @Headers("Content-Type: application/json")
     fun logarUsuario(@Body login : LoginUsuario): Call<LoginResponse>
 
+//
+//
+//        @POST("auth/recuperar-senha")
+//        fun recuperarSenha(@Body email: String): Call<Usuario>
+//
+//        @POST("auth/login")
+//        fun logarUsuario(@Body loginReq: LoginUsuario): Call<LoginResponse>
+
+
 }
