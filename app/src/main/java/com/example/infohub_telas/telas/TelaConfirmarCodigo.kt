@@ -3,6 +3,7 @@ package com.example.infohub_telas.telas
 import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,12 +44,16 @@ import androidx.compose.ui.unit.sp
 import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
+
+
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.navigation.NavHostController
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun TelaConfirmarCodigo() {
+fun TelaConfirmarCodigo(navController: NavHostController? = null) {
     val it = ""
     var codigo1 by remember { mutableStateOf("") }
     var codigo2 by remember { mutableStateOf("") }
@@ -94,8 +99,9 @@ fun TelaConfirmarCodigo() {
                 .fillMaxWidth()
                 .align(Alignment.Center)
                 .padding(horizontal = 24.dp)
+
         ) {
-            Spacer(modifier = Modifier.height(200.dp))
+            Spacer(modifier = Modifier.height(90.dp))
 
             Text(
                 text = "Confirme seu e-mail",
@@ -108,17 +114,25 @@ fun TelaConfirmarCodigo() {
                 text = "Código enviado para:$emailSalvo",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium,
+                color = Color.Gray,
+                lineHeight = 18.sp
+            )
+            Spacer(modifier = Modifier.height(7.dp))
+            Text(
+                text = "Digite seu código:",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Normal,
                 color = Color.Black,
                 lineHeight = 18.sp
             )
             Spacer(modifier = Modifier.height(3.dp))
-
             Row (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp),
+//                    .padding(horizontal = 2.dp)
+                    .padding(top = 15.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ){
                 OutlinedTextField(
                     value = codigo1,
@@ -133,7 +147,7 @@ fun TelaConfirmarCodigo() {
                     textStyle = LocalTextStyle.current.copy(
                         textAlign = TextAlign.Center,
                         fontSize = 20.sp
-                ),
+                    ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
 
                     )
@@ -191,14 +205,40 @@ fun TelaConfirmarCodigo() {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            Spacer(modifier = Modifier
+                .height(16.dp)
+            )
 
             Button(
                 onClick = { },
                 modifier = Modifier
-                    .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                    .fillMaxWidth(0.8f)
+                    .height(56.dp)
+                    .align(Alignment.CenterHorizontally),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B))
             ) {
-                Text(text = "Continuar", color = Color.White)
+                Text(text = "Continuar",
+                    color = Color.Black,
+                    fontWeight = FontWeight.SemiBold)
+            }
+            Spacer(modifier = Modifier
+                .height(5.dp))
+
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ){
+
+                Text("Não recebeu código? ", color = Color.Gray, fontSize = 14.sp)
+                Text(
+                    "Enviar novamente",
+                    color = Color(color = 0xFFF25992E),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable {
+                        navController?.navigate("cadastro")
+                    }
+                )
             }
         }
 
