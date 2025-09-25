@@ -4,6 +4,7 @@ package com.example.infohub_telas.service
 import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.model.Usuario
+import com.example.infohub_telas.model.recuperarSenha
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.Headers
@@ -18,5 +19,13 @@ interface InfoHub_User {
     @POST("login")
     @Headers("Content-Type: application/json")
     fun logarUsuario(@Body login : LoginUsuario): Call<LoginResponse>
+
+
+
+    @POST("auth/recuperar-senha")
+    fun recuperarSenha(@Body email: recuperarSenha): Call<Usuario>
+    @POST("auth/login")
+    fun loginUsuarios(@Body loginReq: LoginUsuario): Call<LoginResponse>
+
 
 }

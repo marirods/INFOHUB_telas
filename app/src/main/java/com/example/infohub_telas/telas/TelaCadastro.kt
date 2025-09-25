@@ -1,6 +1,5 @@
 package com.example.infohub_telas.telas
 
-import TelaLogin
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,7 +33,7 @@ import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaCadastro(navController: NavController) {
+fun TelaCadastro(navController: NavController?) {
     var nome by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
     var cnpj by remember { mutableStateOf("") }
@@ -291,7 +290,7 @@ fun TelaCadastro(navController: NavController) {
                     fontSize = 14.sp,
                     color = primaryOrange,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { navController.navigate("login") }
+                    modifier = Modifier.clickable { navController?.navigate("login") }
                 )
             }
         }
@@ -312,7 +311,7 @@ fun TelaCadastro(navController: NavController) {
             confirmButton = {
                 TextButton(onClick = {
                     showSuccessDialog = false
-                    navController.navigate("login") {
+                    navController?.navigate("login") {
                         popUpTo("cadastro") { inclusive = true }
                     }
                 }) {

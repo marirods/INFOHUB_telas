@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.infohub_telas.telas.TelaCadastro
+import com.example.infohub_telas.telas.TelaRedefinicaoSenha
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 class MainActivity : ComponentActivity() {
@@ -18,7 +19,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             InfoHub_telasTheme {
-                TelaLogin(navController = null)
+                TelaRedefinicaoSenha()
             }
         }
     }
