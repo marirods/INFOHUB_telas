@@ -72,6 +72,22 @@ fun TelaConfirmarCodigo() {
                 .align(Alignment.TopCenter)
                 .offset(y = 70.dp)
         )
+        Text(
+            text = "Confirme seu e-mail",
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 23.sp,
+            color = Color.Black,
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = "Código enviado para:",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            lineHeight = 18.sp
+        )
+        Spacer(modifier = Modifier.height(3.dp))
+
 
 
 //
