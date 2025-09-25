@@ -1,6 +1,7 @@
 package com.example.infohub_telas.telas
 
 import android.content.Context
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -40,13 +42,32 @@ import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.platform.LocalContext
+import com.example.infohub_telas.model.Usuario
+import com.example.infohub_telas.model.recuperarSenha
+import com.example.infohub_telas.service.RetrofitFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import retrofit2.await
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 
 fun TelaRedefinicaoSenha() {
     var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+
+    val retrofitFactory = RetrofitFactory()
+    val userApi = retrofitFactory.getInfoHub_UserService()
+
+    fun validar(): Boolean{
+        val emailCliente = !Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        return emailCliente
+    }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -165,7 +186,22 @@ fun TelaRedefinicaoSenha() {
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = {},
+                onClick = {
+                    //validacao dos dados
+                    if (validar()){
+                        val emailEnviado = recuperarSenha(
+                            email = email
+                        )
+
+                        //requisição do POST para a API
+                        GlobalScope.launch(Dispatchers.IO){
+                            val novoUsuario = userApi.recuperarSenha(emailEnviado).await()
+                            println(novoUsuario)
+                        }
+                    }else{
+                        println("********* DADOS INCORRETOS! PREENCHER CORRETAMENTE*****************")
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(56.dp)
@@ -173,13 +209,15 @@ fun TelaRedefinicaoSenha() {
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E))
             ) {
-                Text(
-                    text = "Recuperar",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Recuperar", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+
+
             }
+
         }
     }
 }
