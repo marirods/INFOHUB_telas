@@ -40,13 +40,23 @@ import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.platform.LocalContext
+import com.example.infohub_telas.service.RetrofitFactory
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 
 fun TelaRedefinicaoSenha() {
     var email by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+
+    val retrofitFactory = RetrofitFactory()
+    val userApi = retrofitFactory.getInfoHub_UserService()
+
+
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -165,7 +175,12 @@ fun TelaRedefinicaoSenha() {
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = {},
+                onClick = {
+                    //validacao dos dados
+                    if (email.isNotEmpty()){
+                        isLoading = true
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(56.dp)
