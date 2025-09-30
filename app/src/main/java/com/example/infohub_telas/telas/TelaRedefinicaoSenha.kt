@@ -42,8 +42,10 @@ import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavHostController
 import com.example.infohub_telas.model.Usuario
 import com.example.infohub_telas.model.recuperarSenha
+import com.example.infohub_telas.model.recuperarSenhaResponse
 import com.example.infohub_telas.service.RetrofitFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -53,19 +55,21 @@ import retrofit2.await
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 
-fun TelaRedefinicaoSenha() {
+fun TelaRedefinicaoSenha(navController: NavHostController?) {
     var email by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+
 
     val retrofitFactory = RetrofitFactory()
     val userApi = retrofitFactory.getInfoHub_UserService()
 
     fun validar(): Boolean{
-        val emailCliente = !Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        return emailCliente
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
+
 
 
     Box(
@@ -193,10 +197,27 @@ fun TelaRedefinicaoSenha() {
                             email = email
                         )
 
+                        isLoading = true
+
                         //requisição do POST para a API
                         GlobalScope.launch(Dispatchers.IO){
-                            val novoUsuario = userApi.recuperarSenha(emailEnviado).await()
-                            println(novoUsuario)
+                            val call = userApi.recuperarSenha(emailEnviado)
+                            val resposta = call.execute()
+//                            val resposta: recuperarSenhaResponse = userApi.recuperarSenha(emailEnviado).await()
+
+
+
+                            launch(Dispatchers.Main){
+                                isLoading = false
+                                if (resposta.isSuccessful){
+                                    prefs.edit().putString("email", email).apply()
+                                    println("Resposta da API: ${resposta.body()?.mensagem}")
+                                    navController?.navigate("confirmar_codigo")
+                                }else{
+                                    println("Erro na API: ${resposta.code()}")
+                                }
+
+                            }
                         }
                     }else{
                         println("********* DADOS INCORRETOS! PREENCHER CORRETAMENTE*****************")
@@ -227,6 +248,6 @@ fun TelaRedefinicaoSenha() {
 @Composable
 fun TelaRedefinicaoSenhaPreview(){
     InfoHub_telasTheme {
-        TelaRedefinicaoSenha()
+        TelaRedefinicaoSenha(null)
     }
 }

@@ -20,12 +20,13 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaCadastroJuridico() {
+fun TelaCadastroJuridico(navController: NavHostController?) {
     var nome by remember { mutableStateOf("") }
     var cnpj by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
@@ -313,6 +314,6 @@ fun NovaSenhaTextField(
 @Composable
 fun TelaCadastroJuridicoPreview() {
     InfoHub_telasTheme {
-        TelaCadastroJuridico()
+        TelaCadastroJuridico(null)
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -35,7 +37,7 @@ import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaLogin(navController: NavHostController? = null) {
+fun TelaLogin(navController: NavHostController?) {
 
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
@@ -135,7 +137,37 @@ fun TelaLogin(navController: NavHostController? = null) {
                     )
                 )
 
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+
+                ){
+                    TextButton(
+                        onClick = {
+                            navController?.navigate("redefinicao_senha")
+                        }
+                    ) {
+                        Text(
+                            text = "Recuperar senha",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Black
+
+                        )
+                    }
+
+                    Spacer(modifier = Modifier
+                        .height(12.dp)
+
+                    )
+                }
+
+
+
                 Spacer(modifier = Modifier.height(32.dp))
+
+
 
                 Button(
                     onClick = {
@@ -195,7 +227,7 @@ fun TelaLogin(navController: NavHostController? = null) {
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable {
-                            navController?.navigate("cadastro")
+                            navController?.navigate("tela_cadastro")
                         }
                     )
                 }
@@ -208,6 +240,4 @@ fun TelaLogin(navController: NavHostController? = null) {
 @Composable
 fun TelaLoginPreview() {
     InfoHub_telasTheme {
-        TelaLogin()
-    }
-}
+        TelaLogin(null)}}

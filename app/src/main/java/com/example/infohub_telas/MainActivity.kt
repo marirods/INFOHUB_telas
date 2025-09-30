@@ -9,7 +9,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.telas.TelaCadastro
+import com.example.infohub_telas.telas.TelaCadastroJuridico
+import com.example.infohub_telas.telas.TelaConfirmarCodigo
+import com.example.infohub_telas.telas.TelaCriarNovaSenha
 import com.example.infohub_telas.telas.TelaRedefinicaoSenha
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
@@ -19,11 +25,47 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             InfoHub_telasTheme {
-                TelaRedefinicaoSenha()
+                var navController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = "login"
+                ){
+                    composable (
+                        route = "login"
+                    ){
+                        TelaLogin(navController)
+                    }
+                    composable (
+                        route = "tela_cadastro"
+                    ){
+                        TelaCadastro(navController)
+                    }
+                    composable (
+                        route = "cadastro_juridico"
+                    ){
+                        TelaCadastroJuridico(navController)
+                    }
+                    composable (
+                        route = "redefinicao_senha"
+                    ){
+                        TelaRedefinicaoSenha(navController)
+                    }
+                    composable (
+                        route = "confirmar_codigo"
+                    ){
+                        TelaConfirmarCodigo(navController)
+                    }
+                    composable (
+                        route = "criar_senha"
+                    ){
+
+                    }
+                    }
+                }
             }
         }
     }
-}
+
 
 
 
