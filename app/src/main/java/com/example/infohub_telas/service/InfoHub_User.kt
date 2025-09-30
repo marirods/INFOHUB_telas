@@ -4,7 +4,10 @@ package com.example.infohub_telas.service
 import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.model.Usuario
+import com.example.infohub_telas.model.ValidarCodigoRequest
+import com.example.infohub_telas.model.ValidarCodigoResponse
 import com.example.infohub_telas.model.recuperarSenha
+import com.example.infohub_telas.model.recuperarSenhaResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.Headers
@@ -22,10 +25,16 @@ interface InfoHub_User {
 
 
 
-    @POST("auth/recuperar-senha")
-    fun recuperarSenha(@Body email: recuperarSenha): Call<Usuario>
+    @POST("recuperar-senha")
+    @Headers("Content-Type: application/json")
+    fun recuperarSenha(@Body email: recuperarSenha): Call<recuperarSenhaResponse>
+
     @POST("auth/login")
     fun loginUsuarios(@Body loginReq: LoginUsuario): Call<LoginResponse>
 
 
+    @POST("validar-codigo")
+    @Headers("Content-Type: application/json")
+    fun validarCodigo(@Body request: ValidarCodigoRequest): Call<ValidarCodigoResponse>
+    fun atualizarSenha(atualizarSenhaRequest: Any)
 }

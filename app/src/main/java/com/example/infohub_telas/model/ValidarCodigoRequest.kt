@@ -1,8 +1,6 @@
 package com.example.infohub_telas.model
 
-data class recuperarSenha(
+data class ValidarCodigoRequest(
     val email: String,
-
+    val codigo: String
 )
-
-

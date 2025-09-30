@@ -387,7 +387,7 @@ fun SenhaTextField(
 @Composable
 fun TelaCadastroPreview() {
     InfoHub_telasTheme {
-        TelaCadastro(navController = rememberNavController())
+        TelaCadastro(null)
     }
 }
 
