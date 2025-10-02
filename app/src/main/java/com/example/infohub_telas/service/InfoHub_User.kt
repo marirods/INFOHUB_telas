@@ -1,6 +1,8 @@
 package com.example.infohub_telas.service
 
 
+import com.example.infohub_telas.model.AtualizarSenhaRequest
+import com.example.infohub_telas.model.AtualizarSenhaResponse
 import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.model.Usuario
@@ -37,5 +39,8 @@ interface InfoHub_User {
     @Headers("Content-Type: application/json")
     fun validarCodigo(@Body request: ValidarCodigoRequest): Call<ValidarCodigoResponse>
 
-    fun atualizarSenha(@body atualizarSenhaRequest
+
+    @POST("usuarios/atualizar-senha")
+    @Headers("Content-Type: application/json")
+    fun atualizarSenha(@Body request: AtualizarSenhaRequest): Call<AtualizarSenhaResponse>
 }
