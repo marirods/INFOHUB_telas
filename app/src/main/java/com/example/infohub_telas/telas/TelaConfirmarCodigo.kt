@@ -2,6 +2,7 @@ package com.example.infohub_telas.telas
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -224,17 +225,38 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                     isLoading = true
                     scope.launch {
                         try {
+
+                            println("➡️ Enviando request de validação:")
+                            println("Código = $codigoDigits")
+
                             val resposta = withContext(Dispatchers.IO) {
                                 userApi.validarCodigo(ValidarCodigoRequest(codigoDigits)).execute()
                             }
 
-                            if (resposta.isSuccessful && (resposta.body()?.sucesso == true)) {
-                                println("Código válido")
-                                navController?.navigate("criar_senha")
+                            println("⬅️ Resposta da API:")
+                            println("HTTP code = ${resposta.code()}")
+                            println("isSuccessful = ${resposta.isSuccessful}")
+                            println("body = ${resposta.body()}")
+                            println("errorBody = ${resposta.errorBody()?.string()}")
+
+                            if (resposta.isSuccessful) {
+                                val body = resposta.body()
+                                if (body?.status == true) {
+                                    prefs.edit().putString("codigo", codigoDigits).apply()
+                                    Toast.makeText(context, "✅ Código válido!", Toast.LENGTH_SHORT).show()
+                                    println("✅ Código válido")
+                                    navController?.navigate("criar_senha")
+                                } else {
+                                    val msg = body?.message ?: "Código inválido"
+                                    Toast.makeText(context, "❌ $msg", Toast.LENGTH_SHORT).show()
+                                    println("❌ Validação falhou: $msg")
+                                }
                             } else {
-                                val msg = resposta.body()?.mensagem ?: resposta.errorBody()?.string()
-                                println("Código inválido ou erro: ${msg ?: "sem mensagem"}")
+                                val erro = "Erro HTTP: ${resposta.code()}"
+                                Toast.makeText(context, erro, Toast.LENGTH_SHORT).show()
+                                println("❌ $erro - ${resposta.errorBody()?.string()}")
                             }
+
                         } catch (e: Exception) {
                             println("Falha na chamada: ${e.message}")
                         } finally {

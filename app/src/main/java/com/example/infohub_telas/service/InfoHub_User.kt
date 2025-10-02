@@ -40,7 +40,7 @@ interface InfoHub_User {
     fun validarCodigo(@Body request: ValidarCodigoRequest): Call<ValidarCodigoResponse>
 
 
-    @POST("usuarios/atualizar-senha")
+    @POST("redefinir-senha")
     @Headers("Content-Type: application/json")
     fun atualizarSenha(@Body request: AtualizarSenhaRequest): Call<AtualizarSenhaResponse>
 }
