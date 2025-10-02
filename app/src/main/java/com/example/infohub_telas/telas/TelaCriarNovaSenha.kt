@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.navigation.NavHostController
+import com.example.infohub_telas.model.AtualizarSenhaRequest
 import com.example.infohub_telas.service.RetrofitFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -142,8 +143,8 @@ fun TelaCriarNovaSenha(navController: NavHostController?) {
 
 
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { novoValor -> email = novoValor },
+                        value = senha,
+                        onValueChange = { novoValor -> senha = novoValor },
                         placeholder = { Text("Nova senha*") },
                         modifier = Modifier
                             .padding(vertical = 6.dp)
@@ -189,9 +190,9 @@ fun TelaCriarNovaSenha(navController: NavHostController?) {
 
 
                     OutlinedTextField(
-                        value = senha,
-                        onValueChange = { novoValor -> senha = novoValor },
-                        placeholder = { Text("Nova senha*") },
+                        value = confirmarSenha,
+                        onValueChange = { novoValor -> confirmarSenha = novoValor },
+                        placeholder = { Text("Confirmar nova senha*") },
                         modifier = Modifier
                             .padding(vertical = 6.dp)
                             .fillMaxWidth(),
@@ -225,31 +226,45 @@ fun TelaCriarNovaSenha(navController: NavHostController?) {
             TextButton(
                 onClick = {
                     // Navegação direta opcional
-                    navController?.navigate("login")
 
-                        //para verificar os campos preenchidos pelo usuário
 
-                        if (senha.isEmpty() || confirmarSenha.isEmpty()){
-                            println("***************** PREENCHA TODOS OS CAMPOS CORRETAMENTE *************")
-                        }else if (senha.length != 10){
-                            println("***************** A senha deve ter exatamente 10 caracteres *************")
-                        }else if (senha != confirmarSenha){
-                            println("***************** As senhas não coincidem*************")
-                        }else{
-                            // Verifica os requisitos da senha
-                            val temMaiuscula = senha.any { it.isUpperCase() }
-                            val temMinuscula = senha.any { it.isLowerCase() }
-                            val temNumero = senha.any { it.isDigit() }
-                            val temEspecial = senha.any { !it.isLetterOrDigit() }
+                    //para verificar os campos preenchidos pelo usuário
 
-                            if (!temMaiuscula || !temMinuscula || !temNumero || !temEspecial) {
-                                println("****************** A senha deve conter 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial ********************")
-                        }else{
+                    if (senha.isEmpty() || confirmarSenha.isEmpty()) {
+                        println("***************** PREENCHA TODOS OS CAMPOS CORRETAMENTE *************")
+                    } else if (senha.length < 10) {
+                        println("***************** A senha deve ter exatamente 10 caracteres *************")
+                    } else if (senha != confirmarSenha) {
+                        println("***************** As senhas não coincidem*************")
+                    } else {
+                        // Verifica os requisitos da senha
+                        val temMaiuscula = senha.any { it.isUpperCase() }
+                        val temMinuscula = senha.any { it.isLowerCase() }
+                        val temNumero = senha.any { it.isDigit() }
+                        val temEspecial = senha.any { !it.isLetterOrDigit() }
+
+                        if (!temMaiuscula || !temMinuscula || !temNumero || !temEspecial) {
+                            println("****************** A senha deve conter 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial ********************")
+                        } else {
                             isLoading = true
-                                GlobalScope.launch(Dispatchers.IO){
-                                    val call = userApi.
+                            GlobalScope.launch(Dispatchers.IO) {
+                                val call = userApi.atualizarSenha(
+                                    AtualizarSenhaRequest(email,senha)
+                                )
+                                val resposta = call.execute()
+                                launch(Dispatchers.Main) {
+                                    isLoading = false
+                                    if (resposta.isSuccessful && resposta.body()?.sucesso == true) {
+                                        println("Senha cadastrada com sucesso")
+                                    } else {
+                                        println("Erro ao cadastrar senha: ${resposta.body()?.mensagem}")
+                                    }
                                 }
                             }
+                        }
+                    }
+                },
+                modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(60.dp)
                     .align(Alignment.CenterHorizontally),

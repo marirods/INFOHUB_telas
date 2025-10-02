@@ -171,6 +171,11 @@ fun TelaLogin(navController: NavHostController?) {
 
                 Button(
                     onClick = {
+                        // Imprime no log os dados que vão para o backend
+                        println("Tentativa de login:")
+                        println("Email: $email")
+                        println("Senha: $senha")
+
                         if (validar()) {
                             isLoading = true
                             val loginReq = LoginUsuario(email, senha)
@@ -187,8 +192,8 @@ fun TelaLogin(navController: NavHostController?) {
                                             // Salvar token
                                             val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
                                             prefs.edit().putString("token", body.token).apply()
-
                                             println("Token salvo: ${body.token}")
+
                                             // Navegar para home
                                             navController?.navigate("home") {
                                                 popUpTo("login") { inclusive = true }
