@@ -1,6 +1,7 @@
 package com.example.infohub_telas.telas
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,17 +25,21 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,10 +49,8 @@ import com.example.infohub_telas.model.ValidarCodigoRequest
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
+import kotlinx.coroutines.withContext
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,14 +64,14 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
     val codigo by remember { derivedStateOf { codigo1 + codigo2 + codigo3 + codigo4 } }
     var isLoading by remember { mutableStateOf(false) }
 
-    val retrofitFactory = RetrofitFactory()
-    val userApi = retrofitFactory.getInfoHub_UserService()
+    val retrofitFactory = remember { RetrofitFactory() }
+    val userApi = remember { retrofitFactory.getInfoHub_UserService() }
 
-    // mari, aqui vou puxar o email da outra tela para voce usar no seu componente
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val emailSalvo = prefs.getString("email", "") ?: ""
-    // calmaa, tem aqla interrogacao para se nao tiver nada vai vim nulo
+
+    val scope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -207,29 +210,36 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
 
             TextButton(
                 onClick = {
-                    // Navegação direta opcional
-                    navController?.navigate("criar_senha")
+                    // Mantém apenas dígitos; evita espaço/traço
+                    val codigoDigits = codigo.filter { it.isDigit() }
 
-                    // Somente se o código tiver 4 dígitos, chama a API
-                    if (codigo.length == 4) {
-                        isLoading = true
-                        GlobalScope.launch(Dispatchers.IO) {
-                            val call = userApi.validarCodigo(
-                                ValidarCodigoRequest(emailSalvo, codigo)
-                            )
-                            val resposta = call.execute()
-                            launch(Dispatchers.Main) {
-                                isLoading = false
-                                if (resposta.isSuccessful && resposta.body()?.sucesso == true) {
-                                    println("Código válido")
-                                    navController?.navigate("criar_senha") // navegação aqui
-                                } else {
-                                    println("Código inválido ou erro: ${resposta.body()?.mensagem}")
-                                }
+                    Log.d("TelaConfirmarCodigo", "codigo raw='$codigo'  |  somenteDigitos='$codigoDigits' (${codigoDigits.length} dígitos)")
+
+                    // Validações simples
+                    if (codigoDigits.length != 4) {
+                        println("****************** O código deve ter 4 dígitos numéricos ********************")
+                        return@TextButton
+                    }
+
+                    isLoading = true
+                    scope.launch {
+                        try {
+                            val resposta = withContext(Dispatchers.IO) {
+                                userApi.validarCodigo(ValidarCodigoRequest(codigoDigits)).execute()
                             }
+
+                            if (resposta.isSuccessful && (resposta.body()?.sucesso == true)) {
+                                println("Código válido")
+                                navController?.navigate("criar_senha")
+                            } else {
+                                val msg = resposta.body()?.mensagem ?: resposta.errorBody()?.string()
+                                println("Código inválido ou erro: ${msg ?: "sem mensagem"}")
+                            }
+                        } catch (e: Exception) {
+                            println("Falha na chamada: ${e.message}")
+                        } finally {
+                            isLoading = false
                         }
-                    } else {
-                        println("****************** PREENCHA TODOS OS CAMPOS CORRETAMENTE ********************")
                     }
                 },
                 modifier = Modifier
@@ -238,7 +248,6 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                     .align(Alignment.CenterHorizontally),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B))
             ) {
-                // Conteúdo visual do botão
                 Text(
                     text = "Continuar",
                     color = Color.Black,
@@ -255,7 +264,8 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                 Text("Não recebeu código? ", color = Color.Gray, fontSize = 14.sp)
                 Text(
                     "Enviar novamente",
-                    color = Color(color = 0xFFF25992E),
+                    // mantém exatamente seu uso original de cor
+                    color = Color(0xFFF25992E),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -271,4 +281,3 @@ fun TelaConfirmarCodigoPreview() {
         TelaConfirmarCodigo(null)
     }
 }
-
