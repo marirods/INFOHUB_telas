@@ -15,16 +15,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,186 +35,229 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.model.ValidarCodigoRequest
 import com.example.infohub_telas.service.RetrofitFactory
+import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaConfirmarCodigo(navController: NavController?) {
-    var codigo by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+@OptIn(ExperimentalMaterial3Api::class)
+fun TelaConfirmarCodigo(navController: NavHostController?) {
 
-    val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    var codigo1 by remember { mutableStateOf("") }
+    var codigo2 by remember { mutableStateOf("") }
+    var codigo3 by remember { mutableStateOf("") }
+    var codigo4 by remember { mutableStateOf("") }
+
+    val codigo by remember { derivedStateOf { codigo1 + codigo2 + codigo3 + codigo4 } }
+    var isLoading by remember { mutableStateOf(false) }
 
     val retrofitFactory = RetrofitFactory()
     val userApi = retrofitFactory.getInfoHub_UserService()
+
+    // mari, aqui vou puxar o email da outra tela para voce usar no seu componente
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val emailSalvo = prefs.getString("email", "") ?: ""
+    // calmaa, tem aqla interrogacao para se nao tiver nada vai vim nulo
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
-        Column {
+        Image(
+            painter = painterResource(id = R.drawable.elipse_vermelha),
+            contentDescription = null,
+            modifier = Modifier
+                .size(150.dp)
+                .offset(x = (-41).dp, y = 80.dp)
+                .align(Alignment.TopStart)
+        )
 
-            Box(
+        Image(
+            painter = painterResource(id = R.drawable.elipse_laranja),
+            contentDescription = null,
+            modifier = Modifier
+                .size(300.dp)
+                .offset(x = (6).dp, y = (-10).dp)
+                .align(Alignment.TopEnd)
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.mulher_lendo),
+            contentDescription = "",
+            modifier = Modifier
+                .size(230.dp)
+                .align(Alignment.TopCenter)
+                .offset(y = 70.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .padding(horizontal = 24.dp)
+        ) {
+            Spacer(modifier = Modifier.height(90.dp))
+
+            Text(
+                text = "Confirme seu e-mail",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 23.sp,
+                color = Color.Black,
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = "Código enviado para: $emailSalvo",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Gray,
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(7.dp))
+
+            Text(
+                text = "Digite seu código:",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Normal,
+                color = Color.Black,
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(420.dp)
-                    .background(Color(0xFFFFD966))
+                    .padding(top = 15.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.elipse_vermelha),
-                    contentDescription = null,
+                OutlinedTextField(
+                    value = codigo1,
+                    onValueChange = { if (it.length <= 1) codigo1 = it },
                     modifier = Modifier
-                        .size(150.dp)
-                        .offset(x = (-41).dp, y = 80.dp)
-                        .align(Alignment.TopStart)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.amarela_elipse),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(300.dp)
-                        .offset(x = (6).dp, y = (-10).dp)
-                        .align(Alignment.TopEnd)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.elipse_branca),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(260.dp)
-                        .offset(x = (6).dp, y = (-10).dp)
-                        .align(Alignment.TopEnd)
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.mulher_lendo),
-                    contentDescription = "",
-                    modifier = Modifier
-                        .size(230.dp)
-                        .align(Alignment.TopCenter)
-                        .offset(y = 70.dp)
+                        .width(60.dp)
+                        .height(60.dp),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
 
-                Column(
+                OutlinedTextField(
+                    value = codigo2,
+                    onValueChange = { if (it.length <= 1) codigo2 = it },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .offset(y = (0).dp)
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 140.dp)
-                ) {
-                    Text(
-                        text = "Confirme o Código",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 23.sp,
-                        color = Color.Black,
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Digite o código de 4 dígitos enviado para o seu e-mail:",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        lineHeight = 18.sp
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
+                        .width(60.dp)
+                        .height(60.dp),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
 
-                    OutlinedTextField(
-                        value = codigo,
-                        onValueChange = { novoValor ->
-                            if (novoValor.length <= 4) codigo = novoValor
-                        },
-                        placeholder = { Text("Código*") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        singleLine = true,
-                        keyboardOptions = androidx.compose.ui.text.input.KeyboardOptions(keyboardType = KeyboardType.Number),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(28.dp)
-                    )
-                }
+                OutlinedTextField(
+                    value = codigo3,
+                    onValueChange = { if (it.length <= 1) codigo3 = it },
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(60.dp),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+
+                OutlinedTextField(
+                    value = codigo4,
+                    onValueChange = { if (it.length <= 1) codigo4 = it },
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(60.dp),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
+            TextButton(
                 onClick = {
+                    // Navegação direta opcional
+                    navController?.navigate("criar_senha")
+
+                    // Somente se o código tiver 4 dígitos, chama a API
                     if (codigo.length == 4) {
                         isLoading = true
-                        val email = prefs.getString("email", "") ?: ""
-
                         GlobalScope.launch(Dispatchers.IO) {
-                            val resposta = userApi.validarCodigo(ValidarCodigoRequest(email, codigo)).execute()
-
+                            val call = userApi.validarCodigo(
+                                ValidarCodigoRequest(emailSalvo, codigo)
+                            )
+                            val resposta = call.execute()
                             launch(Dispatchers.Main) {
                                 isLoading = false
-                                if (resposta.isSuccessful) {
-                                    println("Código válido!")
-                                    navController?.navigate("criar_senha")
+                                if (resposta.isSuccessful && resposta.body()?.sucesso == true) {
+                                    println("Código válido")
+                                    navController?.navigate("criar_senha") // navegação aqui
                                 } else {
-                                    println("Erro: ${resposta.code()}")
+                                    println("Código inválido ou erro: ${resposta.body()?.mensagem}")
                                 }
                             }
                         }
                     } else {
-                        println("Código inválido! Digite os 4 dígitos corretamente.")
+                        println("****************** PREENCHA TODOS OS CAMPOS CORRETAMENTE ********************")
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(56.dp)
                     .align(Alignment.CenterHorizontally),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B))
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                } else {
-                    Text("Confirmar", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                }
+                // Conteúdo visual do botão
+                Text(
+                    text = "Continuar",
+                    color = Color.Black,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
+                Text("Não recebeu código? ", color = Color.Gray, fontSize = 14.sp)
                 Text(
-                    text = "Não recebeu código?",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.size(4.dp))
-                Text(
-                    text = "Enviar Novamente",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF25992E),
-                    modifier = Modifier.clickable {
-                        // Pode chamar a API de reenvio
-                        navController?.navigate("redefinir_senha")
-                    }
+                    "Enviar novamente",
+                    color = Color(color = 0xFFF25992E),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -228,3 +271,4 @@ fun TelaConfirmarCodigoPreview() {
         TelaConfirmarCodigo(null)
     }
 }
+
