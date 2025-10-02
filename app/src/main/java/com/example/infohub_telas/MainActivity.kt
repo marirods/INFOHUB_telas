@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
                     composable (
                         route = "criar_senha"
                     ){
-
+                        TelaCriarNovaSenha(navController)
                     }
                     }
                 }
