@@ -1,155 +1,233 @@
 package com.example.infohub_telas.telas
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.infohub_telas.model.ChatRequest
-import com.example.infohub_telas.service.RetrofitFactory
+import com.example.infohub_telas.R
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
-
 
 @Composable
 fun TelaChatDePrecos(navController: NavController?) {
-    val mensagens = remember { mutableStateListOf("Olá! Em que posso te ajudar hoje?") }
-    var mensagemUsuario by remember { mutableStateOf("") }
-
-    // Suponha que você já tenha sua instância criada assim:
-    val chatService = RetrofitFactory().getInfoHub_UserService()
+    var inputText by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF6F6F6))
+            .background(Color.White)
             .padding(16.dp)
     ) {
-        // Título
+        // Título principal
         Text(
-            text = "Assistente InfoHub",
-            fontSize = 20.sp,
+            text = "Chat de Preços IA",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFF9800),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 24.dp),
+            textAlign = TextAlign.Center
+        )
+
+        // Mensagem de boas-vindas
+        Text(
+            text = "Olá usuário, seja bem-vindo!",
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF222222),
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        // Lista de mensagens
-        Column(
+        Text(
+            text = "Selecione a opção que deseja escolher:",
+            fontSize = 16.sp,
+            color = Color(0xFF222222),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        // Botão "Abrir opções"
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = 8.dp)
+                .fillMaxWidth()
+                .background(Color(0xFFFFC107), shape = RoundedCornerShape(12.dp))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
-            mensagens.forEach { msg ->
-                val isUsuario = msg.startsWith("Você:")
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    contentAlignment = if (isUsuario) Alignment.CenterEnd else Alignment.CenterStart
-                ) {
-                    Text(
-                        text = msg,
-                        modifier = Modifier
-                            .background(
-                                if (isUsuario) Color(0xFF25992E) else Color.White,
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .padding(12.dp),
-                        color = if (isUsuario) Color.White else Color.Black,
-                        fontSize = 14.sp
-                    )
-                }
+            Text(
+                text = "📋  Abrir opções",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Lista de opções
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFFFC107), shape = RoundedCornerShape(12.dp))
+                .padding(16.dp)
+        ) {
+            Column {
+                Text(
+                    text = "Selecione a opção que deseja escolher:",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "1. Comparar preços", color = Color.White, fontSize = 14.sp)
+                Text(text = "2. Comparar lista de compras", color = Color.White, fontSize = 14.sp)
+                Text(text = "3. Dúvidas", color = Color.White, fontSize = 14.sp)
+                Text(text = "4. Como funciona?", color = Color.White, fontSize = 14.sp)
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Campo de texto + botão enviar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, shape = RoundedCornerShape(24.dp))
+                .background(Color(0xFFF6F6F6), RoundedCornerShape(24.dp))
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextField(
-                value = mensagemUsuario,
-                onValueChange = { mensagemUsuario = it },
-                placeholder = { Text("Digite sua mensagem") },
-                modifier = Modifier.weight(1f),
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
+            BasicTextField(
+                value = inputText,
+                onValueChange = { inputText = it },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp),
+                textStyle = TextStyle(color = Color.Black, fontSize = 14.sp),
+                decorationBox = { innerTextField ->
+                    if (inputText.isEmpty()) {
+                        Text(
+                            text = "Digite o produto que você procura...",
+                            color = Color.Gray,
+                            fontSize = 14.sp
+                        )
+                    }
+                    innerTextField()
+                }
             )
 
-            IconButton(onClick = {
-                if (mensagemUsuario.isNotBlank()) {
-                    val texto = mensagemUsuario
-                    mensagens.add("Você: $texto")
-                    mensagemUsuario = ""
+            Icon(
+                imageVector = Icons.Default.Send,
+                contentDescription = "Enviar",
+                tint = Color(0xFF43A047)
+            )
+        }
 
-                    GlobalScope.launch(Dispatchers.IO) {
-                        val token = "Bearer SEU_TOKEN_AQUI"  // 🔐 coloque o token certo aqui
+        Spacer(modifier = Modifier.height(24.dp))
 
-                        val call = chatService.enviarMensagemChat(
-                            token,
-                            ChatRequest(chatId = "sessao-teste", message = texto)
-                        )
-                        val response = call.execute()
-
-                        withContext(Dispatchers.Main) {
-                            if (response.isSuccessful) {
-                                val resposta = response.body()?.resposta ?: "Sem resposta"
-                                mensagens.add("Bot: $resposta")
-                            } else {
-                                mensagens.add("Bot: Erro ao enviar")
-                            }
-                        }
-                    }
-                }
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Send,
-                    contentDescription = "Enviar",
-                    tint = Color(0xFF25992E)
+        // Barra "Ver carrinho"
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(16.dp))
+                .padding(12.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Ver carrinho",
+                    color = Color(0xFFFF9800),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
                 )
+                Text(
+                    text = "R$ 0,00",
+                    color = Color.Black,
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Menu inferior (com ícones reais, sem função separada)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Ícone + texto - Início
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_home),
+                    contentDescription = "Início",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text("Início", fontSize = 12.sp, color = Color.Black)
+            }
+
+            // Ícone + texto - Promoções
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_promocoes),
+                    contentDescription = "Promoções",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text("Promoções", fontSize = 12.sp, color = Color.Black)
+            }
+
+            // Ícone + texto - Localização
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_localizacao),
+                    contentDescription = "Localização",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text("Localização", fontSize = 12.sp, color = Color.Black)
+            }
+
+            // Ícone + texto - InfoCash
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_infocash),
+                    contentDescription = "InfoCash",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text("InfoCash", fontSize = 12.sp, color = Color.Black)
+            }
+
+            // Ícone + texto - Meu Perfil
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_perfil),
+                    contentDescription = "Meu Perfil",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text("Meu Perfil", fontSize = 12.sp, color = Color.Black)
             }
         }
     }
 }
-
 @Preview(showSystemUi = true)
 @Composable
 fun TelaChatDePrecosPreview() {
