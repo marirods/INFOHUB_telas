@@ -11,6 +11,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -22,7 +24,7 @@ import androidx.navigation.NavController
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @Composable
-fun TelaLocalizacao(navController: NavController) {
+fun TelaLocalizacao(navController: NavController? = null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,27 +37,27 @@ fun TelaLocalizacao(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF9A01B)) // cor laranja
+                .background(Color(0xFFF9A01B)) //
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(50.dp)
                     .background(Color.White, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.sacola_menu),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(100.dp)
                 )
             }
         }
 
         Spacer(
             modifier = Modifier
-                .height(12.dp)
+                .height(10.dp)
         )
 
         // MAPA
@@ -73,12 +75,14 @@ fun TelaLocalizacao(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp)
+        )
 
         // BARRA DE BUSCA
         Row(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
+                .shadow(8.dp, RoundedCornerShape(16.dp)) // sombra
                 .background(Color.White, RoundedCornerShape(16.dp))
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -96,7 +100,7 @@ fun TelaLocalizacao(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(250.dp))
 
         // BOTÃO "Ver Carrinho"
         Button(
@@ -119,14 +123,15 @@ fun TelaLocalizacao(navController: NavController) {
 
         Spacer(
             modifier = Modifier
-                .height(12.dp)
+                .height(13.dp)
         )
 
         // MENU INFERIOR
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
+
+                .width(90.dp)
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
@@ -137,7 +142,7 @@ fun TelaLocalizacao(navController: NavController) {
             {
                 Image(
                     painter = painterResource(
-                        id = R.drawable.sacola_menu),
+                        id = R.drawable.loja_menu),
                     contentDescription = "Início",
                     modifier = Modifier
                         .size(24.dp)
@@ -166,6 +171,13 @@ fun TelaLocalizacao(navController: NavController) {
                 horizontalAlignment = Alignment
                     .CenterHorizontally)
             {
+            Box(
+                modifier = Modifier
+                    .size(67.dp)
+                    .background(Color.White, CircleShape),
+                contentAlignment = Alignment.Center
+
+            ) {
                 Image(
                     painter = painterResource
                         (id = R.drawable.loc_menu),
@@ -176,8 +188,11 @@ fun TelaLocalizacao(navController: NavController) {
                     "Localização",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF9A01B)
+                    color = Color(0xFFF9A01B),
+
+
                 )
+            }
             }
             Column(
                 horizontalAlignment = Alignment
