@@ -23,7 +23,6 @@ class RetrofitFactory {
         fun getInfoHub_UserService(): InfoHub_User{
             return retrofitFactory.create(InfoHub_User::class.java)
         }
-
     }
 
 
