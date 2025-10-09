@@ -35,22 +35,70 @@ import retrofit2.Callback
 import retrofit2.Response
 
 
-fun validarCPF(cpf: String, cpfsCadastrados: List<String> = emptyList()): Boolean {
-    // Verifica se está no formato 000.000.000-00
-    if (!cpf.matches(Regex("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}"))) return false
+fun validarCPF(cpf: String, cpfsCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
+    val cpfComum = cpf.filter { it.isDigit() }
 
-    // Remove máscara para verificar dígitos iguais
-    val cpfComum = cpf.replace(".", "").replace("-", "")
+    if (cpfComum.isEmpty())
+        return false to "CPF não pode ser vazio"
 
-    // Dígitos iguais
-    if (cpfComum.all { it == cpfComum.first() }) return false
+    if (cpfComum.length != 11)
+        return false to "CPF deve ter 11 dígitos"
 
-    // CPF já cadastrado
-    if (cpfsCadastrados.any { it.replace(".", "").replace("-", "") == cpfComum }) return false
+    if (cpfComum.all { it == cpfComum.first() })
+        return false to "CPF não pode ter todos números iguais"
 
-    return true
+    if (cpfsCadastrados.any { it.filter { c -> c.isDigit() } == cpfComum })
+        return false to "CPF já cadastrado"
+
+    return true to ""
+}
+//    // Remove máscara para verificar dígitos iguais
+//    val cpfComum = cpf.replace(".", "").replace("-", "")
+//
+//    // Dígitos iguais
+//    if (cpfComum.all { it == cpfComum.first() }) return false
+//
+//    // CPF já cadastrado
+//    if (cpfsCadastrados.any { it.replace(".", "").replace("-", "") == cpfComum }) return false
+//
+//    return true
+//}
+
+fun validarTelefone(telefone: String, telefonesCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
+    val telefoneLimpo = telefone.filter { it.isDigit() }
+
+
+    if (telefoneLimpo.isEmpty())
+        return false to "Telefone não pode ser vazio"
+
+
+    if (telefoneLimpo.length !in 10..11)
+        return false to "Telefone deve ter 10 ou 11 dígitos"
+
+
+    if (telefoneLimpo.all { it == telefoneLimpo.first() })
+        return false to "Telefone não pode ter todos números iguais"
+
+    // Não pode estar cadastrado
+    if (telefoneLimpo in telefonesCadastrados.map { it.filter { c -> c.isDigit() } })
+        return false  to "Telefone já cadastrado"
+
+    return true to ""
 }
 
+fun validarEmail(email: String, emailsCadastrados: List<String> = emptyList()): Boolean{
+    if (email.isBlank())
+        return false
+
+
+    val regex = Regex("^[\\w.+-]+@(?:gmail\\.com|hotmail\\.com|yahoo\\.com)$")
+    if (!email.matches(regex))
+        return false
+
+    if (emailsCadastrados.any { it.equals(email, ignoreCase = true) })
+        return false
+    return true
+}
 
 
 
@@ -250,34 +298,33 @@ fun TelaCadastro(navController: NavController?) {
                     ),
                     visualTransformation = VisualTransformation { text ->
                         val numbers = text.text.filter { it.isDigit() }
-                        val telefoneMascarado = buildString {
+                        val masked = buildString {
                             numbers.forEachIndexed { i, c ->
                                 when (i) {
                                     0 -> append("(").append(c)
                                     1 -> append(c).append(") ")
-                                    6 -> append("-").append(c)
+                                    7 -> append("-").append(c)
                                     else -> append(c)
                                 }
                             }
                         }
-                        TransformedText(
-                            text = AnnotatedString(telefoneMascarado),
-                            offsetMapping = object : OffsetMapping {
-                                override fun originalToTransformed(offset: Int) = when {
-                                    offset <= 1 -> offset + 1
-                                    offset <= 5 -> offset + 3
-                                    offset <= 9 -> offset + 4
-                                    else -> telefoneMascarado.length
-                                }
-
-                                override fun transformedToOriginal(offset: Int) = when {
-                                    offset <= 2 -> offset - 1
-                                    offset <= 8 -> offset - 3
-                                    offset <= 13 -> offset - 4
-                                    else -> numbers.length
-                                }
+                        val offsetMapping = object : OffsetMapping {
+                            override fun originalToTransformed(offset: Int): Int {
+                                var transformed = offset
+                                if (offset > 1) transformed += 1 // para o ') '
+                                if (offset > 5) transformed += 1 // para o '-'
+                                return transformed.coerceAtMost(masked.length)
                             }
-                        )
+
+                            override fun transformedToOriginal(offset: Int): Int {
+                                var original = offset
+                                if (offset > 2) original -= 1
+                                if (offset > 7) original -= 1
+                                return original.coerceAtMost(numbers.length)
+                            }
+                        }
+
+                        TransformedText(AnnotatedString(masked), offsetMapping)
                     }
                 )
                 CustomTextField(
@@ -341,19 +388,31 @@ fun TelaCadastro(navController: NavController?) {
                     }
 
                     //validar cpf
-                    if (isPessoaFisicaSelected && !validarCPF(cpf)) {
-                        errorMessage = "CPF inválido. Verifique se digitou corretamente."
+                    if (isPessoaFisicaSelected) {
+                        val (cpfValido, cpfMsg) = validarCPF(cpf)
+                        if (!cpfValido) {
+                            errorMessage = cpfMsg
+                            showErrorDialog = true
+                            return@Button
+                        }
+                    }
+
+                    // Validar telefone usando a função criada
+                    val (telValido, telMsg) = validarTelefone(telefone)
+                    if (!telValido) {
+                        errorMessage = telMsg
                         showErrorDialog = true
                         return@Button
                     }
 
-                    // Validar telefone
-                    val telefoneLimpo = telefone.filter { it.isDigit() }
-                    if (telefoneLimpo.length !in 10..11) {
-                        errorMessage = "Telefone inválido. Digite com DDD (10 ou 11 números)."
+                    // Validar email
+                    if (!validarEmail(email)) {
+                        errorMessage = "E-mail inválido. Use apenas Gmail, Hotmail ou Yahoo e não deixe vazio."
                         showErrorDialog = true
                         return@Button
                     }
+
+
 
 
                     val usuario = Usuario(
@@ -454,22 +513,43 @@ fun CustomTextField(
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     textFieldColors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    validator: ((String) -> Pair<Boolean, String>)? = null,
+    showError: Boolean = true
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = { Text(placeholder) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = textFieldColors,
-        visualTransformation = visualTransformation,
-        shape = RoundedCornerShape(28.dp)
-    )
+    var errorText by remember { mutableStateOf("") }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {
+                onValueChange (it)
+                validator?.let { validate ->
+                    val (valid, message) = validate(it)
+                    errorText = if (!valid && showError) message else ""
+                }
+            },
+            placeholder = { Text(placeholder) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors = textFieldColors,
+            visualTransformation = visualTransformation,
+            isError = errorText.isNotEmpty(),
+            shape = RoundedCornerShape(28.dp)
+        )
+        if (errorText.isNotEmpty()) {
+            Text(
+                text = errorText,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 12.dp, top = 2.dp)
+            )
+        }
+    }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
