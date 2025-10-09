@@ -14,9 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +33,27 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+
+
+fun validarCPF(cpf: String, cpfsCadastrados: List<String> = emptyList()): Boolean {
+    // Verifica se está no formato 000.000.000-00
+    if (!cpf.matches(Regex("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}"))) return false
+
+    // Remove máscara para verificar dígitos iguais
+    val cpfComum = cpf.replace(".", "").replace("-", "")
+
+    // Dígitos iguais
+    if (cpfComum.all { it == cpfComum.first() }) return false
+
+    // CPF já cadastrado
+    if (cpfsCadastrados.any { it.replace(".", "").replace("-", "") == cpfComum }) return false
+
+    return true
+}
+
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,8 +70,12 @@ fun TelaCadastro(navController: NavController?) {
 
     var isPessoaFisicaSelected by remember { mutableStateOf(true) }
 
-    // controla se mostra o diálogo de sucesso
     var showSuccessDialog by remember { mutableStateOf(false) }
+
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
 
     val primaryOrange = Color(0xFFFF8C00)
     val lightGray = Color(0xFFF0F0F0)
@@ -139,7 +167,7 @@ fun TelaCadastro(navController: NavController?) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Formulário
+
             Column(modifier = Modifier.padding(horizontal = 32.dp)) {
                 CustomTextField(
                     value = nome,
@@ -155,7 +183,7 @@ fun TelaCadastro(navController: NavController?) {
                 if (isPessoaFisicaSelected) {
                     CustomTextField(
                         value = cpf,
-                        onValueChange = { cpf = it },
+                        onValueChange = { cpf = it.filter { c -> c.isDigit() }.take(11) },
                         placeholder = "CPF*",
                         keyboardType = KeyboardType.Number,
                         textFieldColors = OutlinedTextFieldDefaults.colors(
@@ -163,7 +191,37 @@ fun TelaCadastro(navController: NavController?) {
                             unfocusedBorderColor = Color.Gray,
                             focusedContainerColor = textFieldBackground,
                             unfocusedContainerColor = textFieldBackground
-                        )
+                        ),
+                        visualTransformation = VisualTransformation{ text ->
+                            val numbers = text.text.filter { it.isDigit() }
+                            val cpfMascarado = buildString {
+                                for (i in numbers.indices){
+                                    append(numbers[i])
+                                    if (i == 2 || i == 5) append(".")
+                                    if (i == 8) append("-")
+                                }
+                            }
+                            TransformedText(
+                                text = AnnotatedString(cpfMascarado),
+                                offsetMapping = object : OffsetMapping {
+                                    override fun originalToTransformed(offset: Int) = when {
+                                        offset <= 2 -> offset
+                                        offset <= 5 -> offset + 1
+                                        offset <= 8 -> offset + 2
+                                        offset <= 11 -> offset + 3
+                                        else -> 14
+                                    }
+
+                                    override fun transformedToOriginal(offset: Int) = when {
+                                        offset <= 3 -> offset
+                                        offset <= 7 -> offset - 1
+                                        offset <= 11 -> offset - 2
+                                        offset <= 14 -> offset - 3
+                                        else -> 11
+                                    }
+                                }
+
+                            )                        }
                     )
                 } else {
                     CustomTextField(
@@ -181,7 +239,7 @@ fun TelaCadastro(navController: NavController?) {
                 }
                 CustomTextField(
                     value = telefone,
-                    onValueChange = { telefone = it },
+                    onValueChange = { telefone = it.filter { c -> c.isDigit() }.take(11) },
                     placeholder = "Telefone*",
                     keyboardType = KeyboardType.Phone,
                     textFieldColors = OutlinedTextFieldDefaults.colors(
@@ -189,7 +247,38 @@ fun TelaCadastro(navController: NavController?) {
                         unfocusedBorderColor = Color.Gray,
                         focusedContainerColor = textFieldBackground,
                         unfocusedContainerColor = textFieldBackground
-                    )
+                    ),
+                    visualTransformation = VisualTransformation { text ->
+                        val numbers = text.text.filter { it.isDigit() }
+                        val telefoneMascarado = buildString {
+                            numbers.forEachIndexed { i, c ->
+                                when (i) {
+                                    0 -> append("(").append(c)
+                                    1 -> append(c).append(") ")
+                                    6 -> append("-").append(c)
+                                    else -> append(c)
+                                }
+                            }
+                        }
+                        TransformedText(
+                            text = AnnotatedString(telefoneMascarado),
+                            offsetMapping = object : OffsetMapping {
+                                override fun originalToTransformed(offset: Int) = when {
+                                    offset <= 1 -> offset + 1
+                                    offset <= 5 -> offset + 3
+                                    offset <= 9 -> offset + 4
+                                    else -> telefoneMascarado.length
+                                }
+
+                                override fun transformedToOriginal(offset: Int) = when {
+                                    offset <= 2 -> offset - 1
+                                    offset <= 8 -> offset - 3
+                                    offset <= 13 -> offset - 4
+                                    else -> numbers.length
+                                }
+                            }
+                        )
+                    }
                 )
                 CustomTextField(
                     value = email,
@@ -233,9 +322,40 @@ fun TelaCadastro(navController: NavController?) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Botão
+
             Button(
                 onClick = {
+                    //para validar campos obrigatórios
+
+                    if(nome.isBlank() || email.isBlank() || senha.isBlank() || confirmarSenha.isBlank()){
+                        errorMessage = "Preencha todos os dados obrigatórios"
+                        showErrorDialog = true
+                        return@Button
+                    }
+
+                    //validar senha
+                    if (senha != confirmarSenha) {
+                        errorMessage = "As senhas não coincidem."
+                        showErrorDialog = true
+                        return@Button
+                    }
+
+                    //validar cpf
+                    if (isPessoaFisicaSelected && !validarCPF(cpf)) {
+                        errorMessage = "CPF inválido. Verifique se digitou corretamente."
+                        showErrorDialog = true
+                        return@Button
+                    }
+
+                    // Validar telefone
+                    val telefoneLimpo = telefone.filter { it.isDigit() }
+                    if (telefoneLimpo.length !in 10..11) {
+                        errorMessage = "Telefone inválido. Digite com DDD (10 ou 11 números)."
+                        showErrorDialog = true
+                        return@Button
+                    }
+
+
                     val usuario = Usuario(
                         nome = nome,
                         email = email,
@@ -264,6 +384,8 @@ fun TelaCadastro(navController: NavController?) {
 
                         override fun onFailure(call: Call<Usuario>, t: Throwable) {
                             Log.e("API", "Falha na requisição: ${t.message}")
+                            errorMessage = "Falha na conexão. Verifique sua internet."
+                            showErrorDialog = true
                         }
                     })
                 },
@@ -331,7 +453,8 @@ fun CustomTextField(
     onValueChange: (String) -> Unit,
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
-    textFieldColors: TextFieldColors = OutlinedTextFieldDefaults.colors()
+    textFieldColors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     OutlinedTextField(
         value = value,
@@ -343,6 +466,7 @@ fun CustomTextField(
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = textFieldColors,
+        visualTransformation = visualTransformation,
         shape = RoundedCornerShape(28.dp)
     )
 }
