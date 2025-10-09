@@ -52,11 +52,16 @@ dependencies {
 
 
 
+
+
+
     // Mantenha só essa linha para o Material3
     implementation("androidx.compose.material3:material3:1.3.2")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3")
+
+
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.foundation)
@@ -75,4 +80,15 @@ dependencies {
 dependencies {
     implementation("androidx.compose.material:material-icons-core:<versão>")
     implementation("androidx.compose.material:material-icons-extended:<versão>")
+
+    // OpenStreetMap
+    implementation("org.osmdroid:osmdroid-android:6.1.16")
+
+    // Retrofit (para ViaCEP e BrasilAPI)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+// Coroutines (para chamadas assíncronas)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
 }

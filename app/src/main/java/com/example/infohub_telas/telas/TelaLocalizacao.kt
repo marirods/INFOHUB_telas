@@ -9,6 +9,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -21,10 +26,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
+import kotlinx.coroutines.launch
 
 @Composable
-fun TelaLocalizacao(navController: NavController? = null) {
+@OptIn(ExperimentalMaterial3Api::class)
+fun TelaLocalizacao(navController: NavController?) {
+
+    val retrofitFactory = RetrofitFactory()
+    val infoHubService = retrofitFactory.getInfoHub_UserService()
+    val scope = rememberCoroutineScope()
+
+    val viaCepService = retrofitFactory.getViaCepService()
+    val brasilApiService = retrofitFactory.getBrasilApiService()
+
+    val userApi = retrofitFactory.getInfoHub_UserService()
+
+    var cep by remember { mutableStateOf("") }
+    var endereco by remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,6 +100,7 @@ fun TelaLocalizacao(navController: NavController? = null) {
         )
 
         // BARRA DE BUSCA
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -88,16 +110,45 @@ fun TelaLocalizacao(navController: NavController? = null) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.lupa_loc),
-                contentDescription = "Buscar",
-                modifier = Modifier.size(24.dp)
+            TextField(
+                value = cep,
+                onValueChange = { cep = it },
+                placeholder = { Text("Digite o CEP") },
+                singleLine = true,
+                modifier = Modifier.weight(1f)
             )
+            IconButton(onClick = {
+                scope.launch {
+                    try {
+                        val resposta = viaCepService.buscarCep(cep)
+                        endereco = "${resposta.logradouro}, ${resposta.bairro}, ${resposta.localidade} - ${resposta.uf}"
+                    } catch (e: Exception) {
+                        endereco = "CEP não encontrado"
+                    }
+                }
+            }) {
+                Image(
+                    painter = painterResource(id = R.drawable.lupa_loc),
+                    contentDescription = "Buscar",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             Image(
                 painter = painterResource(id = R.drawable.microfone_loc),
                 contentDescription = "Microfone",
                 modifier = Modifier.size(24.dp)
             )
+        }
+
+
+            if (endereco != null) {
+                Text(
+                    text = endereco ?: "",
+                    modifier = Modifier.padding(top = 8.dp),
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(250.dp))
@@ -171,28 +222,28 @@ fun TelaLocalizacao(navController: NavController? = null) {
                 horizontalAlignment = Alignment
                     .CenterHorizontally)
             {
-            Box(
-                modifier = Modifier
-                    .size(67.dp)
-                    .background(Color.White, CircleShape),
-                contentAlignment = Alignment.Center
+                Box(
+                    modifier = Modifier
+                        .size(67.dp)
+                        .background(Color.White, CircleShape),
+                    contentAlignment = Alignment.Center
 
-            ) {
-                Image(
-                    painter = painterResource
-                        (id = R.drawable.loc_menu),
-                    contentDescription = "Localização",
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    "Localização",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF9A01B),
+                ) {
+                    Image(
+                        painter = painterResource
+                            (id = R.drawable.loc_menu),
+                        contentDescription = "Localização",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        "Localização",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF9A01B),
 
 
-                )
-            }
+                        )
+                }
             }
             Column(
                 horizontalAlignment = Alignment
@@ -228,9 +279,14 @@ fun TelaLocalizacao(navController: NavController? = null) {
             }
         }
     }
+
 }
+
+
+
+
 @Preview(showSystemUi = true)
 @Composable
 fun TelaLocalizacaoPreview() {
     InfoHub_telasTheme {
-        TelaLocalizacao(navController = null)}}
+        TelaLocalizacao(null)}}
