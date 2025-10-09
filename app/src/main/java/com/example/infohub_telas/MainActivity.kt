@@ -31,36 +31,36 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     startDestination = "login"
                 ){
-                    composable (
-                        route = "login"
-                    ){
-                        TelaLogin(navController)
-                    }
-                    composable (
-                        route = "tela_cadastro"
-                    ){
-                        TelaCadastro(navController)
-                    }
-                    composable (
-                        route = "cadastro_juridico"
-                    ){
-                        TelaCadastroJuridico(navController)
-                    }
-                    composable (
-                        route = "redefinicao_senha"
-                    ){
-                        TelaRedefinicaoSenha(navController)
-                    }
-                    composable (
-                        route = "confirmar_codigo"
-                    ){
-                        TelaConfirmarCodigo(navController)
-                    }
-                    composable (
-                        route = "criar_senha"
-                    ){
-                        TelaCriarNovaSenha(navController)
-                    }
+//                    composable (
+//                        route = "login"
+//                    ){
+//                        TelaLogin(navController)
+//                    }
+//                    composable (
+//                        route = "tela_cadastro"
+//                    ){
+//                        TelaCadastro(navController)
+//                    }
+//                    composable (
+//                        route = "cadastro_juridico"
+//                    ){
+//                        TelaCadastroJuridico(navController)
+//                    }
+//                    composable (
+//                        route = "redefinicao_senha"
+//                    ){
+//                        TelaRedefinicaoSenha(navController)
+//                    }
+//                    composable (
+//                        route = "confirmar_codigo"
+//                    ){
+//                        TelaConfirmarCodigo(navController)
+//                    }
+//                    composable (
+//                        route = "criar_senha"
+//                    ){
+//                        TelaCriarNovaSenha(navController)
+//                    }
                     composable (
                         route = "Localização"
                     ) {

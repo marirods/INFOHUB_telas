@@ -24,7 +24,38 @@ class RetrofitFactory {
             return retrofitFactory.create(InfoHub_User::class.java)
         }
 
+
+    private fun viaCepRetrofit(): Retrofit{
+        return Retrofit.Builder()
+            .baseUrl("https://viacep.com.br/ws/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
+
+
+    fun getViaCepService(): ViaCepApi {
+       return viaCepRetrofit().create(ViaCepApi::class.java)
+
+    }
+
+    private fun brasilApiRetrofit(): Retrofit{
+        return Retrofit.Builder()
+            .baseUrl("https://brasilapi.com.br/api/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+    }
+
+    fun getBrasilApiService(): BrasilApi {
+        return brasilApiRetrofit().create(BrasilApi::class.java)
+    }
+
+
+    }
+
+
+
+
 
 
 
