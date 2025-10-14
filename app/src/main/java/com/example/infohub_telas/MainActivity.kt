@@ -1,7 +1,9 @@
 package com.example.infohub_telas
 
 import TelaLogin
+import org.osmdroid.config.Configuration
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,13 +25,18 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        Configuration.getInstance().load(
+            applicationContext,
+            PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        )
+
         setContent {
             InfoHub_telasTheme {
-                var navController = rememberNavController()
+                val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "login"
+                    startDestination = "Localização"
                 ){
 //                    composable (
 //                        route = "login"
