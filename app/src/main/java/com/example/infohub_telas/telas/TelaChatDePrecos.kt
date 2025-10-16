@@ -1,24 +1,27 @@
 package com.example.infohub_telas.telas
 
 import android.R.attr.onClick
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIos
-import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +40,10 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.primaryLight
 
 
+
+
+
+var ativo: Boolean = true
 @Composable
 fun TelaChatDePrecos(navController: NavController?) {
     var inputText by remember { mutableStateOf("") }
@@ -58,13 +65,13 @@ fun TelaChatDePrecos(navController: NavController?) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .padding(start = 16.dp)
-                    .padding(top = 20.dp) // Adiciona padding no topo para descer o conteúdo
+                    .padding(top = 20.dp)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo",
                     modifier = Modifier
-                        .size(40.dp) // Ajuste o tamanho conforme necessário
+                        .size(40.dp)
                         .clickable { navController?.navigateUp() }
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -108,7 +115,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                     modifier = Modifier
                         .width(4.dp)
                         .height(80.dp) // Aumentei a altura da linha
-                        .background(Color(0xFFFFC107))
+                        .background(Color(0xFFF9A01B))
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Icon(
@@ -146,7 +153,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 20.dp) // Espaço após o botão
-                    .background(Color(0xFFFFC107), RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF9A01B), RoundedCornerShape(12.dp))
                     .height(56.dp)
                     .clickable { /* Ação do botão */ },
                 contentAlignment = Alignment.Center
@@ -175,7 +182,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 24.dp) // Mais espaço após a lista
-                    .background(Color(0xFFFFC107), RoundedCornerShape(12.dp))
+                    .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp))
                     .padding(16.dp) // Padding interno aumentado
             ) {
                 Column {
@@ -216,6 +223,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                             Text(
                                 text = "Digite o produto que você procura...",
                                 color = Color.DarkGray,
+                                fontWeight = FontWeight.Medium,
                                 fontSize = 14.sp
                             )
                         }
@@ -261,59 +269,109 @@ fun TelaChatDePrecos(navController: NavController?) {
                         Text(
                             text = "Ver carrinho",
                             color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                            modifier = Modifier
+                                .align(Alignment.CenterVertically))
                     }
 
                     Text(
                         text = "R$0,00",
                         color = Color.Black,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
         }
 
-        // Menu inferior
-        Box(
+        // MENU INFERIOR
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
-                .padding(vertical = 12.dp)
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+            // Início
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MenuItem(icon = R.drawable.inicio, label = "Início")
-                MenuItem(icon = R.drawable.promocoes, label = "Promoções")
-                MenuItem(icon = R.drawable.local, label = "Localização")
-                MenuItem(icon = R.drawable.dinheiro, label = "InfoCash")
-                MenuItem(icon = R.drawable.perfil, label = "Meu Perfil")
+                Image(
+                    painter = painterResource(id = R.drawable.loja_menu),
+                    contentDescription = "Início",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    "Início",
+                    fontSize = 12.sp
+                )
+            }
+
+            // Promoções
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.etiqueta_menu),
+                    contentDescription = "Promoções",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    "Promoções",
+                    fontSize = 12.sp
+                )
+            }
+
+            // Localização
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.local),
+                    contentDescription = "Localização",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    "Localização",
+                    fontSize = 12.sp
+                )
+            }
+
+            // InfoCash
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.cash_menu),
+                    contentDescription = "InfoCash",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    "InfoCash",
+                    fontSize = 12.sp
+                )
+            }
+
+            // Meu Perfil
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.perfil_icon),
+                    contentDescription = "Perfil",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    "Meu Perfil",
+                    fontSize = 12.sp
+                )
             }
         }
-    }
-}
-@Composable
-fun MenuItem(icon: Int, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Image(
-            painter = painterResource(id = icon),
-            contentDescription = label,
-            modifier = Modifier.size(28.dp)
-        )
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = Color.Black,
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
+    }
+
+}
 
     @Preview(showSystemUi = true)
 @Composable
