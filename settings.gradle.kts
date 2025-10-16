@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "InfoHub_telas"
 include(":app")
+include(":shared")

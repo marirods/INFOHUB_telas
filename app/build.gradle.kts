@@ -37,10 +37,14 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.13"
+    }
 }
 
 dependencies {
 
+    implementation(project(":shared"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -48,21 +52,10 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-
-
-
-
-    // Mantenha só essa linha para o Material3
-    implementation("androidx.compose.material3:material3:1.3.2")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.foundation)
-    implementation(libs.material3)
-
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.compose.material:material-icons-extended")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
