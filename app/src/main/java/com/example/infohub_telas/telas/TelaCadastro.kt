@@ -594,5 +594,3 @@ fun TelaCadastroPreview() {
         TelaCadastro(null)
     }
 }
-
-
