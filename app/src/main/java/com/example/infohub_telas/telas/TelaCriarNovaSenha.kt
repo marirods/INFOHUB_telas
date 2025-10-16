@@ -1,6 +1,7 @@
 package com.example.infohub_telas.telas
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.foundation.Image
@@ -65,6 +66,7 @@ fun TelaCriarNovaSenha(navController: NavHostController?) {
     // mari, aqui vou puxar o email da outra tela para voce usar no seu componente
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val codigoSalvo = prefs.getString("codigo", "") ?: ""
 
 
 
@@ -225,40 +227,66 @@ fun TelaCriarNovaSenha(navController: NavHostController?) {
             }
             TextButton(
                 onClick = {
-                    // Navegação direta opcional
-
-
-                    //para verificar os campos preenchidos pelo usuário
-
+                    // Validações básicas
                     if (senha.isEmpty() || confirmarSenha.isEmpty()) {
-                        println("***************** PREENCHA TODOS OS CAMPOS CORRETAMENTE *************")
+                        Toast.makeText(context, "⚠️ Preencha todos os campos corretamente", Toast.LENGTH_SHORT).show()
                     } else if (senha.length < 10) {
-                        println("***************** A senha deve ter exatamente 10 caracteres *************")
+                        Toast.makeText(context, "⚠️ A senha deve ter no mínimo 10 caracteres", Toast.LENGTH_SHORT).show()
                     } else if (senha != confirmarSenha) {
-                        println("***************** As senhas não coincidem*************")
+                        Toast.makeText(context, "⚠️ As senhas não coincidem", Toast.LENGTH_SHORT).show()
+                    } else if (!senha.any { it.isUpperCase() }) {
+                        Toast.makeText(context, "⚠️ A senha deve conter pelo menos 1 letra maiúscula", Toast.LENGTH_SHORT).show()
+                    } else if (!senha.any { it.isLowerCase() }) {
+                        Toast.makeText(context, "⚠️ A senha deve conter pelo menos 1 letra minúscula", Toast.LENGTH_SHORT).show()
+                    } else if (!senha.any { it.isDigit() }) {
+                        Toast.makeText(context, "⚠️ A senha deve conter pelo menos 1 número", Toast.LENGTH_SHORT).show()
+                    } else if (!senha.any { !it.isLetterOrDigit() }) {
+                        Toast.makeText(context, "⚠️ A senha deve conter pelo menos 1 caractere especial", Toast.LENGTH_SHORT).show()
                     } else {
-                        // Verifica os requisitos da senha
-                        val temMaiuscula = senha.any { it.isUpperCase() }
-                        val temMinuscula = senha.any { it.isLowerCase() }
-                        val temNumero = senha.any { it.isDigit() }
-                        val temEspecial = senha.any { !it.isLetterOrDigit() }
+                        // Se passou em todas as validações
+                        isLoading = true
 
-                        if (!temMaiuscula || !temMinuscula || !temNumero || !temEspecial) {
-                            println("****************** A senha deve conter 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial ********************")
-                        } else {
-                            isLoading = true
-                            GlobalScope.launch(Dispatchers.IO) {
+                        // 🔹 LOG de envio
+                        println("📤 Enviando requisição de atualização de senha:")
+                        println("Código: $codigoSalvo")
+                        println("Senha: $senha")
+
+                        GlobalScope.launch(Dispatchers.IO) {
+                            try {
                                 val call = userApi.atualizarSenha(
-                                    AtualizarSenhaRequest(email,senha)
+                                    AtualizarSenhaRequest(
+                                        codigoSalvo,
+                                        senha
+                                    )
                                 )
                                 val resposta = call.execute()
+
+                                // 🔹 LOG da resposta bruta
+                                println("📥 Resposta da API:")
+                                println("HTTP code: ${resposta.code()}")
+                                println("isSuccessful: ${resposta.isSuccessful}")
+                                println("Body: ${resposta.body()}")
+                                println("ErroBody: ${resposta.errorBody()?.string()}")
+
                                 launch(Dispatchers.Main) {
                                     isLoading = false
-                                    if (resposta.isSuccessful && resposta.body()?.sucesso == true) {
-                                        println("Senha cadastrada com sucesso")
+                                    if (resposta.isSuccessful && resposta.body()?.status == true) {
+                                        println("✅ API retornou sucesso: ${resposta.body()}")
+                                        Toast.makeText(context, "✅ Senha cadastrada com sucesso!", Toast.LENGTH_SHORT).show()
+                                        navController?.navigate("login")
                                     } else {
-                                        println("Erro ao cadastrar senha: ${resposta.body()?.mensagem}")
+                                        println("❌ API retornou erro: ${resposta.body()?.message}")
+                                        Toast.makeText(context, "❌ Erro: ${resposta.body()?.message ?: "Falha ao atualizar senha"}", Toast.LENGTH_SHORT).show()
                                     }
+                                }
+                            } catch (e: Exception) {
+                                // 🔹 LOG do erro
+                                println("💥 Erro na requisição: ${e.message}")
+                                e.printStackTrace()
+
+                                launch(Dispatchers.Main) {
+                                    isLoading = false
+                                    Toast.makeText(context, "❌ Erro na requisição: ${e.message}", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }
@@ -278,6 +306,8 @@ fun TelaCriarNovaSenha(navController: NavHostController?) {
                     fontWeight = FontWeight.Bold
                 )
             }
+
+
 
 
 

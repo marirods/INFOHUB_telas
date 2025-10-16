@@ -15,7 +15,7 @@ val Pink40 = Color(0xFF7D5260)
 
 
 //CORES DO TEMA CLARO
-val primaryLight = Color(0xFFFF9A01B)
+val primaryLight = Color(0xFFF9A01B)
 val onPrimaryLight = Color(0xFFFFFFFF)
 
 val secondaryLight = Color(0xFF715A41)
