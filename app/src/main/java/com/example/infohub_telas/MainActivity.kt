@@ -1,7 +1,9 @@
 package com.example.infohub_telas
 
 import TelaLogin
+import org.osmdroid.config.Configuration
 import android.os.Bundle
+import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,56 +18,67 @@ import com.example.infohub_telas.telas.TelaCadastro
 import com.example.infohub_telas.telas.TelaCadastroJuridico
 import com.example.infohub_telas.telas.TelaConfirmarCodigo
 import com.example.infohub_telas.telas.TelaCriarNovaSenha
+import com.example.infohub_telas.telas.TelaLocalizacao
 import com.example.infohub_telas.telas.TelaRedefinicaoSenha
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        Configuration.getInstance().load(
+            applicationContext,
+            PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        )
+
         setContent {
             InfoHub_telasTheme {
-                var navController = rememberNavController()
+                val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "login"
+                    startDestination = "Localização"
                 ){
+//                    composable (
+//                        route = "login"
+//                    ){
+//                        TelaLogin(navController)
+//                    }
+//                    composable (
+//                        route = "tela_cadastro"
+//                    ){
+//                        TelaCadastro(navController)
+//                    }
+//                    composable (
+//                        route = "cadastro_juridico"
+//                    ){
+//                        TelaCadastroJuridico(navController)
+//                    }
+//                    composable (
+//                        route = "redefinicao_senha"
+//                    ){
+//                        TelaRedefinicaoSenha(navController)
+//                    }
+//                    composable (
+//                        route = "confirmar_codigo"
+//                    ){
+//                        TelaConfirmarCodigo(navController)
+//                    }
+//                    composable (
+//                        route = "criar_senha"
+//                    ){
+//                        TelaCriarNovaSenha(navController)
+//                    }
                     composable (
-                        route = "login"
-                    ){
-                        TelaLogin(navController)
-                    }
-                    composable (
-                        route = "tela_cadastro"
-                    ){
-                        TelaCadastro(navController)
-                    }
-                    composable (
-                        route = "cadastro_juridico"
-                    ){
-                        TelaCadastroJuridico(navController)
-                    }
-                    composable (
-                        route = "redefinicao_senha"
-                    ){
-                        TelaRedefinicaoSenha(navController)
-                    }
-                    composable (
-                        route = "confirmar_codigo"
-                    ){
-                        TelaConfirmarCodigo(navController)
-                    }
-                    composable (
-                        route = "criar_senha"
-                    ){
-                        TelaCriarNovaSenha(navController)
+                        route = "Localização"
+                    ) {
+                        TelaLocalizacao(navController)
                     }
                     }
+
                 }
             }
         }
     }
-
 
 
 
