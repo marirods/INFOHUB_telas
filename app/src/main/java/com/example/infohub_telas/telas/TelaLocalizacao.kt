@@ -1,6 +1,6 @@
 package com.example.infohub_telas.telas
 
-import BottomMenu
+import com.example.infohub_telas.components.BottomMenu
 import android.location.Geocoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
