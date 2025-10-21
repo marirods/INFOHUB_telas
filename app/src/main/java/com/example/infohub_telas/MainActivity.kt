@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -30,7 +33,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "carrinho" // Rota inicial para teste do fluxo de e-commerce
+                    startDestination = "carrinho", // Rota inicial para teste do fluxo de e-commerce
+                    enterTransition = { slideInHorizontally(animationSpec = tween(300), initialOffsetX = { it }) },
+                    exitTransition = { slideOutHorizontally(animationSpec = tween(300), targetOffsetX = { -it }) },
+                    popEnterTransition = { slideInHorizontally(animationSpec = tween(300), initialOffsetX = { -it }) },
+                    popExitTransition = { slideOutHorizontally(animationSpec = tween(300), targetOffsetX = { it }) }
                 ) {
 //                    composable("login") { TelaLogin(navController) }
 //                    composable("tela_cadastro") { TelaCadastro(navController) }
