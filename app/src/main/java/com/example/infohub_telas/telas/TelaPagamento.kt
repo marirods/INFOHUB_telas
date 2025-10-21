@@ -3,8 +3,10 @@ package com.example.infohub_telas.telas
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,10 +38,12 @@ fun TelaPagamento(navController: NavController, pagamentoViewModel: PagamentoVie
         bottomBar = { BottomMenu(navController = navController) }
     ) { paddingValues ->
         Crossfade(targetState = uiState.etapa, modifier = Modifier.padding(paddingValues)) { etapa ->
-            when (etapa) {
-                1 -> EtapaDadosCartao(pagamentoViewModel)
-                2 -> EtapaEnderecoCobranca(pagamentoViewModel)
-                3 -> EtapaConfirmacao(pagamentoViewModel, navController)
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                when (etapa) {
+                    1 -> EtapaDadosCartao(pagamentoViewModel)
+                    2 -> EtapaEnderecoCobranca(pagamentoViewModel)
+                    3 -> EtapaConfirmacao(pagamentoViewModel, navController)
+                }
             }
         }
     }

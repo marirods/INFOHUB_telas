@@ -131,7 +131,7 @@ fun ResumoPedido(navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* Navegar para checkout */ },
+                onClick = { navController.navigate("checkout") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
                 modifier = Modifier
                     .fillMaxWidth()
