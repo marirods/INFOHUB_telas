@@ -15,11 +15,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.telas.OpenScreen
+import com.example.infohub_telas.telas.WelcomeScreen
 import com.example.infohub_telas.telas.TelaCadastro
 import com.example.infohub_telas.telas.TelaCadastroJuridico
 import com.example.infohub_telas.telas.TelaConfirmarCodigo
 import com.example.infohub_telas.telas.TelaCriarNovaSenha
 import com.example.infohub_telas.telas.TelaLocalizacao
+import com.example.infohub_telas.telas.TelaLoginCadastro
 import com.example.infohub_telas.telas.TelaRedefinicaoSenha
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
@@ -37,7 +39,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "animation"
+                    startDestination = "splash"
                 ){
 //                    composable (
 //                        route = "login"
@@ -70,23 +72,30 @@ class MainActivity : ComponentActivity() {
 //                        TelaCriarNovaSenha(navController)
 //                    }
                     composable(
-                        route = "animation"
+                        route = "splash"
                     ){
-                        OpenScreen()
+                        OpenScreen(navController = navController)
+                    }
+                    composable(
+                        route = "loginCadastro"
+                    ){
+                        TelaLoginCadastro(navController = navController)
+                    }
+                    composable(
+                        route = "welcome"
+                    ){
+                        WelcomeScreen(navController = navController)
                     }
                     composable (
                         route = "Localização"
                     ) {
                         TelaLocalizacao(navController)
                     }
-                    }
-
                 }
             }
         }
     }
-
-
+}
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
