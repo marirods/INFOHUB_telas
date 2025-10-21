@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.telas.OpenScreen
 import com.example.infohub_telas.telas.TelaCadastro
 import com.example.infohub_telas.telas.TelaCadastroJuridico
 import com.example.infohub_telas.telas.TelaConfirmarCodigo
@@ -36,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "Localização"
+                    startDestination = "animation"
                 ){
 //                    composable (
 //                        route = "login"
@@ -68,6 +69,11 @@ class MainActivity : ComponentActivity() {
 //                    ){
 //                        TelaCriarNovaSenha(navController)
 //                    }
+                    composable(
+                        route = "animation"
+                    ){
+                        OpenScreen()
+                    }
                     composable (
                         route = "Localização"
                     ) {
