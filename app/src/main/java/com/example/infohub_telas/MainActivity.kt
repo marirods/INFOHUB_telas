@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "Localização"
+                    startDestination = "tela_cadastro"
                 ){
 //                    composable (
 //                        route = "login"
@@ -69,9 +69,9 @@ class MainActivity : ComponentActivity() {
 //                        TelaCriarNovaSenha(navController)
 //                    }
                     composable (
-                        route = "Localização"
+                        route = "tela_cadastro"
                     ) {
-                        TelaLocalizacao(navController)
+                        TelaCadastro(navController)
                     }
                     }
 
