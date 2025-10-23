@@ -1,3 +1,4 @@
+import android.R.attr.shape
 import android.content.Context
 import android.util.Patterns
 import androidx.compose.foundation.Image
@@ -11,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -21,6 +23,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -97,11 +100,12 @@ fun TelaLogin(navController: NavHostController?) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("E-mail", color = Color.DarkGray) },
+                    placeholder = { Text("E-mail", color = Color.Black) },
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 30.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(15.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = textColor,
                         unfocusedBorderColor = textColor,
@@ -115,8 +119,9 @@ fun TelaLogin(navController: NavHostController?) {
                     value = senha,
                     onValueChange = { senha = it },
                     placeholder = { Text("Senha", color = Color.DarkGray) },
-                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
@@ -129,13 +134,14 @@ fun TelaLogin(navController: NavHostController?) {
                             )
                         }
                     },
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(15.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = textColor,
                         unfocusedBorderColor = textColor,
                         focusedContainerColor = Color.White
                     )
                 )
+
 
                 Row (
                     modifier = Modifier
@@ -230,7 +236,7 @@ fun TelaLogin(navController: NavHostController?) {
                         "Cadastre-se aqui",
                         color = linkColor,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         modifier = Modifier.clickable {
                             navController?.navigate("tela_cadastro")
                         }
@@ -239,6 +245,12 @@ fun TelaLogin(navController: NavHostController?) {
             }
         }
     }
+}
+
+private fun Modifier.shadow(
+    elevation: Dp,
+    shape: Int
+) {
 }
 
 @Preview(showSystemUi = true)
