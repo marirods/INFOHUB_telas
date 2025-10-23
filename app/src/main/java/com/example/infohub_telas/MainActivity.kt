@@ -33,15 +33,11 @@ class MainActivity : ComponentActivity() {
                 
                 NavHost(
                     navController = navController,
-                    startDestination = "home" // 🔹 Tela Home ativa
-                ) {
-                    // 🔹 Tela Home - ATIVA PARA TESTE
-                    composable(route = "home") {
-                        TelaHome(navController)
-                    }
-
-                    // 🔸 Tela de Login - Desativada
-//                    composable(route = "login") {
+                    startDestination = "tela_cadastro"
+                ){
+//                    composable (
+//                        route = "login"
+//                    ){
 //                        TelaLogin(navController)
 //                    }
 
@@ -65,6 +61,12 @@ class MainActivity : ComponentActivity() {
 //                    composable(route = "criar_senha") {
 //                        TelaCriarNovaSenha(navController)
 //                    }
+                    composable (
+                        route = "tela_cadastro"
+                    ) {
+                        TelaCadastro(navController)
+                    }
+                    }
 
                     // 🔸 Tela de Localização
 //                    composable(route = "localizacao") {
