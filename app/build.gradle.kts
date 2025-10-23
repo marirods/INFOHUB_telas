@@ -50,6 +50,7 @@ dependencies {
     // Accompanist Permissions
     implementation ("com.google.accompanist:accompanist-permissions:0.31.5-beta")
     implementation(libs.androidx.compose.ui.text)
+    implementation(libs.androidx.compose.material)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
 
