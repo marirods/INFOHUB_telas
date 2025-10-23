@@ -2,7 +2,9 @@ package com.example.infohub_telas.telas
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -11,13 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.InfoRow
+import com.example.infohub_telas.components.MyTopAppBar
 import com.example.infohub_telas.model.Estabelecimento
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.launch
@@ -52,20 +55,10 @@ fun TelaMeuEstabelecimento(navController: NavController, estabelecimento: Estabe
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Meu Estabelecimento", color = Color.White) },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(
-                                Icons.Default.Menu, 
-                                contentDescription = "Abrir menu", 
-                                tint = Color.White
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color(0xFFF9A01B)
-                    )
+                MyTopAppBar(
+                    title = "Meu Estabelecimento",
+                    navigationIcon = Icons.Default.Menu,
+                    onNavigationIconClick = { scope.launch { drawerState.open() } }
                 )
             }
         ) { paddingValues ->
@@ -74,6 +67,7 @@ fun TelaMeuEstabelecimento(navController: NavController, estabelecimento: Estabe
                     .fillMaxSize()
                     .background(Color(0xFFF5F5F5))
                     .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -157,20 +151,6 @@ fun TelaMeuEstabelecimento(navController: NavController, estabelecimento: Estabe
     }
 }
 
-@Composable
-private fun InfoRow(icon: ImageVector, label: String, text: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = Color(0xFF03A9F4), modifier = Modifier.size(28.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(text = label, fontSize = 14.sp, color = Color.Gray)
-            Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Black)
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

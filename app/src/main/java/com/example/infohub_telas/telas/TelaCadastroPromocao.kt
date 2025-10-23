@@ -1,1 +1,200 @@
-package com.example.infohub_telas.telas\n\nimport android.net.Uri\nimport android.util.Log\nimport android.widget.Toast\nimport androidx.activity.compose.rememberLauncherForActivityResult\nimport androidx.activity.result.contract.ActivityResultContracts\nimport androidx.compose.foundation.background\nimport androidx.compose.foundation.clickable\nimport androidx.compose.foundation.layout.*\nimport androidx.compose.foundation.rememberScrollState\nimport androidx.compose.foundation.shape.RoundedCornerShape\nimport androidx.compose.foundation.text.KeyboardOptions\nimport androidx.compose.foundation.verticalScroll\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.automirrored.filled.ArrowBack\nimport androidx.compose.material.icons.automirrored.filled.List\nimport androidx.compose.material.icons.filled.*\nimport androidx.compose.material3.*\nimport androidx.compose.runtime.*\nimport androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.draw.clip\nimport androidx.compose.ui.graphics.Color\nimport androidx.compose.ui.layout.ContentScale\nimport androidx.compose.ui.platform.LocalContext\nimport androidx.compose.ui.text.font.FontWeight\nimport androidx.compose.ui.text.input.KeyboardType\nimport androidx.compose.ui.text.style.TextAlign\nimport androidx.compose.ui.tooling.preview.Preview\nimport androidx.compose.ui.unit.dp\nimport androidx.compose.ui.unit.sp\nimport androidx.navigation.NavController\nimport androidx.navigation.compose.rememberNavController\nimport coil.compose.AsyncImage\nimport com.example.infohub_telas.model.Promocao\nimport com.example.infohub_telas.ui.theme.InfoHub_telasTheme\nimport java.text.SimpleDateFormat\nimport java.util.*\n\n@OptIn(ExperimentalMaterial3Api::class)\n@Composable\nfun TelaCadastroPromocao(navController: NavController) {\n    var nomeProduto by remember { mutableStateOf(\"\") }\n    var precoPromocional by remember { mutableStateOf(\"\") }\n    var dataInicio by remember { mutableStateOf<Long?>(null) }\n    var dataTermino by remember { mutableStateOf<Long?>(null) }\n    var descricao by remember { mutableStateOf(\"\") }\n    var imageUri by remember { mutableStateOf<Uri?>(null) }\n    var categoriaExpandida by remember { mutableStateOf(false) }\n    val categorias = listOf(\"Alimentação\", \"Varejo\", \"Serviços\", \"Saúde\", \"Educação\", \"Outros\")\n    var categoriaSelecionada by remember { mutableStateOf(categorias[0]) }\n    val context = LocalContext.current\n\n    val imagePickerLauncher = rememberLauncherForActivityResult(\n        contract = ActivityResultContracts.GetContent(),\n        onResult = { uri: Uri? -> imageUri = uri }\n    )\n\n    Scaffold(\n        topBar = {\n            TopAppBar(\n                title = { Text(\"Cadastro de Promoção\", color = Color.Black, fontWeight = FontWeight.Bold) },\n                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFF5F5F5)),\n                navigationIcon = {\n                    IconButton(onClick = { navController.popBackStack() }) {\n                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = \"Voltar\", tint = Color.Black)\n                    }\n                }\n            )\n        },\n        containerColor = Color(0xFFF5F5F5)\n    ) { paddingValues ->\n        Column(\n            modifier = Modifier\n                .fillMaxSize()\n                .padding(paddingValues)\n                .verticalScroll(rememberScrollState())\n                .padding(horizontal = 16.dp, vertical = 20.dp),\n            horizontalAlignment = Alignment.CenterHorizontally,\n            verticalArrangement = Arrangement.spacedBy(16.dp)\n        ) {\n            // Nome do Produto\n            StyledTextField(value = nomeProduto, onValueChange = { nomeProduto = it }, placeholder = \"Nome do Produto\", icon = Icons.Default.ShoppingBag)\n\n            // Card para Categoria e Foto\n            StyledCard {\n                Text(\"Categoria\", fontWeight = FontWeight.Bold, fontSize = 18.sp)\n                Spacer(modifier = Modifier.height(12.dp))\n                CategoryDropdown(\n                    expanded = categoriaExpandida, \n                    onExpandedChange = { categoriaExpandida = it }, \n                    selectedCategory = categoriaSelecionada, \n                    onCategorySelected = { categoriaSelecionada = it }, \n                    categories = categorias\n                )\n                Spacer(modifier = Modifier.height(16.dp))\n                ImageUpload(imageUri = imageUri, onClick = { imagePickerLauncher.launch(\"image/*\") })\n            }\n            \n            // Preço Promocional\n            StyledTextField(\n                value = precoPromocional,\n                onValueChange = { value ->\n                    if (value.isEmpty() || value.matches(Regex(\"^\\\\d*[,.]?\\\\d*\$|\\\"))) {\n                        precoPromocional = value\n                    }\n                },\n                placeholder = \"Preço Promocional (ex: 29.90)\",\n                icon = Icons.Default.LocalOffer,\n                keyboardType = KeyboardType.Decimal\n            )\n\n            // Datas\n            StyledDatePicker(label = \"Data de Início\", selectedDate = dataInicio, onDateSelected = { dataInicio = it })\n            StyledDatePicker(label = \"Data de Término\", selectedDate = dataTermino, onDateSelected = { dataTermino = it })\n\n            // Descrição\n            StyledCard {\n                Row(verticalAlignment = Alignment.CenterVertically) {\n                    Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray)\n                    Spacer(modifier = Modifier.width(8.dp))\n                    Text(\"Descrição da Promoção\", fontWeight = FontWeight.Bold, fontSize = 18.sp)\n                }\n                Text(\"Destaque os principais benefícios e diferenciais da promoção\", fontSize = 14.sp, color = Color.Gray)\n                Spacer(modifier = Modifier.height(8.dp))\n                OutlinedTextField(\n                    value = descricao,\n                    onValueChange = { descricao = it },\n                    modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),\n                    placeholder = { Text(\"Insira a descrição aqui...\") },\n                    colors = OutlinedTextFieldDefaults.colors(\n                        containerColor = Color.Transparent,\n                        unfocusedBorderColor = Color.Transparent,\n                        focusedBorderColor = Color.Transparent\n                    )\n                )\n            }\n\n            Spacer(modifier = Modifier.weight(1f, fill = false))\n\n            // Botão Salvar\n            Button(\n                onClick = {\n                    // Validação dos campos\n                    when {\n                        nomeProduto.isBlank() -> {\n                            Toast.makeText(context, \"Preencha o nome do produto\", Toast.LENGTH_SHORT).show()\n                        }\n                        precoPromocional.isBlank() -> {\n                            Toast.makeText(context, \"Preencha o preço promocional\", Toast.LENGTH_SHORT).show()\n                        }\n                        precoPromocional.toDoubleOrNull() == null -> {\n                            Toast.makeText(context, \"Preço inválido\", Toast.LENGTH_SHORT).show()\n                        }\n                        dataInicio == null -> {\n                            Toast.makeText(context, \"Selecione a data de início\", Toast.LENGTH_SHORT).show()\n                        }\n                        dataTermino == null -> {\n                            Toast.makeText(context, \"Selecione a data de término\", Toast.LENGTH_SHORT).show()\n                        }\n                        dataTermino!! < dataInicio!! -> {\n                            Toast.makeText(context, \"Data de término deve ser após a data de início\", Toast.LENGTH_SHORT).show()\n                        }\n                        descricao.isBlank() -> {\n                            Toast.makeText(context, \"Preencha a descrição\", Toast.LENGTH_SHORT).show()\n                        }\n                        imageUri == null -> {\n                            Toast.makeText(context, \"Adicione uma imagem do produto\", Toast.LENGTH_SHORT).show()\n                        }\n                        else -> {\n                            val novaPromocao = Promocao(\n                                nomeProduto = nomeProduto,\n                                precoPromocional = precoPromocional.replace(\",\", \".\"),\n                                dataInicio = Date(dataInicio!!),\n                                dataTermino = Date(dataTermino!!),\n                                descricao = descricao,\n                                categoria = categoriaSelecionada,\n                                imagemUrl = imageUri.toString()\n                            )\n                            Log.d(\"CadastroPromocao\", \"Promoção Criada: $novaPromocao\")\n                            Toast.makeText(context, \"Promoção salva com sucesso!\", Toast.LENGTH_SHORT).show()\n\n                            navController.popBackStack()\n                        }\n                    }\n                },\n                modifier = Modifier.fillMaxWidth().height(56.dp),\n                shape = RoundedCornerShape(12.dp),\n                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF2811D))\n            ) {\n                Text(\"Salvar Promoção\", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)\n            }\n        }\n    }\n}\n\n// Styled Composables to match the image\n@Composable\nfun StyledCard(content: @Composable ColumnScope.() -> Unit) {\n    Card(\n        shape = RoundedCornerShape(12.dp),\n        colors = CardDefaults.cardColors(containerColor = Color.White),\n        modifier = Modifier.fillMaxWidth(),\n        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),\n        content = { Column(modifier = Modifier.padding(16.dp), content = content) }\n    )\n}\n\n@Composable\nfun StyledTextField(\n    value: String,\n    onValueChange: (String) -> Unit,\n    placeholder: String,\n    icon: androidx.compose.ui.graphics.vector.ImageVector,\n    keyboardType: KeyboardType = KeyboardType.Text\n) {\n    OutlinedTextField(\n        value = value,\n        onValueChange = onValueChange,\n        placeholder = { Text(placeholder) },\n        leadingIcon = { Icon(icon, contentDescription = null) },\n        modifier = Modifier.fillMaxWidth(),\n        shape = RoundedCornerShape(12.dp),\n        colors = OutlinedTextFieldDefaults.colors(\n            containerColor = Color.White,\n            unfocusedBorderColor = Color.Gray.copy(alpha = 0.2f),\n            focusedBorderColor = Color(0xFFF2811D)\n        ),\n        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),\n        singleLine = true\n    )\n}\n\n@OptIn(ExperimentalMaterial3Api::class)\n@Composable\nfun CategoryDropdown(\n    expanded: Boolean,\n    onExpandedChange: (Boolean) -> Unit,\n    selectedCategory: String,\n    onCategorySelected: (String) -> Unit,\n    categories: List<String>\n) {\n    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = onExpandedChange) {\n        OutlinedTextField(\n            value = selectedCategory,\n            onValueChange = {},\n            readOnly = true,\n            placeholder = { Text(\"Selecione a Categoria\") },\n            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },\n            modifier = Modifier.menuAnchor().fillMaxWidth(),\n            shape = RoundedCornerShape(8.dp),\n            colors = OutlinedTextFieldDefaults.colors(\n                containerColor = Color.Gray.copy(alpha = 0.05f),\n                unfocusedBorderColor = Color.Gray.copy(alpha = 0.2f)\n            )\n        )\n        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {\n            categories.forEach { category ->\n                DropdownMenuItem(text = { Text(category) }, onClick = {\n                    onCategorySelected(category)\n                    onExpandedChange(false)\n                })\n            }\n        }\n    }\n}\n\n@Composable\nfun ImageUpload(imageUri: Uri?, onClick: () -> Unit) {\n    Column(\n        modifier = Modifier\n            .fillMaxWidth()\n            .clip(RoundedCornerShape(12.dp))\n            .background(Color.Gray.copy(alpha = 0.05f))\n            .clickable(onClick = onClick)\n            .padding(16.dp),\n        horizontalAlignment = Alignment.CenterHorizontally,\n        verticalArrangement = Arrangement.Center\n    ) {\n        if (imageUri != null) {\n            AsyncImage(\n                model = imageUri,\n                contentDescription = \"Foto do Produto\",\n                modifier = Modifier\n                    .height(120.dp)\n                    .fillMaxWidth()\n                    .clip(RoundedCornerShape(8.dp)),\n                contentScale = ContentScale.Crop\n            )\n            Spacer(modifier = Modifier.height(8.dp))\n            Text(\"Toque para alterar a foto\", fontSize = 12.sp, color = Color.Gray)\n        } else {\n            Icon(\n                Icons.Default.PhotoCamera,\n                contentDescription = null,\n                tint = Color.Gray,\n                modifier = Modifier.size(40.dp)\n            )\n            Spacer(modifier = Modifier.height(8.dp))\n            Text(\n                \"Adicionar Foto do Produto\",\n                fontWeight = FontWeight.Bold,\n                fontSize = 16.sp,\n                color = Color.Black\n            )\n            Text(\n                \"Toque para selecionar uma imagem da galeria\",\n                fontSize = 12.sp,\n                color = Color.Gray,\n                textAlign = TextAlign.Center\n            )\n        }\n    }\n}\n\n@OptIn(ExperimentalMaterial3Api::class)\n@Composable\nfun StyledDatePicker(label: String, selectedDate: Long?, onDateSelected: (Long) -> Unit) {\n    var showDatePicker by remember { mutableStateOf(false) }\n    val sdf = SimpleDateFormat(\"dd/MM/yyyy\", Locale.getDefault())\n\n    OutlinedTextField(\n        value = selectedDate?.let { sdf.format(Date(it)) } ?: \"\",\n        onValueChange = {},\n        placeholder = { Text(label) },\n        readOnly = true,\n        leadingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },\n        trailingIcon = { Icon(Icons.Default.CalendarToday, contentDescription = null) },\n        modifier = Modifier\n            .fillMaxWidth()\n            .clickable { showDatePicker = true },\n        shape = RoundedCornerShape(12.dp),\n        colors = OutlinedTextFieldDefaults.colors(\n            containerColor = Color.White,\n            unfocusedBorderColor = Color.Gray.copy(alpha = 0.2f),\n            focusedBorderColor = Color(0xFFF2811D)\n        )\n    )\n\n    if (showDatePicker) {\n        val datePickerState = rememberDatePickerState(\n            initialSelectedDateMillis = selectedDate ?: System.currentTimeMillis()\n        )\n        DatePickerDialog(\n            onDismissRequest = { showDatePicker = false },\n            confirmButton = {\n                TextButton(onClick = {\n                    datePickerState.selectedDateMillis?.let { onDateSelected(it) }\n                    showDatePicker = false\n                }) { Text(\"OK\") }\n            },\n            dismissButton = {\n                TextButton(onClick = { showDatePicker = false }) { Text(\"Cancelar\") }\n            }\n        ) {\n            DatePicker(state = datePickerState)\n        }\n    }\n}\n\n@Preview(showSystemUi = true, backgroundColor = 0xFFF5F5F5)\n@Composable\nfun TelaCadastroPromocaoFinalPreview() {\n    InfoHub_telasTheme {\n        TelaCadastroPromocao(rememberNavController())\n    }\n}\n
+package com.example.infohub_telas.telas
+
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.CategoryDropdown
+import com.example.infohub_telas.components.ImageUpload
+import com.example.infohub_telas.components.MyTopAppBar
+import com.example.infohub_telas.components.StyledCard
+import com.example.infohub_telas.components.StyledDatePicker
+import com.example.infohub_telas.components.StyledTextField
+import com.example.infohub_telas.model.Promocao
+import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
+import java.util.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TelaCadastroPromocao(navController: NavController) {
+    var nomeProduto by remember { mutableStateOf("") }
+    var precoPromocional by remember { mutableStateOf("") }
+    var dataInicio by remember { mutableStateOf<Long?>(null) }
+    var dataTermino by remember { mutableStateOf<Long?>(null) }
+    var descricao by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var categoriaExpandida by remember { mutableStateOf(false) }
+    val categorias = listOf("Alimentação", "Varejo", "Serviços", "Saúde", "Educação", "Outros")
+    var categoriaSelecionada by remember { mutableStateOf(categorias[0]) }
+    val context = LocalContext.current
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? -> imageUri = uri }
+    )
+
+    Scaffold(
+        topBar = {
+            MyTopAppBar(
+                title = "Cadastro de Promoção",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                onNavigationIconClick = { navController.popBackStack() }
+            )
+        },
+        containerColor = Color(0xFFF5F5F5)
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Nome do Produto
+            StyledTextField(value = nomeProduto, onValueChange = { nomeProduto = it }, placeholder = "Nome do Produto", icon = Icons.Default.ShoppingBag)
+
+            // Card para Categoria e Foto
+            StyledCard {
+                Text("Categoria", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(12.dp))
+                CategoryDropdown(
+                    expanded = categoriaExpandida,
+                    onExpandedChange = { categoriaExpandida = it },
+                    selectedCategory = categoriaSelecionada,
+                    onCategorySelected = { categoriaSelecionada = it },
+                    categories = categorias
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                ImageUpload(imageUri = imageUri, onClick = { imagePickerLauncher.launch("image/*") })
+            }
+
+            // Preço Promocional
+            StyledTextField(
+                value = precoPromocional,
+                onValueChange = { value ->
+                    if (value.isEmpty() || value.matches(Regex("^\\d*[,.]?\\d*$"))) {
+                        precoPromocional = value
+                    }
+                },
+                placeholder = "Preço Promocional (ex: 29.90)",
+                icon = Icons.Default.LocalOffer,
+                keyboardType = KeyboardType.Decimal
+            )
+
+            // Datas
+            StyledDatePicker(label = "Data de Início", selectedDate = dataInicio, onDateSelected = { dataInicio = it })
+            StyledDatePicker(label = "Data de Término", selectedDate = dataTermino, onDateSelected = { dataTermino = it })
+
+            // Descrição
+            StyledCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Descrição da Promoção", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+                Text("Destaque os principais benefícios e diferenciais da promoção", fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = descricao,
+                    onValueChange = { descricao = it },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
+                    placeholder = { Text("Insira a descrição aqui...") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f, fill = false))
+
+            // Botão Salvar
+            Button(
+                onClick = {
+                    // Validação dos campos
+                    when {
+                        nomeProduto.isBlank() -> {
+                            Toast.makeText(context, "Preencha o nome do produto", Toast.LENGTH_SHORT).show()
+                        }
+                        precoPromocional.isBlank() -> {
+                            Toast.makeText(context, "Preencha o preço promocional", Toast.LENGTH_SHORT).show()
+                        }
+                        precoPromocional.replace(",", ".").toDoubleOrNull() == null -> {
+                            Toast.makeText(context, "Preço inválido", Toast.LENGTH_SHORT).show()
+                        }
+                        dataInicio == null -> {
+                            Toast.makeText(context, "Selecione a data de início", Toast.LENGTH_SHORT).show()
+                        }
+                        dataTermino == null -> {
+                            Toast.makeText(context, "Selecione a data de término", Toast.LENGTH_SHORT).show()
+                        }
+                        dataTermino!! < dataInicio!! -> {
+                            Toast.makeText(context, "Data de término deve ser após a data de início", Toast.LENGTH_SHORT).show()
+                        }
+                        descricao.isBlank() -> {
+                            Toast.makeText(context, "Preencha a descrição", Toast.LENGTH_SHORT).show()
+                        }
+                        imageUri == null -> {
+                            Toast.makeText(context, "Adicione uma imagem do produto", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            val novaPromocao = Promocao(
+                                nomeProduto = nomeProduto,
+                                precoPromocional = precoPromocional.replace(",", "."),
+                                dataInicio = Date(dataInicio!!),
+                                dataTermino = Date(dataTermino!!),
+                                descricao = descricao,
+                                categoria = categoriaSelecionada,
+                                imagemUrl = imageUri.toString()
+                            )
+                            Log.d("CadastroPromocao", "Promoção Criada: $novaPromocao")
+                            Toast.makeText(context, "Promoção salva com sucesso!", Toast.LENGTH_SHORT).show()
+
+                            navController.popBackStack()
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF2811D))
+            ) {
+                Text("Salvar Promoção", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
+        }
+    }
+}
+
+@Preview(showSystemUi = true, backgroundColor = 0xFFF5F5F5)
+@Composable
+fun TelaCadastroPromocaoFinalPreview() {
+    InfoHub_telasTheme {
+        TelaCadastroPromocao(rememberNavController())
+    }
+}
