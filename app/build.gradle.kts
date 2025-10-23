@@ -81,7 +81,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.1.0")
     implementation("com.google.maps.android:maps-compose:2.11.5")
 
-
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
 
 
