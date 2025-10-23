@@ -16,6 +16,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.telas.*
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Button
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +39,16 @@ class MainActivity : ComponentActivity() {
                 ) {
                     // 🔹 Tela Home - ATIVA PARA TESTE
                     composable(route = "home") {
-                        TelaHome(navController)
+                        Column {
+                            TelaHome(navController)
+                            Button(onClick = { navController.navigate("cadastroEstabelecimento") }) {
+                                Text("Ir para Cadastro Estabelecimento")
+                            }
+                        }
+                    }
+
+                    composable(route = "cadastroEstabelecimento") {
+                        TelaCadastroEstabelecimento(navController)
                     }
 
                     // 🔸 Tela de Login - Desativada
@@ -46,9 +57,9 @@ class MainActivity : ComponentActivity() {
 //                    }
 
                     // 🔸 Telas do fluxo de cadastro
-//                    composable(route = "tela_cadastro") {
-//                        TelaCadastro(navController)
-//                    }
+                    composable(route = "tela_cadastro") {
+                        TelaCadastro(navController)
+                    }
 //
 //                    composable(route = "cadastro_juridico") {
 //                        TelaCadastroJuridico(navController)

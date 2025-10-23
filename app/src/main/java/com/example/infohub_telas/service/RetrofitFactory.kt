@@ -1,12 +1,7 @@
 package com.example.infohub_telas.service
 
-import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
-
-
-
 
 class RetrofitFactory {
 
@@ -22,6 +17,10 @@ class RetrofitFactory {
 
         fun getInfoHub_UserService(): InfoHub_User{
             return retrofitFactory.create(InfoHub_User::class.java)
+        }
+
+        fun getInfoHub_EstabelecimentoService(): InfoHub_EstabelecimentoService{
+            return retrofitFactory.create(InfoHub_EstabelecimentoService::class.java)
         }
 
 
@@ -52,12 +51,3 @@ class RetrofitFactory {
 
 
     }
-
-
-
-
-
-
-
-
-
