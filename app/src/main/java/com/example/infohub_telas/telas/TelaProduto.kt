@@ -17,12 +17,10 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
@@ -31,11 +29,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
 
 @Composable
-fun TelaProduto() {
+fun TelaProduto(navController: NavHostController?) {
     Scaffold(
         topBar = { TopBarPromocao() },
         bottomBar = { BottomBarPromocao() }
@@ -67,7 +66,7 @@ fun TopBarPromocao() {
         navigationIcon = {
             IconButton(onClick = { /* TODO: Voltar */ }) {
                 Icon(
-                    painter = painterResource(id = R.drawable.sacola_menu),
+                    painter = painterResource(id = R.drawable.sacola),
                     contentDescription = "Voltar",
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
@@ -364,7 +363,7 @@ fun BottomBarPromocao() {
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            painter = painterResource(id = R.drawable.sacola_menu),
+                            painter = painterResource(id = R.drawable.sacola),
                             contentDescription = "Carrinho",
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
@@ -478,6 +477,6 @@ fun BottomNavigationItemAnimated(
 @Composable
 fun DefaultPreview() {
     InfoHub_telasTheme {
-        TelaProduto()
+        TelaProduto(null)
     }
 }
