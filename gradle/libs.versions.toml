@@ -1,5 +1,5 @@
 [versions]
-agp = "8.8.0"
+agp = "8.13.0"
 kotlin = "2.0.0"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -15,6 +15,7 @@ foundation = "1.9.2"
 playServicesMaps = "19.2.0"
 material3Version = "1.4.0"
 navigationRuntimeKtxVersion = "2.9.5"
+animationCore = "1.9.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +39,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3Version" }
 navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtxVersion" }
+androidx-compose-animation-core = { group = "androidx.compose.animation", name = "animation-core", version.ref = "animationCore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
