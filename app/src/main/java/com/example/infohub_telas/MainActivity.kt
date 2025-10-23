@@ -30,22 +30,22 @@ class MainActivity : ComponentActivity() {
         setContent {
             InfoHub_telasTheme {
                 val navController = rememberNavController()
-
+                
                 NavHost(
                     navController = navController,
-                    startDestination = "termos_uso" // 🔹 Tela inicial ativa - TESTE
+                    startDestination = "home" // 🔹 Tela Home ativa
                 ) {
-                    // 🔸 Tela de Login - Desativada para teste
+                    // 🔹 Tela Home - ATIVA PARA TESTE
+                    composable(route = "home") {
+                        TelaHome(navController)
+                    }
+
+                    // 🔸 Tela de Login - Desativada
 //                    composable(route = "login") {
 //                        TelaLogin(navController)
 //                    }
 
-                    // 🔹 Tela de Termos de Uso - ATIVA PARA TESTE
-                    composable(route = "termos_uso") {
-                        TelaTermosDeUso(navController)
-                    }
-
-                    // 🔸 Telas do fluxo de cadastro — Ativar depois se quiser
+                    // 🔸 Telas do fluxo de cadastro
 //                    composable(route = "tela_cadastro") {
 //                        TelaCadastro(navController)
 //                    }
@@ -66,33 +66,21 @@ class MainActivity : ComponentActivity() {
 //                        TelaCriarNovaSenha(navController)
 //                    }
 
-                    // 🔸 Tela de localização — Ativar depois se quiser
+                    // 🔸 Tela de Localização
 //                    composable(route = "localizacao") {
 //                        TelaLocalizacao(navController)
 //                    }
 
-                    // 🔸 Fluxo de e-commerce — Ativar depois se quiser
-//                    composable(route = "carrinho") {
-//                        TelaCarrinho(navController)
-//                    }
-//
-//                    composable(route = "checkout") {
-//                        TelaCheckout(navController)
-//                    }
-//
-//                    composable(route = "pagamento") {
-//                        TelaPagamento(navController)
-//                    }
-//
-//                    composable(route = "pagamento_sucesso") {
-//                        TelaPagamentoSucesso(navController)
-//                    }
-
-                    // 🔸 Rotas de menu inferior — Ativar depois se quiser
+                    // 🔸 Rotas de menu inferior
 //                    composable(route = "inicio") { Text(text = "Tela de Início") }
 //                    composable(route = "promocoes") { Text(text = "Tela de Promoções") }
 //                    composable(route = "infocash") { Text(text = "Tela de InfoCash") }
 //                    composable(route = "perfil") { Text(text = "Tela de Perfil") }
+
+                    // 🔸 Chat de Preços (para o botão flutuante)
+                    composable(route = "chat_precos") {
+                        TelaChatDePrecos(navController)
+                    }
                 }
             }
         }
