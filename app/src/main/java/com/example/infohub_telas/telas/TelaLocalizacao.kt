@@ -1,14 +1,19 @@
 package com.example.infohub_telas.telas
 
+<<<<<<< HEAD
 
+=======
+import com.example.infohub_telas.components.BottomMenu
+>>>>>>> a5924d04fdcc47658b0b227dedca06b13057ca28
 import android.location.Geocoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +27,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.launch
@@ -30,7 +37,7 @@ import org.osmdroid.views.overlay.Marker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaLocalizacao(navController: NavController?) {
+fun TelaLocalizacao(navController: NavController) {
 
     val isPreview = LocalInspectionMode.current
     val context = LocalContext.current
@@ -38,6 +45,8 @@ fun TelaLocalizacao(navController: NavController?) {
 
     var cep by remember { mutableStateOf("") }
     var endereco by remember { mutableStateOf<String?>(null) }
+    var feedbackMessage by remember { mutableStateOf<Pair<String, Color>?>(null) }
+
 
     val mapView = if (!isPreview) {
         remember {
@@ -56,7 +65,7 @@ fun TelaLocalizacao(navController: NavController?) {
         }
     } else null
 
-    // Column principal com SpaceBetween para manter menu no fim
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -64,10 +73,10 @@ fun TelaLocalizacao(navController: NavController?) {
         verticalArrangement = Arrangement.SpaceBetween
     ) {
 
-        // Conteúdo principal
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-            // Header com logo
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,7 +100,7 @@ fun TelaLocalizacao(navController: NavController?) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Mapa ou preview
+
             if (!isPreview) {
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -116,7 +125,8 @@ fun TelaLocalizacao(navController: NavController?) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Campo de CEP / endereço
+
+
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(
                     modifier = Modifier
@@ -128,7 +138,10 @@ fun TelaLocalizacao(navController: NavController?) {
                 ) {
                     TextField(
                         value = cep,
-                        onValueChange = { cep = it },
+                        onValueChange = {
+                            cep = it
+                            feedbackMessage = null // Limpa a mensagem ao digitar
+                        },
                         placeholder = { Text("Digite um endereço ou CEP (ex: 01310-100...)") },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
@@ -147,10 +160,8 @@ fun TelaLocalizacao(navController: NavController?) {
                                     enderecoResult = input
                                 }
 
-                                endereco = enderecoResult
-
                                 if (!isPreview) {
-                                    val geo = Geocoder(context).getFromLocationName(endereco!!, 1)
+                                    val geo = Geocoder(context).getFromLocationName(enderecoResult, 1)
                                     if (!geo.isNullOrEmpty()) {
                                         val loc = geo[0]
                                         val lat = loc.latitude
@@ -165,11 +176,19 @@ fun TelaLocalizacao(navController: NavController?) {
                                         mapView.overlays.clear()
                                         mapView.overlays.add(marker)
                                         mapView.invalidate()
+                                        endereco = enderecoResult
+                                        feedbackMessage = "Endereço encontrado com sucesso!" to Color(0xFF006400) // Verde escuro
+                                    } else {
+                                        throw Exception("Endereço não localizado no mapa.")
                                     }
+                                } else { // Lógica para preview
+                                    endereco = enderecoResult
+                                    feedbackMessage = "Endereço encontrado com sucesso!" to Color(0xFF006400)
                                 }
 
                             } catch (e: Exception) {
-                                endereco = "CEP não encontrado"
+                                endereco = null
+                                feedbackMessage = "Endereço não encontrado. Tente novamente." to Color.Red
                             }
                         }
                     }) {
@@ -186,28 +205,34 @@ fun TelaLocalizacao(navController: NavController?) {
                     )
                 }
 
-                if (endereco != null) {
+
+                feedbackMessage?.let { (message, color) ->
                     Text(
-                        text = endereco ?: "",
+                        text = message,
                         modifier = Modifier.padding(top = 8.dp),
                         fontSize = 14.sp,
-                        color = Color.Black
+                        color = color
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+
+            }
         }
+<<<<<<< HEAD
 
         // Menu inferior fixo na base \BottomMenu(navController ?: rememberNavController())
+=======
+>>>>>>> a5924d04fdcc47658b0b227dedca06b13057ca28
     }
 }
+
+
 
 
 @Preview(showSystemUi = true)
 @Composable
 fun TelaLocalizacaoPreview() {
     InfoHub_telasTheme {
-        TelaLocalizacao(null)
+        TelaLocalizacao(rememberNavController())
     }
 }
