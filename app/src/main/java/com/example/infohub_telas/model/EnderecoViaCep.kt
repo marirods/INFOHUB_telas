@@ -5,6 +5,6 @@ data class EnderecoViaCep(
     val logradouro: String?,
     val bairro: String?,
     val localidade: String?,
-    val uf: String?
+    val uf: String?,
+    val erro: Boolean? = false  // 🔹 Adicione esta linha
 )
-

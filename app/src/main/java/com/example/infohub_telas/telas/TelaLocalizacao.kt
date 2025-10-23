@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.Header
+import com.example.infohub_telas.service.RetroFitFactoryVIACEP
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.launch
@@ -119,9 +120,9 @@ fun TelaLocalizacao(navController: NavController) {
                                 var enderecoResult: String? = null
 
                                 if (input.matches(Regex("\\d{5}-?\\d{3}"))) {
-                                    val viaCepService = RetrofitFactory().getViaCepService()
+                                    val viaCepService = RetroFitFactoryVIACEP().getViaCepService()
                                     val resposta = viaCepService.buscarCep(input)
-                                    enderecoResult = "${resposta.logradouro}, ${resposta.bairro}, ${resposta.localidade} - ${resposta.uf}"
+                                    enderecoResult = "${resposta.body()?.logradouro}, ${resposta.body()?.bairro}, ${resposta.body()?.localidade} - ${resposta.body()?.cep}"
                                 } else {
                                     enderecoResult = input
                                 }
