@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,18 +60,26 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyTopAppBar(title: String, navigationIcon: ImageVector, onNavigationIconClick: () -> Unit) {
+fun MyTopAppBar(
+    title: String,
+    navigationIcon: ImageVector? = null,
+    onNavigationIconClick: (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
     TopAppBar(
         title = { Text(title, color = Color.White) },
         navigationIcon = {
-            IconButton(onClick = onNavigationIconClick) {
-                Icon(
-                    imageVector = navigationIcon,
-                    contentDescription = "Voltar",
-                    tint = Color.White
-                )
+            if (navigationIcon != null && onNavigationIconClick != null) {
+                IconButton(onClick = onNavigationIconClick) {
+                    Icon(
+                        imageVector = navigationIcon,
+                        contentDescription = "Navigation Icon",
+                        tint = Color.White
+                    )
+                }
             }
         },
+        actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color(0xFFF9A01B)
         )
@@ -93,7 +102,7 @@ fun StyledTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
     OutlinedTextField(

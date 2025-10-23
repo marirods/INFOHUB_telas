@@ -51,6 +51,7 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-permissions:0.31.5-beta")
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.foundation)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
 

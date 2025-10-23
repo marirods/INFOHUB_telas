@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -195,7 +196,8 @@ fun ProdutoCard(produto: Promocao) {
                 contentDescription = "Imagem do produto",
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -236,9 +238,9 @@ fun ProdutoCard(produto: Promocao) {
 @Composable
 fun TelaListaProdutosPreview() {
     val sampleProdutos = listOf(
-        Promocao(nomeProduto = "Hambúrguer de Picanha", categoria = "Alimentação", precoPromocional = "29.90", dataInicio = Date(), dataTermino = Date(System.currentTimeMillis() + 86400000), descricao = "", imagemUrl = ""),
-        Promocao(nomeProduto = "Tênis de Corrida", categoria = "Varejo", precoPromocional = "249.99", dataInicio = Date(System.currentTimeMillis() - 86400000), dataTermino = Date(System.currentTimeMillis() - 1000), descricao = "", imagemUrl = ""),
-        Promocao(nomeProduto = "Corte de Cabelo", categoria = "Serviços", precoPromocional = "45.00", dataInicio = Date(), dataTermino = Date(System.currentTimeMillis() + 5 * 86400000), descricao = "", imagemUrl = "")
+        Promocao(nomeProduto = "Hambúrguer de Picanha", categoria = "Alimentação", precoPromocional = "29.90", dataInicio = Date(), dataTermino = Date(System.currentTimeMillis() + 86400000), descricao = "", imagemUrl = "https://picsum.photos/seed/1/200"),
+        Promocao(nomeProduto = "Tênis de Corrida", categoria = "Varejo", precoPromocional = "249.99", dataInicio = Date(System.currentTimeMillis() - 86400000), dataTermino = Date(System.currentTimeMillis() - 1000), descricao = "", imagemUrl = "https://picsum.photos/seed/2/200"),
+        Promocao(nomeProduto = "Corte de Cabelo", categoria = "Serviços", precoPromocional = "45.00", dataInicio = Date(), dataTermino = Date(System.currentTimeMillis() + 5 * 86400000), descricao = "", imagemUrl = "https://picsum.photos/seed/3/200")
     )
     InfoHub_telasTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
