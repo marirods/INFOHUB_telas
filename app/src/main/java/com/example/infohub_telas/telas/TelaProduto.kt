@@ -31,11 +31,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
 
 @Composable
-fun TelaProduto() {
+fun TelaProduto(navController: NavController) {
     Scaffold(
         topBar = { TopBarPromocao() },
         bottomBar = { BottomBarPromocao() }
@@ -471,13 +472,5 @@ fun BottomNavigationItemAnimated(
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
             color = Color.Black
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    InfoHub_telasTheme {
-        TelaProduto()
     }
 }

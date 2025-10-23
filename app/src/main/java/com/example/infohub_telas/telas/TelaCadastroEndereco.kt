@@ -11,129 +11,71 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.model.Usuario
-import com.example.infohub_telas.service.RetrofitFactory
+import com.example.infohub_telas.model.EnderecoViaCep
+import com.example.infohub_telas.service.RetroFitFactoryVIACEP
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-
-//@Composable
-//@OptIn(ExperimentalMaterial3Api::class)
-//fun validarCPF(cpf: String, cpfsCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
-//    val cpfComum = cpf.filter { it.isDigit() }
-//
-//    if (cpfComum.isEmpty())
-//        return false to "CPF não pode ser vazio"
-//
-//    if (cpfComum.length != 11)
-//        return false to "CPF deve ter 11 dígitos"
-//
-//    if (cpfComum.all { it == cpfComum.first() })
-//        return false to "CPF não pode ter todos números iguais"
-//
-//    if (cpfsCadastrados.any { it.filter { c -> c.isDigit() } == cpfComum })
-//        return false to "CPF já cadastrado"
-//
-//    return true to ""
-//}
-////    // Remove máscara para verificar dígitos iguais
-////    val cpfComum = cpf.replace(".", "").replace("-", "")
-////
-////    // Dígitos iguais
-////    if (cpfComum.all { it == cpfComum.first() }) return false
-////
-////    // CPF já cadastrado
-////    if (cpfsCadastrados.any { it.replace(".", "").replace("-", "") == cpfComum }) return false
-////
-////    return true
-////}
-//@Composable
-//@OptIn(ExperimentalMaterial3Api::class)
-//fun validarTelefone(telefone: String, telefonesCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
-//    val telefoneLimpo = telefone.filter { it.isDigit() }
-//
-//
-//    if (telefoneLimpo.isEmpty())
-//        return false to "Telefone não pode ser vazio"
-//
-//
-//    if (telefoneLimpo.length !in 10..11)
-//        return false to "Telefone deve ter 10 ou 11 dígitos"
-//
-//
-//    if (telefoneLimpo.all { it == telefoneLimpo.first() })
-//        return false to "Telefone não pode ter todos números iguais"
-//
-//    // Não pode estar cadastrado
-//    if (telefoneLimpo in telefonesCadastrados.map { it.filter { c -> c.isDigit() } })
-//        return false  to "Telefone já cadastrado"
-//
-//    return true to ""
-//}
-//
-//fun validarEmail(email: String, emailsCadastrados: List<String> = emptyList()): Boolean{
-//    if (email.isBlank())
-//        return false
-//
-//
-//    val regex = Regex("^[\\w.+-]+@(?:gmail\\.com|hotmail\\.com|yahoo\\.com)$")
-//    if (!email.matches(regex))
-//        return false
-//
-//    if (emailsCadastrados.any { it.equals(email, ignoreCase = true) })
-//        return false
-//    return true
-//}
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCadastroEndereco(navController: NavController?) {
     var cep by remember { mutableStateOf("") }
-    var nome by remember { mutableStateOf("") }
-    var cpf by remember { mutableStateOf("") }
-    var cnpj by remember { mutableStateOf("") }
-    var telefone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var senha by remember { mutableStateOf("") }
-    var confirmarSenha by remember { mutableStateOf("") }
-    var mostrarSenha by remember { mutableStateOf(false) }
-    var mostrarConfirmarSenha by remember { mutableStateOf(false) }
-    var isPessoaFisicaSelected by remember { mutableStateOf(true) }
-
-
+    var rua by remember { mutableStateOf("") }
+    var numero by remember { mutableStateOf("") }
+    var complemento by remember { mutableStateOf("") }
+    var bairro by remember { mutableStateOf("") }
+    var cidade by remember { mutableStateOf("") }
+    var estado by remember { mutableStateOf("") }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
-
-
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-
+    var isLoadingCep by remember { mutableStateOf(false) }
 
     val primaryOrange = Color(0xFFFF8C00)
     val lightGray = Color(0xFFF0F0F0)
     val textFieldBackground = Color.White
 
-    val userApi = RetrofitFactory().getInfoHub_UserService()
+    val viaCepApi = RetroFitFactoryVIACEP().getViaCepService()
+
+    // 🔹 Efeito que dispara a busca no ViaCEP quando o CEP tiver 8 dígitos
+    LaunchedEffect(cep) {
+        if (cep.length == 8) {
+            isLoadingCep = true
+            try {
+                val response = viaCepApi.buscarCep(cep)
+                if (response.isSuccessful) {
+                    val endereco = response.body()
+                    if (endereco != null) {
+                        rua = endereco.logradouro ?: ""
+                        bairro = endereco.bairro ?: ""
+                        cidade = endereco.localidade ?: ""
+                        estado = endereco.uf ?: ""
+                    } else {
+                        Log.e("ViaCEP", "CEP não retornou dados")
+                    }
+                } else {
+                    Log.e("ViaCEP", "Erro HTTP: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("ViaCEP", "Falha ao buscar CEP: ${e.message}")
+            } finally {
+                isLoadingCep = false
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -173,7 +115,7 @@ fun TelaCadastroEndereco(navController: NavController?) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Seleção PF / PJ
+            // Título
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -186,387 +128,212 @@ fun TelaCadastroEndereco(navController: NavController?) {
                         text = "Cadastro de Endereço",
                         fontSize = 18.sp,
                     )
-                        Box(
-                            modifier = Modifier
-                                .width(90.dp)
-                                .height(3.dp)
-                                .background(primaryOrange, RoundedCornerShape(2.dp))
-                        )
-                    }
-                }
-
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-
-                Column(modifier = Modifier.padding(horizontal = 32.dp)) {
-                    CustomTextField(
-                        value = cep,
-                        onValueChange = { cep = it },
-                        placeholder = "CEP*",
-                        textFieldColors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedContainerColor = textFieldBackground,
-                            unfocusedContainerColor = textFieldBackground
-                        )
-                    )
-                    if (isPessoaFisicaSelected) {
-                        CustomTextField(
-                            value = cpf,
-                            onValueChange = { cpf = it.filter { c -> c.isDigit() }.take(11) },
-                            placeholder = "Rua*",
-                            keyboardType = KeyboardType.Number,
-                            textFieldColors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Gray,
-                                unfocusedBorderColor = Color.Gray,
-                                focusedContainerColor = textFieldBackground,
-                                unfocusedContainerColor = textFieldBackground
-                            ),
-                            visualTransformation = VisualTransformation { text ->
-                                val numbers = text.text.filter { it.isDigit() }
-                                val cpfMascarado = buildString {
-                                    for (i in numbers.indices) {
-                                        append(numbers[i])
-                                        if (i == 2 || i == 5) append(".")
-                                        if (i == 8) append("-")
-                                    }
-                                }
-                                TransformedText(
-                                    text = AnnotatedString(cpfMascarado),
-                                    offsetMapping = object : OffsetMapping {
-                                        override fun originalToTransformed(offset: Int) = when {
-                                            offset <= 2 -> offset
-                                            offset <= 5 -> offset + 1
-                                            offset <= 8 -> offset + 2
-                                            offset <= 11 -> offset + 3
-                                            else -> 14
-                                        }
-
-                                        override fun transformedToOriginal(offset: Int) = when {
-                                            offset <= 3 -> offset
-                                            offset <= 7 -> offset - 1
-                                            offset <= 11 -> offset - 2
-                                            offset <= 14 -> offset - 3
-                                            else -> 11
-                                        }
-                                    }
-
-                                )
-                            }
-                        )
-                    } else {
-                        CustomTextField(
-                            value = cnpj,
-                            onValueChange = { cnpj = it },
-                            placeholder = "Número*",
-                            keyboardType = KeyboardType.Number,
-                            textFieldColors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Gray,
-                                unfocusedBorderColor = Color.Gray,
-                                focusedContainerColor = textFieldBackground,
-                                unfocusedContainerColor = textFieldBackground
-                            )
-                        )
-                    }
-                    CustomTextField(
-                        value = telefone,
-                        onValueChange = { telefone = it.filter { c -> c.isDigit() }.take(11) },
-                        placeholder = "Complemento*",
-                        keyboardType = KeyboardType.Phone,
-                        textFieldColors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedContainerColor = textFieldBackground,
-                            unfocusedContainerColor = textFieldBackground
-                        ),
-                        visualTransformation = VisualTransformation { text ->
-                            val numbers = text.text.filter { it.isDigit() }
-                            val masked = buildString {
-                                numbers.forEachIndexed { i, c ->
-                                    when (i) {
-                                        0 -> append("(").append(c)
-                                        1 -> append(c).append(") ")
-                                        7 -> append("-").append(c)
-                                        else -> append(c)
-                                    }
-                                }
-                            }
-                            val offsetMapping = object : OffsetMapping {
-                                override fun originalToTransformed(offset: Int): Int {
-                                    var transformed = offset
-                                    if (offset > 1) transformed += 1 // para o ') '
-                                    if (offset > 5) transformed += 1 // para o '-'
-                                    return transformed.coerceAtMost(masked.length)
-                                }
-
-                                override fun transformedToOriginal(offset: Int): Int {
-                                    var original = offset
-                                    if (offset > 2) original -= 1
-                                    if (offset > 7) original -= 1
-                                    return original.coerceAtMost(numbers.length)
-                                }
-                            }
-
-                            TransformedText(AnnotatedString(masked), offsetMapping)
-                        }
-                    )
-                    CustomTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = "Bairro*",
-                        keyboardType = KeyboardType.Email,
-                        textFieldColors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedContainerColor = textFieldBackground,
-                            unfocusedContainerColor = textFieldBackground
-                        )
-                    )
-                    SenhaTextField(
-                        value = senha,
-                        onValueChange = { senha = it },
-                        mostrarSenha = mostrarSenha,
-                        onMostrarSenhaChange = { mostrarSenha = it },
-                        label = "Cidade*",
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedContainerColor = textFieldBackground,
-                            unfocusedContainerColor = textFieldBackground
-                        )
-                    )
-                    SenhaTextField(
-                        value = confirmarSenha,
-                        onValueChange = { confirmarSenha = it },
-                        mostrarSenha = mostrarConfirmarSenha,
-                        onMostrarSenhaChange = { mostrarConfirmarSenha = it },
-                        label = "Estado*",
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedContainerColor = textFieldBackground,
-                            unfocusedContainerColor = textFieldBackground
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-
-                Button(
-                    onClick = {
-                        //para validar campos obrigatórios
-
-                        if (nome.isBlank() || email.isBlank() || senha.isBlank() || confirmarSenha.isBlank()) {
-                            errorMessage = "Preencha todos os dados obrigatórios"
-                            showErrorDialog = true
-                            return@Button
-                        }
-
-                        //validar senha
-                        if (senha != confirmarSenha) {
-                            errorMessage = "As senhas não coincidem."
-                            showErrorDialog = true
-                            return@Button
-                        }
-
-                        //validar cpf
-                        if (isPessoaFisicaSelected) {
-                            val (cpfValido, cpfMsg) = validarCPF(cpf)
-                            if (!cpfValido) {
-                                errorMessage = cpfMsg
-                                showErrorDialog = true
-                                return@Button
-                            }
-                        }
-
-                        // Validar telefone usando a função criada
-                        val (telValido, telMsg) = validarTelefone(telefone)
-                        if (!telValido) {
-                            errorMessage = telMsg
-                            showErrorDialog = true
-                            return@Button
-                        }
-
-                        // Validar email
-                        if (!validarEmail(email)) {
-                            errorMessage =
-                                "E-mail inválido. Use apenas Gmail, Hotmail ou Yahoo e não deixe vazio."
-                            showErrorDialog = true
-                            return@Button
-                        }
-
-
-                        val usuario = Usuario(
-                            nome = nome,
-                            email = email,
-                            senha_hash = senha,
-                            perfil = when {
-                                isPessoaFisicaSelected -> "consumidor"
-                                !isPessoaFisicaSelected -> "estabelecimento"
-                                else -> "admin"
-                            },
-                            cpf = if (isPessoaFisicaSelected) cpf else null,
-                            cnpj = if (!isPessoaFisicaSelected) cnpj else null,
-                            data_nascimento = "1900-01-01"
-                        )
-
-                        Log.d("DEBUG", "Enviando usuário -> $usuario")
-
-                        userApi.cadastrarUsuario(usuario).enqueue(object : Callback<Usuario> {
-                            override fun onResponse(
-                                call: Call<Usuario>,
-                                response: Response<Usuario>
-                            ) {
-                                if (response.isSuccessful) {
-                                    Log.d("API", "Usuário cadastrado: ${response.body()}")
-                                    showSuccessDialog = true
-                                } else {
-                                    Log.e("API", "Erro: ${response.code()} - ${response.message()}")
-                                }
-                            }
-
-                            override fun onFailure(call: Call<Usuario>, t: Throwable) {
-                                Log.e("API", "Falha na requisição: ${t.message}")
-                                errorMessage = "Falha na conexão. Verifique sua internet."
-                                showErrorDialog = true
-                            }
-                        })
-                    },
-                    modifier = Modifier
-                        .width(220.dp)
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
-                    shape = RoundedCornerShape(28.dp)
-                ) {
-                    Text(
-                        text = "Cadastrar Endereço",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row {
-                    Text(text = "", fontSize = 14.sp, color = Color.Black)
-
-                    Text(
-                        text = "",
-                        fontSize = 14.sp,
-                        color = primaryOrange,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { navController?.navigate("login") }
+                    Box(
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(3.dp)
+                            .background(primaryOrange, RoundedCornerShape(2.dp))
                     )
                 }
             }
 
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(20.dp)
-                    .background(primaryOrange, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
-            )
-        }
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // diálogo de sucesso
-        if (showSuccessDialog) {
-            AlertDialog(
-                onDismissRequest = { showSuccessDialog = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showSuccessDialog = false
-                        navController?.navigate("login") {
-                            popUpTo("cadastro") { inclusive = true }
-                        }
-                    }) {
-                        Text("OK")
+            // Formulário
+            Column(modifier = Modifier.padding(horizontal = 32.dp)) {
+                // 🔸 Campo CEP com loading
+                Box {
+                    CustomTextField(
+                        value = cep,
+                        onValueChange = { cep = it.filter { c -> c.isDigit() }.take(8) },
+                        placeholder = "CEP*",
+                        keyboardType = KeyboardType.Number
+                    )
+                    if (isLoadingCep) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 16.dp)
+                                .size(24.dp),
+                            color = primaryOrange,
+                            strokeWidth = 2.dp
+                        )
                     }
-                },
-                title = { Text("Sucesso") },
-                text = { Text("Usuário cadastrado com sucesso!") }
-            )
-        }
-    }
+                }
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun CustomTextField(
-        value: String,
-        onValueChange: (String) -> Unit,
-        placeholder: String,
-        keyboardType: KeyboardType = KeyboardType.Text,
-        textFieldColors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
-        visualTransformation: VisualTransformation = VisualTransformation.None,
-        validator: ((String) -> Pair<Boolean, String>)? = null,
-        showError: Boolean = true
-    ) {
-        var errorText by remember { mutableStateOf("") }
-        Column(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = value,
-                onValueChange = {
-                    onValueChange(it)
-                    validator?.let { validate ->
-                        val (valid, message) = validate(it)
-                        errorText = if (!valid && showError) message else ""
+                // 🔸 Campos preenchidos automaticamente
+                CustomTextField(
+                    value = rua,
+                    onValueChange = { rua = it },
+                    placeholder = "Rua*"
+                )
+                CustomTextField(
+                    value = numero,
+                    onValueChange = { numero = it },
+                    placeholder = "Número*"
+                )
+                CustomTextField(
+                    value = complemento,
+                    onValueChange = { complemento = it },
+                    placeholder = "Complemento"
+                )
+                CustomTextField(
+                    value = bairro,
+                    onValueChange = { bairro = it },
+                    placeholder = "Bairro*"
+                )
+                CustomTextField(
+                    value = cidade,
+                    onValueChange = { cidade = it },
+                    placeholder = "Cidade*"
+                )
+                CustomTextField(
+                    value = estado,
+                    onValueChange = { estado = it },
+                    placeholder = "Estado*"
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = {
+                    if (cep.isBlank() || rua.isBlank() || numero.isBlank() ||
+                        bairro.isBlank() || cidade.isBlank() || estado.isBlank()) {
+                        errorMessage = "Preencha todos os campos obrigatórios."
+                        showErrorDialog = true
+                        return@Button
                     }
+
+                    showSuccessDialog = true
                 },
-                placeholder = { Text(placeholder) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                colors = textFieldColors,
-                visualTransformation = visualTransformation,
-                isError = errorText.isNotEmpty(),
+                    .width(220.dp)
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
                 shape = RoundedCornerShape(28.dp)
-            )
-            if (errorText.isNotEmpty()) {
+            ) {
                 Text(
-                    text = errorText,
-                    color = Color.Red,
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 12.dp, top = 2.dp)
+                    text = "Cadastrar Endereço",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row {
+                Text(text = "Já tem uma conta? ", fontSize = 14.sp, color = Color.Black)
+                Text(
+                    text = "Faça login",
+                    fontSize = 14.sp,
+                    color = primaryOrange,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { navController?.navigate("login") }
                 )
             }
         }
-    }
 
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun SenhaTextField(
-        value: String,
-        onValueChange: (String) -> Unit,
-        mostrarSenha: Boolean,
-        onMostrarSenhaChange: (Boolean) -> Unit,
-        label: String,
-        colors: TextFieldColors = OutlinedTextFieldDefaults.colors()
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label) },
+        Box(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            singleLine = true,
-            visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            colors = colors,
-            shape = RoundedCornerShape(28.dp)
+                .height(20.dp)
+                .background(primaryOrange, RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp))
         )
     }
 
-    @Preview(showSystemUi = true)
-    @Composable
-    fun TelaCadastroEnderecoPreview() {
-        InfoHub_telasTheme {
-            TelaCadastroEndereco(null)
+    // Diálogo de sucesso
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = { showSuccessDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSuccessDialog = false
+                    navController?.navigate("login")
+                }) {
+                    Text("OK")
+                }
+            },
+            title = { Text("Sucesso") },
+            text = { Text("Endereço cadastrado com sucesso!") }
+        )
+    }
+
+    // Diálogo de erro
+    if (showErrorDialog) {
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                TextButton(onClick = { showErrorDialog = false }) { Text("OK") }
+            },
+            title = { Text("Erro") },
+            text = { Text(errorMessage) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    textFieldColors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    validator: ((String) -> Pair<Boolean, String>)? = null,
+    showError: Boolean = true
+) {
+    var errorText by remember { mutableStateOf("") }
+    val shape = RoundedCornerShape(12.dp)
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = {
+                onValueChange(it)
+                validator?.let { validate ->
+                    val (valid, message) = validate(it)
+                    errorText = if (!valid && showError) message else ""
+                }
+            },
+            placeholder = { Text(placeholder, color = Color.Gray) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
+                .shadow(elevation = 4.dp, shape = shape)
+                .clip(shape)
+                .background(Color.White),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                cursorColor = MaterialTheme.colorScheme.primary
+            ),
+            visualTransformation = visualTransformation,
+            isError = errorText.isNotEmpty(),
+            shape = shape
+        )
+        if (errorText.isNotEmpty()) {
+            Text(
+                text = errorText,
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 12.dp, top = 2.dp)
+            )
         }
     }
+}
+
+@Preview(showSystemUi = true)
+@Composable
+fun TelaCadastroEnderecoPreview() {
+    InfoHub_telasTheme {
+        TelaCadastroEndereco(null)
+    }
+}
