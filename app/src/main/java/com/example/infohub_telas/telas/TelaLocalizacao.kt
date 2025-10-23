@@ -5,7 +5,6 @@ import android.location.Geocoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +21,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.launch
@@ -30,7 +31,7 @@ import org.osmdroid.views.overlay.Marker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaLocalizacao(navController: NavController?) {
+fun TelaLocalizacao(navController: NavController) {
 
     val isPreview = LocalInspectionMode.current
     val context = LocalContext.current
@@ -56,39 +57,17 @@ fun TelaLocalizacao(navController: NavController?) {
         }
     } else null
 
-    // Column principal com SpaceBetween para manter menu no fim
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        verticalArrangement = Arrangement.SpaceBetween
+    Scaffold(
+        topBar = { Header(title = "Localização") },
+        bottomBar = { BottomMenu(navController = navController) }
     ) {
-
-        // Conteúdo principal
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-            // Header com logo
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF9A01B))
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .background(Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Logo",
-                        modifier = Modifier.size(100.dp)
-                    )
-                }
-            }
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+                .background(Color.White),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Spacer(modifier = Modifier.height(10.dp))
 
             // Mapa ou preview
@@ -195,12 +174,7 @@ fun TelaLocalizacao(navController: NavController?) {
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
-
-        // Menu inferior fixo na base
-        BottomMenu(navController ?: rememberNavController())
     }
 }
 
@@ -209,6 +183,6 @@ fun TelaLocalizacao(navController: NavController?) {
 @Composable
 fun TelaLocalizacaoPreview() {
     InfoHub_telasTheme {
-        TelaLocalizacao(null)
+        TelaLocalizacao(rememberNavController())
     }
 }
