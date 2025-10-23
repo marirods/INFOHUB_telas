@@ -14,7 +14,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.telas.*
+import com.example.infohub_telas.telas.TelaCadastro
+import com.example.infohub_telas.telas.TelaCadastroJuridico
+import com.example.infohub_telas.telas.TelaConfirmarCodigo
+import com.example.infohub_telas.telas.TelaCriarNovaSenha
+import com.example.infohub_telas.telas.TelaLocalizacao
+import com.example.infohub_telas.telas.TelaProduto
+import com.example.infohub_telas.telas.TelaRedefinicaoSenha
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 class MainActivity : ComponentActivity() {

@@ -49,8 +49,7 @@ dependencies {
         implementation("androidx.compose.material:material-icons-extended")
     // Accompanist Permissions
     implementation ("com.google.accompanist:accompanist-permissions:0.31.5-beta")
-    implementation(libs.androidx.compose.runtime)
-    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.animation.core)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
 
