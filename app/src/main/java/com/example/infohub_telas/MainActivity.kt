@@ -9,23 +9,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.telas.OpenScreen
-import com.example.infohub_telas.telas.WelcomeScreen
+import androidx.navigation.navArgument
+import com.example.infohub_telas.model.Estabelecimento
+import com.example.infohub_telas.model.Promocao
 import com.example.infohub_telas.telas.TelaCadastro
-import com.example.infohub_telas.telas.TelaCadastroJuridico
+import com.example.infohub_telas.telas.TelaCadastroEstabelecimento
+import com.example.infohub_telas.telas.TelaCadastroPromocao
 import com.example.infohub_telas.telas.TelaChatDePrecos
-import com.example.infohub_telas.telas.TelaConfirmarCodigo
-import com.example.infohub_telas.telas.TelaCriarNovaSenha
-import com.example.infohub_telas.telas.TelaLocalizacao
-import com.example.infohub_telas.telas.TelaLoginCadastro
-import com.example.infohub_telas.telas.TelaPerfil
-import com.example.infohub_telas.telas.TelaProduto
-import com.example.infohub_telas.telas.TelaRedefinicaoSenha
+import com.example.infohub_telas.telas.TelaHome
+import com.example.infohub_telas.telas.TelaListaProdutos
+import com.example.infohub_telas.telas.TelaMeuEstabelecimento
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import org.osmdroid.config.Configuration
+import java.util.Date
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,51 +41,68 @@ class MainActivity : ComponentActivity() {
             InfoHub_telasTheme {
                 val navController = rememberNavController()
 
+                val sampleProdutos = listOf(
+                    Promocao(nomeProduto = "Hambúrguer de Picanha", categoria = "Alimentação", precoPromocional = "29.90", dataInicio = Date(), dataTermino = Date(System.currentTimeMillis() + 86400000), descricao = "", imagemUrl = "https://picsum.photos/seed/1/200"),
+                    Promocao(nomeProduto = "Tênis de Corrida", categoria = "Varejo", precoPromocional = "249.99", dataInicio = Date(System.currentTimeMillis() - 86400000), dataTermino = Date(System.currentTimeMillis() - 1000), descricao = "", imagemUrl = "https://picsum.photos/seed/2/200"),
+                    Promocao(nomeProduto = "Corte de Cabelo", categoria = "Serviços", precoPromocional = "45.00", dataInicio = Date(), dataTermino = Date(System.currentTimeMillis() + 5 * 86400000), descricao = "", imagemUrl = "https://picsum.photos/seed/3/200")
+                )
+
                 NavHost(
                     navController = navController,
-                    startDestination = "splash"
+                    startDestination = "listaProdutos" 
                 ) {
-
-                    composable(
-                        route = "splash")
-                    {
-                        OpenScreen(navController)
-
+                    composable(route = "home") {
+                        TelaHome(navController)
                     }
                     composable(
                         route = "welcome")
                     {
                         WelcomeScreen(navController)
 
-                    }
                     composable(
-                        route = "loginCadastro")
-                    {
-                        TelaLoginCadastro(navController)
-
+                        route = "cadastroEstabelecimento?id={id}&categoria={categoria}",
+                        arguments = listOf(
+                            navArgument("id") {
+                                type = NavType.IntType
+                                defaultValue = 0
+                            },
+                            navArgument("categoria") {
+                                type = NavType.StringType
+                                nullable = true
+                            }
+                        )
+                    ) {
+                        val id = it.arguments?.getInt("id")
+                        val categoria = it.arguments?.getString("categoria")
+                        TelaCadastroEstabelecimento(navController, id, categoria)
                     }
 
-                    composable(
-                        route = "login")
-                    {
-                        TelaLogin(navController)
-
+                    composable(route = "meuEstabelecimento") {
+                        val sampleEstabelecimento = Estabelecimento(
+                            id = 1,
+                            nome = "Padaria do Zé",
+                            cnpj = "12.345.678/0001-99",
+                            endereco = "Rua das Flores, 123",
+                            telefone = "(11) 99999-8888",
+                            email = "contato@padariadoze.com",
+                            categoria = "Alimentação"
+                        )
+                        TelaMeuEstabelecimento(navController, sampleEstabelecimento)
                     }
 
-                    composable(
-                        route = "tela_cadastro")
-                    {
+                    composable(route = "tela_cadastro") {
                         TelaCadastro(navController)
-
                     }
 
-//                    composable(
-//                        route = "tela_cadastro")
-//                    {
-//                        TelaCadastro(navController)
-//
-//                    }
+                    composable(route = "chat_precos") {
+                        TelaChatDePrecos(navController)
+                    }
 
+                    // Rotas adicionadas para navegação da TelaMeuEstabelecimento
+                    composable(route = "homeJuridico") { Text(text = "Tela Home Jurídico") }
+                    composable(route = "listaProdutos") { TelaListaProdutos(navController, sampleProdutos) }
+                    composable(route = "promocoes") { Text(text = "Tela de Promoções") }
+                    composable(route = "criarPromocao") { TelaCadastroPromocao(navController) }
                 }
             }
         }
