@@ -20,6 +20,7 @@ import com.example.infohub_telas.telas.TelaChatDePrecos
 import com.example.infohub_telas.telas.TelaConfirmarCodigo
 import com.example.infohub_telas.telas.TelaCriarNovaSenha
 import com.example.infohub_telas.telas.TelaLocalizacao
+import com.example.infohub_telas.telas.TelaLoginCadastro
 import com.example.infohub_telas.telas.TelaPerfil
 import com.example.infohub_telas.telas.TelaProduto
 import com.example.infohub_telas.telas.TelaRedefinicaoSenha
@@ -42,25 +43,49 @@ class MainActivity : ComponentActivity() {
 
                 NavHost(
                     navController = navController,
-                    startDestination = "perfil" // 🔹 tela inicial
+                    startDestination = "splash"
                 ) {
-                    // 🔸 Telas de login e cadastro
-                    composable(route = "login") { TelaLogin(navController) }
-                    composable(route = "tela_cadastro") { TelaCadastro(navController) }
-                    composable(route = "cadastro_juridico") { TelaCadastroJuridico(navController) }
 
-                    // 🔸 Telas de redefinição de senha
-                    composable(route = "redefinicao_senha") { TelaRedefinicaoSenha(navController) }
-                    composable(route = "confirmar_codigo") { TelaConfirmarCodigo(navController) }
-                    composable(route = "criar_senha") { TelaCriarNovaSenha(navController) }
+                    composable(
+                        route = "splash")
+                    {
+                        OpenScreen(navController)
 
-                    // 🔸 Telas principais
-                    composable(route = "perfil") { TelaPerfil(navController) }
-                    composable(route = "localizacao") { TelaLocalizacao(navController) }
-                    composable(route = "produto") { TelaProduto(navController) }
+                    }
+                    composable(
+                        route = "welcome")
+                    {
+                        WelcomeScreen(navController)
 
-                    // 🔸 Chat de preços
-                    composable(route = "chat_precos") { TelaChatDePrecos(navController) }
+                    }
+                    composable(
+                        route = "loginCadastro")
+                    {
+                        TelaLoginCadastro(navController)
+
+                    }
+
+                    composable(
+                        route = "login")
+                    {
+                        TelaLogin(navController)
+
+                    }
+
+                    composable(
+                        route = "tela_cadastro")
+                    {
+                        TelaCadastro(navController)
+
+                    }
+
+//                    composable(
+//                        route = "tela_cadastro")
+//                    {
+//                        TelaCadastro(navController)
+//
+//                    }
+
                 }
             }
         }

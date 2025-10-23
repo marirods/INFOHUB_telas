@@ -53,7 +53,7 @@ fun FormPessoaJuridica(
         CustomTextFieldCadastro(
             value = nome,
             onValueChange = onNomeChange,
-            placeholder = "Nome Da Empresa*"
+            placeholder = "Nome da Empresa*"
         )
 
         Spacer(modifier = Modifier.height(12.dp))

@@ -257,7 +257,7 @@ fun TelaLoginCadastro(navController: NavController) {
 
             // Botão LOGIN
             Button(
-                onClick = { /* navController.navigate("login") */ },
+                onClick = { navController.navigate("login") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -282,7 +282,7 @@ fun TelaLoginCadastro(navController: NavController) {
 
             // Botão CADASTRE-SE
             Button(
-                onClick = { /* navController.navigate("cadastro") */ },
+                onClick = { navController.navigate("cadastro") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
