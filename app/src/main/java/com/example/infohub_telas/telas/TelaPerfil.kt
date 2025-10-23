@@ -235,23 +235,27 @@ fun StatItem(
         colors = CardDefaults.cardColors(containerColor = Color.White),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(horizontal = 4.dp, vertical = 12.dp)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.spacedBy(2.dp) // Espaço fixo entre os textos
         ) {
             Text(
                 value,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 color = valueColor,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                lineHeight = 18.sp // Controla a altura da linha
             )
-            Spacer(Modifier.height(4.dp))
+
             Text(
                 label,
                 color = TextGrayColor,
                 fontSize = 10.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                lineHeight = 12.sp // Controla a altura da linha
             )
         }
     }
