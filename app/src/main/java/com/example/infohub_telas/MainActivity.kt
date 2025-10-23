@@ -54,6 +54,10 @@ class MainActivity : ComponentActivity() {
                     composable(route = "home") {
                         TelaHome(navController)
                     }
+                    composable(
+                        route = "welcome")
+                    {
+                        WelcomeScreen(navController)
 
                     composable(
                         route = "cadastroEstabelecimento?id={id}&categoria={categoria}",
@@ -105,6 +109,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// 🔹 Função simples de exemplo (pode remover se não usar)
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
