@@ -43,7 +43,7 @@ fun FormPessoaFisica(
             value = data.cpf,
             onValueChange = { onDataChange(data.copy(cpf = it)) },
             placeholder = "CPF*",
-            keyboardType = KeyboardType.Number  // Mantido; considere máscara se quiser formatação
+            keyboardType = KeyboardType.Number
         )
 
         Spacer(modifier = Modifier.height(8.dp))
