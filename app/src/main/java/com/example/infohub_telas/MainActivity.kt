@@ -12,6 +12,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.telas.OpenScreen
+import com.example.infohub_telas.telas.WelcomeScreen
 import com.example.infohub_telas.telas.TelaCadastro
 import com.example.infohub_telas.telas.TelaCadastroJuridico
 import com.example.infohub_telas.telas.TelaChatDePrecos
