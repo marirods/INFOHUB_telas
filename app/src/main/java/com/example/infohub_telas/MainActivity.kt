@@ -6,18 +6,18 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.infohub_telas.telas.*
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Button
+import com.example.infohub_telas.model.Estabelecimento
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,66 +32,59 @@ class MainActivity : ComponentActivity() {
         setContent {
             InfoHub_telasTheme {
                 val navController = rememberNavController()
-                
+
                 NavHost(
                     navController = navController,
-                    startDestination = "home" // 🔹 Tela Home ativa
+                    startDestination = "meuEstabelecimento" 
                 ) {
-                    // 🔹 Tela Home - ATIVA PARA TESTE
                     composable(route = "home") {
-                        Column {
-                            TelaHome(navController)
-                            Button(onClick = { navController.navigate("cadastroEstabelecimento") }) {
-                                Text("Ir para Cadastro Estabelecimento")
+                        TelaHome(navController)
+                    }
+
+                    composable(
+                        route = "cadastroEstabelecimento?id={id}&categoria={categoria}",
+                        arguments = listOf(
+                            navArgument("id") { 
+                                type = NavType.IntType
+                                defaultValue = 0
+                            },
+                            navArgument("categoria") { 
+                                type = NavType.StringType
+                                nullable = true
                             }
-                        }
+                        )
+                    ) {
+                        val id = it.arguments?.getInt("id")
+                        val categoria = it.arguments?.getString("categoria")
+                        TelaCadastroEstabelecimento(navController, id, categoria)
                     }
 
-                    composable(route = "cadastroEstabelecimento") {
-                        TelaCadastroEstabelecimento(navController)
+                    composable(route = "meuEstabelecimento") {
+                        val sampleEstabelecimento = Estabelecimento(
+                            id = 1,
+                            nome = "Padaria do Zé",
+                            cnpj = "12.345.678/0001-99",
+                            endereco = "Rua das Flores, 123",
+                            telefone = "(11) 99999-8888",
+                            email = "contato@padariadoze.com",
+                            categoria = "Alimentação"
+                        )
+                        TelaMeuEstabelecimento(navController, sampleEstabelecimento)
                     }
 
-                    // 🔸 Tela de Login - Desativada
-//                    composable(route = "login") {
-//                        TelaLogin(navController)
-//                    }
-
-                    // 🔸 Telas do fluxo de cadastro
                     composable(route = "tela_cadastro") {
                         TelaCadastro(navController)
                     }
-//
-//                    composable(route = "cadastro_juridico") {
-//                        TelaCadastroJuridico(navController)
-//                    }
-//
-//                    composable(route = "redefinicao_senha") {
-//                        TelaRedefinicaoSenha(navController)
-//                    }
-//
-//                    composable(route = "confirmar_codigo") {
-//                        TelaConfirmarCodigo(navController)
-//                    }
-//
-//                    composable(route = "criar_senha") {
-//                        TelaCriarNovaSenha(navController)
-//                    }
 
-                    // 🔸 Tela de Localização
-//                    composable(route = "localizacao") {
-//                        TelaLocalizacao(navController)
-//                    }
-
-                    // 🔸 Rotas de menu inferior
-//                    composable(route = "inicio") { Text(text = "Tela de Início") }
-//                    composable(route = "promocoes") { Text(text = "Tela de Promoções") }
-//                    composable(route = "infocash") { Text(text = "Tela de InfoCash") }
-//                    composable(route = "perfil") { Text(text = "Tela de Perfil") }
-
-                    // 🔸 Chat de Preços (para o botão flutuante)
                     composable(route = "chat_precos") {
                         TelaChatDePrecos(navController)
                     }
+
+                    // Rotas adicionadas para navegação da TelaMeuEstabelecimento
+                    composable(route = "homeJuridico") { Text(text = "Tela Home Jurídico") }
+                    composable(route = "listaProdutos") { Text(text = "Tela Lista de Produtos") }
+                    composable(route = "promocoes") { Text(text = "Tela de Promoções") }
+                    composable(route = "criarPromocao") { TelaCadastroPromocao(navController) }
                 }
             }
         }
