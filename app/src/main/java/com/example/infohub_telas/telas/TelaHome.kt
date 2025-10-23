@@ -64,266 +64,225 @@ fun TelaHome(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Laranja)
             )
         },
-        bottomBar = { BottomMenu(navController = navController) },
-        floatingActionButton = {
+        bottomBar = { BottomMenu(navController = navController) }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Banner promocional
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Laranja),
+                    elevation = CardDefaults.cardElevation(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Banner Promocional",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Indicador de banner (bolinhas)
+                Row(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    repeat(3) { index ->
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(
+                                    if (index == 0) Laranja else CinzaClaro,
+                                    CircleShape
+                                )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Barra de busca
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = { /* TODO: Implement search functionality */ },
+                    placeholder = { Text("Buscar produtos...", color = Color.Gray) },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.lupa_loc),
+                            contentDescription = "Buscar",
+                            tint = Laranja,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            painter = painterResource(id = R.drawable.microfone_loc),
+                            contentDescription = "Busca por voz",
+                            tint = Laranja,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(2.dp, RoundedCornerShape(12.dp)),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Seção de Promoções
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Promoções",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Ver mais",
+                                    fontSize = 14.sp,
+                                    color = Laranja,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Icon(
+                                    painter = painterResource(id = R.drawable.seta_direita),
+                                    contentDescription = "Ver mais",
+                                    tint = Laranja,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(3) { index ->
+                                CardProduto()
+                            }
+                        }
+
+                        // Indicador de scroll
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            repeat(12) { index ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .padding(horizontal = 2.dp)
+                                        .background(
+                                            if (index < 3) Laranja else CinzaClaro,
+                                            CircleShape
+                                        )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Seção de Ranking Semanal
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Ranking Semanal",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "Top usuários da semana",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        // Lista de usuários no ranking - mostra apenas o primeiro
+                        ItemRanking(
+                            posicao = 1,
+                            nome = "Israel Magalhães Dos Santos",
+                            pontos = "248 IC",
+                            corMedalha = Laranja,
+                            isLast = true
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(100.dp))
+            }
+
+            // Botão flutuante de chat posicionado no canto inferior direito
             FloatingActionButton(
                 onClick = { navController.navigate("chat_precos") },
                 containerColor = Laranja,
                 shape = CircleShape,
                 modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 80.dp)
                     .size(64.dp)
                     .shadow(8.dp, CircleShape)
             ) {
-                Image(
+                Icon(
                     painter = painterResource(id = R.drawable.robo),
                     contentDescription = "Chat de Preços",
+                    tint = Color.White,
                     modifier = Modifier.size(32.dp)
                 )
             }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(scrollState)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Banner promocional
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Laranja),
-                elevation = CardDefaults.cardElevation(6.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Banner Promocional",
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // Indicador de banner (bolinhas)
-            Row(
-                modifier = Modifier.padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                repeat(3) { index ->
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .background(
-                                if (index == 0) Laranja else CinzaClaro,
-                                CircleShape
-                            )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Barra de busca
-            OutlinedTextField(
-                value = "",
-                onValueChange = { /* TODO: Implement search functionality */ },
-                placeholder = { Text("Buscar produtos...", color = Color.Gray) },
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.lupa_loc),
-                        contentDescription = "Buscar",
-                        tint = Laranja,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                trailingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.microfone_loc),
-                        contentDescription = "Busca por voz",
-                        tint = Laranja,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(2.dp, RoundedCornerShape(12.dp)),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
-                )
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // **ADDED:** New button with robo icon for explicit navigation
-            Button(
-                onClick = { navController.navigate("chat_precos") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Laranja),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.robo),
-                    contentDescription = "Chat de Preços",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Ir para Chat de Preços",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Seção de Promoções
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Promoções",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Ver mais",
-                                fontSize = 14.sp,
-                                color = Laranja,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Icon(
-                                painter = painterResource(id = R.drawable.seta_direita),
-                                contentDescription = "Ver mais",
-                                tint = Laranja,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(3) { index ->
-                            CardProduto()
-                        }
-                    }
-
-                    // Indicador de scroll
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        repeat(12) { index ->
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .padding(horizontal = 2.dp)
-                                    .background(
-                                        if (index < 3) Laranja else CinzaClaro,
-                                        CircleShape
-                                    )
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Seção de Ranking Semanal
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(4.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Text(
-                        text = "Ranking Semanal",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-                    Text(
-                        text = "Top usuários da semana",
-                        fontSize = 12.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    // Lista de usuários no ranking
-                    ItemRanking(
-                        posicao = 1,
-                        nome = "Israel Magalhães Dos Santos Junior",
-                        pontos = "248 IC",
-                        corMedalha = Laranja
-                    )
-                    ItemRanking(
-                        posicao = 2,
-                        nome = "Mariane Da Silva Rodrigues",
-                        pontos = "245 IC",
-                        corMedalha = CinzaClaro
-                    )
-                    ItemRanking(
-                        posicao = 3,
-                        nome = "Beatriz Boletini",
-                        pontos = "245 IC",
-                        corMedalha = Color(0xFFCD7F32)
-                    )
-                    ItemRanking(
-                        posicao = 4,
-                        nome = "Richard Pimentel",
-                        pontos = "90 IC",
-                        corMedalha = Color.Black
-                    )
-                    ItemRanking(
-                        posicao = 5,
-                        nome = "Heloysa",
-                        pontos = "90 IC",
-                        corMedalha = Color.Black,
-                        isLast = true
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
@@ -442,8 +401,7 @@ fun ItemRanking(
                     Text(
                         text = "🏆",
                         fontSize = 20.sp,
-                        modifier = Modifier.padding(end = 8.dp),
-                        color = corMedalha // Use corMedalha here
+                        modifier = Modifier.padding(end = 8.dp)
                     )
                 } else {
                     Text(
