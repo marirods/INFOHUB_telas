@@ -34,7 +34,7 @@ val CinzaClaro = Color(0xFFE0E0E0)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaHome(navController: NavController) {
+fun TelaHome(navController: NavController?) {
     val scrollState = rememberScrollState()
 
     Scaffold(
