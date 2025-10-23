@@ -1,6 +1,6 @@
 package com.example.infohub_telas.telas
 
-import BottomMenu
+
 import android.location.Geocoder
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -84,7 +84,7 @@ fun TelaLocalizacao(navController: NavController?) {
                     Image(
                         painter = painterResource(id = R.drawable.logo),
                         contentDescription = "Logo",
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(50.dp)
                     )
                 }
             }
@@ -199,8 +199,7 @@ fun TelaLocalizacao(navController: NavController?) {
             Spacer(modifier = Modifier.height(20.dp))
         }
 
-        // Menu inferior fixo na base
-        BottomMenu(navController ?: rememberNavController())
+        // Menu inferior fixo na base \BottomMenu(navController ?: rememberNavController())
     }
 }
 

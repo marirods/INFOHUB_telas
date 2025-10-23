@@ -19,6 +19,7 @@ import com.example.infohub_telas.telas.TelaCadastroJuridico
 import com.example.infohub_telas.telas.TelaConfirmarCodigo
 import com.example.infohub_telas.telas.TelaCriarNovaSenha
 import com.example.infohub_telas.telas.TelaLocalizacao
+import com.example.infohub_telas.telas.TelaPerfil
 import com.example.infohub_telas.telas.TelaRedefinicaoSenha
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
@@ -36,45 +37,53 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = "Localização"
+                    startDestination = "perfil"
                 ){
-//                    composable (
-//                        route = "login"
-//                    ){
-//                        TelaLogin(navController)
-//                    }
-//                    composable (
-//                        route = "tela_cadastro"
-//                    ){
-//                        TelaCadastro(navController)
-//                    }
-//                    composable (
-//                        route = "cadastro_juridico"
-//                    ){
-//                        TelaCadastroJuridico(navController)
-//                    }
-//                    composable (
-//                        route = "redefinicao_senha"
-//                    ){
-//                        TelaRedefinicaoSenha(navController)
-//                    }
-//                    composable (
-//                        route = "confirmar_codigo"
-//                    ){
-//                        TelaConfirmarCodigo(navController)
-//                    }
-//                    composable (
-//                        route = "criar_senha"
-//                    ){
-//                        TelaCriarNovaSenha(navController)
-//                    }
+                    composable (
+                        route = "login"
+                    ){
+                        TelaLogin(navController)
+                    }
+                    composable (
+                        route = "tela_cadastro"
+                    ){
+                        TelaCadastro(navController)
+                    }
+                    composable (
+                        route = "cadastro_juridico"
+                    ){
+                        TelaCadastroJuridico(navController)
+                    }
+                    composable (
+                        route = "redefinicao_senha"
+                    ){
+                        TelaRedefinicaoSenha(navController)
+                    }
+                    composable (
+                        route = "confirmar_codigo"
+                    ){
+                        TelaConfirmarCodigo(navController)
+                    }
+                    composable (
+                        route = "criar_senha"
+                    ){
+                        TelaCriarNovaSenha(navController)
+                    }
                     composable (
                         route = "Localização"
                     ) {
                         TelaLocalizacao(navController)
                     }
+                    composable(
+                       route = "perfil"
+                    ){
+                        TelaPerfil(navController)
                     }
-
+                    composable(
+                        route = "localizacao"
+                    ){
+                        TelaLocalizacao(navController)
+                    }
                 }
             }
         }
@@ -95,5 +104,6 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 fun GreetingPreview() {
     InfoHub_telasTheme {
         Greeting("Android")
+    }
     }
 }
