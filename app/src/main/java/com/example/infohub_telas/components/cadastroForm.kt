@@ -5,43 +5,52 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Text  // Adicionado para mensagens de erro (opcional)
+import androidx.compose.ui.graphics.Color
 
+// Data class para encapsular os dados do formulário
+data class FormPessoaFisicaData(
+    val nome: String = "",
+    val cpf: String = "",
+    val telefone: String = "",
+    val email: String = "",
+    val senha: String = "",
+    val confirmarSenha: String = "",
+    val mostrarSenha: Boolean = false,
+    val mostrarConfirmarSenha: Boolean = false
+)
 
 @Composable
 fun FormPessoaFisica(
-    nome: String, onNomeChange: (String) -> Unit,
-    cpf: String, onCpfChange: (String) -> Unit,
-    telefone: String, onTelefoneChange: (String) -> Unit,
-    email: String, onEmailChange: (String) -> Unit,
-    senha: String, onSenhaChange: (String) -> Unit,
-    confirmarSenha: String, onConfirmarSenhaChange: (String) -> Unit,
-    mostrarSenha: Boolean, onMostrarSenhaChange: (Boolean) -> Unit,
-    mostrarConfirmarSenha: Boolean, onMostrarConfirmarSenhaChange: (Boolean) -> Unit
+    data: FormPessoaFisicaData,
+    onDataChange: (FormPessoaFisicaData) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(modifier = modifier) {
         CustomTextFieldCadastro(
-            value = nome,
-            onValueChange = onNomeChange,
+            value = data.nome,
+            onValueChange = { onDataChange(data.copy(nome = it)) },
             placeholder = "Nome Completo*"
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         CustomTextFieldCadastro(
-            value = cpf,
-            onValueChange = onCpfChange,
+            value = data.cpf,
+            onValueChange = { onDataChange(data.copy(cpf = it)) },
             placeholder = "CPF*",
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Number  // Mantido; considere máscara se quiser formatação
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         CustomTextFieldCadastro(
-            value = telefone,
-            onValueChange = onTelefoneChange,
+            value = data.telefone,
+            onValueChange = { onDataChange(data.copy(telefone = it)) },
             placeholder = "Telefone*",
             keyboardType = KeyboardType.Phone
         )
@@ -49,8 +58,8 @@ fun FormPessoaFisica(
         Spacer(modifier = Modifier.height(8.dp))
 
         CustomTextFieldCadastro(
-            value = email,
-            onValueChange = onEmailChange,
+            value = data.email,
+            onValueChange = { onDataChange(data.copy(email = it)) },
             placeholder = "E-mail*",
             keyboardType = KeyboardType.Email
         )
@@ -58,44 +67,42 @@ fun FormPessoaFisica(
         Spacer(modifier = Modifier.height(8.dp))
 
         SenhaTextFieldCadastro(
-            value = senha,
-            onValueChange = onSenhaChange,
-            mostrarSenha = mostrarSenha,
-            onMostrarSenhaChange = onMostrarSenhaChange,
-            label = "Senha*"
+            value = data.senha,
+            onValueChange = { onDataChange(data.copy(senha = it)) },
+            mostrarSenha = data.mostrarSenha,
+            onMostrarSenhaChange = { onDataChange(data.copy(mostrarSenha = it)) },
+            placeholder = "Senha*"
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         SenhaTextFieldCadastro(
-            value = confirmarSenha,
-            onValueChange = onConfirmarSenhaChange,
-            mostrarSenha = mostrarConfirmarSenha,
-            onMostrarSenhaChange = onMostrarConfirmarSenhaChange,
-            label = "Confirme a senha*"
+            value = data.confirmarSenha,
+            onValueChange = { onDataChange(data.copy(confirmarSenha = it)) },
+            mostrarSenha = data.mostrarConfirmarSenha,
+            onMostrarSenhaChange = { onDataChange(data.copy(mostrarConfirmarSenha = it)) },
+            placeholder = "Confirme a senha*"
         )
+
+        // Validação simples: Exemplo de erro se senhas não coincidirem
+        if (data.senha.isNotEmpty() && data.confirmarSenha.isNotEmpty() && data.senha != data.confirmarSenha) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "As senhas não coincidem",
+                color = Color.Red
+            )
+        }
     }
 }
 
-@Preview(showBackground = true)
+
+@Preview(showBackground = true, showSystemUi = false)
 @Composable
-fun FormPessoaFisicaPreview() {
+fun PreviewFormPessoaFisica() {
     FormPessoaFisica(
-        nome = "",
-        onNomeChange = {},
-        cpf = "",
-        onCpfChange = {},
-        telefone = "",
-        onTelefoneChange = {},
-        email = "",
-        onEmailChange = {},
-        senha = "",
-        onSenhaChange = {},
-        confirmarSenha = "",
-        onConfirmarSenhaChange = {},
-        mostrarSenha = false,
-        onMostrarSenhaChange = {},
-        mostrarConfirmarSenha = false,
-        onMostrarConfirmarSenhaChange = {}
+        data = FormPessoaFisicaData(),
+        onDataChange = {}
     )
 }
+
+
