@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Configuração do OpenStreetMap
         Configuration.getInstance().load(
             applicationContext,
             PreferenceManager.getDefaultSharedPreferences(applicationContext)
@@ -35,53 +36,64 @@ class MainActivity : ComponentActivity() {
         setContent {
             InfoHub_telasTheme {
                 val navController = rememberNavController()
+                
                 NavHost(
                     navController = navController,
-                    startDestination = "Produto"
+                    startDestination = "tela_cadastro"
                 ){
 //                    composable (
 //                        route = "login"
 //                    ){
 //                        TelaLogin(navController)
 //                    }
-//                    composable (
-//                        route = "tela_cadastro"
-//                    ){
+
+                    // 🔸 Telas do fluxo de cadastro
+//                    composable(route = "tela_cadastro") {
 //                        TelaCadastro(navController)
 //                    }
-//                    composable (
-//                        route = "cadastro_juridico"
-//                    ){
+//
+//                    composable(route = "cadastro_juridico") {
 //                        TelaCadastroJuridico(navController)
 //                    }
-//                    composable (
-//                        route = "redefinicao_senha"
-//                    ){
+//
+//                    composable(route = "redefinicao_senha") {
 //                        TelaRedefinicaoSenha(navController)
 //                    }
-//                    composable (
-//                        route = "confirmar_codigo"
-//                    ){
+//
+//                    composable(route = "confirmar_codigo") {
 //                        TelaConfirmarCodigo(navController)
 //                    }
-//                    composable (
-//                        route = "criar_senha"
-//                    ){
+//
+//                    composable(route = "criar_senha") {
 //                        TelaCriarNovaSenha(navController)
 //                    }
                     composable (
-                        route = "Produto"
+                        route = "tela_cadastro"
                     ) {
-                        TelaProduto()
+                        TelaCadastro(navController)
                     }
                     }
 
+                    // 🔸 Tela de Localização
+//                    composable(route = "localizacao") {
+//                        TelaLocalizacao(navController)
+//                    }
+
+                    // 🔸 Rotas de menu inferior
+//                    composable(route = "inicio") { Text(text = "Tela de Início") }
+//                    composable(route = "promocoes") { Text(text = "Tela de Promoções") }
+//                    composable(route = "infocash") { Text(text = "Tela de InfoCash") }
+//                    composable(route = "perfil") { Text(text = "Tela de Perfil") }
+
+                    // 🔸 Chat de Preços (para o botão flutuante)
+                    composable(route = "chat_precos") {
+                        TelaChatDePrecos(navController)
+                    }
                 }
             }
         }
     }
-
-
+}
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
