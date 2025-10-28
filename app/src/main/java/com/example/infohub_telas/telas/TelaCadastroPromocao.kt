@@ -33,7 +33,8 @@ import com.example.infohub_telas.components.MyTopAppBar
 import com.example.infohub_telas.components.StyledCard
 import com.example.infohub_telas.components.StyledDatePicker
 import com.example.infohub_telas.components.StyledTextField
-import com.example.infohub_telas.model.Promocao
+import com.example.infohub_telas.model.PromocaoProduto
+import com.example.infohub_telas.model.StatusPromocao
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import java.util.*
 
@@ -165,14 +166,15 @@ fun TelaCadastroPromocao(navController: NavController) {
                             Toast.makeText(context, "Adicione uma imagem do produto", Toast.LENGTH_SHORT).show()
                         }
                         else -> {
-                            val novaPromocao = Promocao(
+                            val novaPromocao = PromocaoProduto(
                                 nomeProduto = nomeProduto,
+                                categoria = categoriaSelecionada,
                                 precoPromocional = precoPromocional.replace(",", "."),
                                 dataInicio = Date(dataInicio!!),
                                 dataTermino = Date(dataTermino!!),
                                 descricao = descricao,
-                                categoria = categoriaSelecionada,
-                                imagemUrl = imageUri.toString()
+                                imagemUrl = imageUri.toString(),
+                                status = StatusPromocao.ATIVA
                             )
                             Log.d("CadastroPromocao", "Promoção Criada: $novaPromocao")
                             Toast.makeText(context, "Promoção salva com sucesso!", Toast.LENGTH_SHORT).show()
