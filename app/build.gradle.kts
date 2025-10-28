@@ -51,6 +51,7 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-permissions:0.31.5-beta")
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.foundation)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
 
@@ -90,7 +91,7 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-    androidTestImplementation(platform("androidx.compose:compose-bom:2025.1.0"))
+    androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
     // Debug
