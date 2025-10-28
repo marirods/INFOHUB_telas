@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -99,11 +101,12 @@ fun TelaLogin(navController: NavController) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = { Text("E-mail", color = Color.DarkGray) },
+                    placeholder = { Text("E-mail", color = Color.Black) },
+                    singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 30.dp),
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(15.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Black,
                         unfocusedBorderColor = Color.Black,
@@ -117,8 +120,9 @@ fun TelaLogin(navController: NavController) {
                     value = senha,
                     onValueChange = { senha = it },
                     placeholder = { Text("Senha", color = Color.DarkGray) },
-                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
@@ -131,7 +135,7 @@ fun TelaLogin(navController: NavController) {
                             )
                         }
                     },
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(15.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Black,
                         unfocusedBorderColor = Color.Black,
