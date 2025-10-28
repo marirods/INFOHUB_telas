@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.model.Estabelecimento
 import com.example.infohub_telas.service.RetrofitFactory
@@ -60,14 +62,19 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
         }
     }
 
-    Scaffold(
-        topBar = { Header(title = if (id != null) "Editar Estabelecimento" else "Cadastro de Estabelecimento") }
-    ) { paddingValues ->
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        AppTopBar(
+            title = if (id != null) "Editar Estabelecimento" else "Cadastro de Estabelecimento",
+            navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+            onNavigationIconClick = { navController.popBackStack() }
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(lightGray)
-                .padding(paddingValues)
                 .padding(horizontal = 32.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)

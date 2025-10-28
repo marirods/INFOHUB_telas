@@ -1,54 +1,105 @@
 package com.example.infohub_telas.components
 
-// Imports necessários para Compose e Material 3
-import androidx.compose.foundation.layout.*  // Para Row, Column, Spacer, etc.
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*  // Para Card, Text, etc.
-import androidx.compose.runtime.Composable  // Para @Composable
-import androidx.compose.ui.Alignment  // Para alinhamento vertical
-import androidx.compose.ui.Modifier  // Para modificadores
-import androidx.compose.ui.draw.shadow  // Para sombra
-import androidx.compose.ui.graphics.Color  // Para cores
-import androidx.compose.ui.text.font.FontWeight  // Para peso da fonte (Bold)
-import androidx.compose.ui.unit.dp  // Para unidades de medida (dp)
-import androidx.compose.ui.unit.sp  // Para unidades de fonte (sp)
-
-// Imports para o modelo e datas
-import com.example.infohub_telas.model.Promocao  // Modelo Promocao
-import java.text.SimpleDateFormat  // Para formatar Date
-import java.util.*  // Para Date e Locale
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.infohub_telas.model.Promocao
+import com.example.infohub_telas.model.StatusPromocao
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
 
 @Composable
-fun PromocaoItem(promocao: Promocao) {
+fun PromocaoListItem(
+    promocao: Promocao,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()  // Ocupa toda a largura
-            .padding(8.dp)  // Espaçamento externo
-            .shadow(4.dp, RoundedCornerShape(12.dp)),  // Sombra suave
-        shape = RoundedCornerShape(12.dp),  // Cantos arredondados
-        colors = CardDefaults.cardColors(containerColor = Color.White)  // Fundo branco
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),  // Espaçamento interno
-            verticalAlignment = Alignment.CenterVertically  // Alinhamento vertical
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {  // Coluna ocupa o espaço restante
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
-                    promocao.nomeProduto,
-                    fontWeight = FontWeight.Bold,  // Negrito
-                    fontSize = 16.sp  // Tamanho da fonte
+                    text = promocao.nome,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
                 )
-                // Correção: Use SimpleDateFormat para formatar Date
                 Text(
-                    "Data: ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(promocao.dataInicio)}",
-                    color = Color.Gray  // Cor cinza
+                    text = "Desconto: ${promocao.desconto}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                // Correção: Use Date().after() para comparar com a data atual
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
                 Text(
-                    "Status: ${if (promocao.dataTermino.after(Date())) "Ativa" else "Expirada"}",
-                    color = if (promocao.dataTermino.after(Date())) Color(0xFF4CAF50) else Color.Red  // Verde para ativa, vermelho para expirada
+                    text = formatarData(promocao.data),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                PromocaoStatusBadge(promocao.status)
             }
         }
     }
+}
+
+@Composable
+private fun PromocaoStatusBadge(status: StatusPromocao) {
+    val backgroundColor = when (status) {
+        StatusPromocao.ATIVA -> Color(0xFF4CAF50)
+        StatusPromocao.AGENDADA -> Color(0xFF2196F3)
+        StatusPromocao.ENCERRADA -> Color(0xFF9E9E9E)
+    }
+
+    Box(
+        modifier = Modifier
+            .background(
+                color = backgroundColor,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = status.name,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = Color.White
+        )
+    }
+}
+
+private fun formatarData(data: java.time.LocalDate): String {
+    val formatter = DateTimeFormatter
+        .ofLocalizedDate(FormatStyle.MEDIUM)
+        .withLocale(Locale("pt", "BR"))
+    return data.format(formatter)
 }
