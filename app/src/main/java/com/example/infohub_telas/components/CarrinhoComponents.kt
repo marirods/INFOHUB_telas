@@ -18,9 +18,11 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 
 @Composable
@@ -147,5 +149,37 @@ fun ResumoPedido(navController: NavController) {
                 Text(text = "Continuar Comprando", color = Color(0xFFF9A01B))
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CarrinhoVazioPreview() {
+    MaterialTheme {
+        CarrinhoVazio(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun CarrinhoCheioPreview() {
+    MaterialTheme {
+        CarrinhoCheio(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProdutoItemPreview() {
+    MaterialTheme {
+        ProdutoItem()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ResumoPedidoPreview() {
+    MaterialTheme {
+        ResumoPedido(navController = rememberNavController())
     }
 }

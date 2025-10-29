@@ -60,7 +60,7 @@ fun PerfilEmpresa(navController: NavController, empresa: Empresa) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("configuracaoPerfil") },
-                containerColor = Color(0xFF1976D2),
+                containerColor = Color(0xFFF9A01B),
                 contentColor = Color.White
             ) {
                 Icon(
@@ -81,7 +81,7 @@ fun PerfilEmpresa(navController: NavController, empresa: Empresa) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
-                    .background(Color(0xFF1976D2))
+                    .background(Color(0xFFF9A01B))
             )
 
             // Card da empresa
