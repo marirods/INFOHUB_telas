@@ -227,11 +227,14 @@ private fun ChartSection() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 fun DashboardEmpresaPreview() {
     InfoHub_telasTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
             DashboardEmpresa(
                 navController = rememberNavController(),
                 dashboardData = DashboardData.getPreview()

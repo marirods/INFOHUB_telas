@@ -3,12 +3,7 @@ package com.example.infohub_telas.model
 import java.time.LocalDate
 import java.util.Date
 
-enum class StatusPromocao {
-    ATIVA,
-    AGENDADA,
-    ENCERRADA
-}
-
+// Dashboard e Promoções
 data class DashboardData(
     val totalVendasMes: Double,
     val totalPromocoesAtivas: Int,
@@ -47,6 +42,12 @@ data class DashboardData(
             )
         )
     }
+}
+
+enum class StatusPromocao {
+    ATIVA,
+    AGENDADA,
+    ENCERRADA
 }
 
 data class Promocao(

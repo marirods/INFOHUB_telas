@@ -56,7 +56,7 @@ fun EmpresaCard(empresa: Empresa, onEditarClick: () -> Unit) {
                     text = empresa.nome,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1976D2)
+                    color = Color(0xFFF9A01B)
                 )
                 Text(
                     text = "CNPJ: ${empresa.cnpj}",
@@ -72,7 +72,7 @@ fun EmpresaCard(empresa: Empresa, onEditarClick: () -> Unit) {
                     text = "Setor de Atuação",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1976D2)
+                    color = Color(0xFFF9A01B)
                 )
                 Text(
                     text = empresa.setor,
@@ -103,7 +103,7 @@ fun EmpresaCard(empresa: Empresa, onEditarClick: () -> Unit) {
                 Button(
                     onClick = onEditarClick,
                     shape = RoundedCornerShape(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
@@ -123,7 +123,7 @@ fun EmpresaCard(empresa: Empresa, onEditarClick: () -> Unit) {
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF1976D2))
+                .background(Color(0xFFF9A01B))
                 .padding(4.dp)
                 .clip(CircleShape)
                 .background(Color.White),
@@ -132,7 +132,7 @@ fun EmpresaCard(empresa: Empresa, onEditarClick: () -> Unit) {
             Icon(
                 Icons.Default.Business,
                 contentDescription = "Ícone da empresa",
-                tint = Color(0xFF1976D2),
+                tint = Color(0xFFF9A01B),
                 modifier = Modifier.size(60.dp)
             )
         }
@@ -150,7 +150,7 @@ private fun InfoSection(title: String, items: List<IconTextPair>) {
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF1976D2),
+            color = Color(0xFFF9A01B),
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -171,7 +171,7 @@ private fun InfoRow(icon: ImageVector, text: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFF1976D2),
+            tint = Color(0xFFF9A01B),
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))

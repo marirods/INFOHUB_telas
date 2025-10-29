@@ -26,6 +26,10 @@ import com.example.infohub_telas.telas.TelaChatDePrecos
 import com.example.infohub_telas.telas.TelaHome
 import com.example.infohub_telas.telas.TelaListaProdutos
 import com.example.infohub_telas.telas.TelaMeuEstabelecimento
+import com.example.infohub_telas.telas.WelcomeScreen
+import com.example.infohub_telas.telas.GerenciamentoEmpresasScreen
+import com.example.infohub_telas.telas.RelatoriosScreen
+import com.example.infohub_telas.telas.CadastroEdicaoEmpresaScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -78,10 +82,10 @@ class MainActivity : ComponentActivity() {
                     composable(route = "home") {
                         TelaHome(navController)
                     }
-                    composable(
-                        route = "welcome")
-                    {
+
+                    composable(route = "welcome") {
                         WelcomeScreen(navController)
+                    }
 
                     composable(
                         route = "cadastroEstabelecimento?id={id}&categoria={categoria}",
@@ -122,11 +126,43 @@ class MainActivity : ComponentActivity() {
                         TelaChatDePrecos(navController)
                     }
 
-                    // Rotas adicionadas para navegação da TelaMeuEstabelecimento
-                    composable(route = "homeJuridico") { Text(text = "Tela Home Jurídico") }
-                    composable(route = "listaProdutos") { TelaListaProdutos(navController, sampleProdutos) }
-                    composable(route = "promocoes") { Text(text = "Tela de Promoções") }
-                    composable(route = "criarPromocao") { TelaCadastroPromocao(navController) }
+                    composable(route = "homeJuridico") {
+                        Text(text = "Tela Home Jurídico")
+                    }
+
+                    composable(route = "listaProdutos") {
+                        TelaListaProdutos(navController, sampleProdutos)
+                    }
+
+                    composable(route = "promocoes") {
+                        Text(text = "Tela de Promoções")
+                    }
+
+                    composable(route = "criarPromocao") {
+                        TelaCadastroPromocao(navController)
+                    }
+
+                    composable(route = "gerenciamentoEmpresas") {
+                        GerenciamentoEmpresasScreen(navController)
+                    }
+
+                    composable(route = "relatorios") {
+                        RelatoriosScreen(navController)
+                    }
+
+                    composable(
+                        route = "cadastroEmpresa?id={id}",
+                        arguments = listOf(
+                            navArgument("id") {
+                                type = NavType.IntType
+                                nullable = true
+                                defaultValue = null
+                            }
+                        )
+                    ) {
+                        val id = it.arguments?.getInt("id")
+                        CadastroEdicaoEmpresaScreen(navController, id)
+                    }
                 }
             }
         }

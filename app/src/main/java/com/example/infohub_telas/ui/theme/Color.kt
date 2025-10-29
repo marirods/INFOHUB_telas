@@ -9,6 +9,17 @@ val BackgroundGray = Color(0xFFF5F5F5)
 val OnSurfaceGray = Color(0xFF757575)
 val DarkText = Color(0xFF333333)
 
+// Corporate Status Colors
+val StatusActive = Color(0xFF4CAF50)
+val StatusInactive = Color(0xFFE57373)
+val StatusPending = Color(0xFFFFA726)
+
+// Corporate Chart Colors
+val ChartBlue = Color(0xFF2196F3)
+val ChartGreen = Color(0xFF66BB6A)
+val ChartOrange = PrimaryOrange
+val ChartPurple = Color(0xFF9C27B0)
+
 // Light Theme Colors
 val primaryLight = PrimaryOrange
 val onPrimaryLight = Color.White
