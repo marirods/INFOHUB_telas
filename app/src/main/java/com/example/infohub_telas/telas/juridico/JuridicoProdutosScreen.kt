@@ -10,29 +10,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
-import com.example.infohub_telas.ui.theme.PrimaryOrange
-
-data class ProdutoJuridico(
-    val id: String,
-    val nome: String,
-    val categoria: String,
-    val preco: Double,
-    val status: String,
-    val empresa: String
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JuridicoProdutosScreen(
-    navController: NavController,
+    onNavigateBack: () -> Unit,
+    onProdutoClick: (String) -> Unit,
     empresaId: String? = null,
     modifier: Modifier = Modifier
 ) {
@@ -41,7 +31,6 @@ fun JuridicoProdutosScreen(
     var selectedCategoria by remember { mutableStateOf<String?>(null) }
     var selectedStatus by remember { mutableStateOf<String?>(null) }
 
-    // Sample data
     val produtos = remember {
         listOf(
             ProdutoJuridico(
@@ -71,18 +60,25 @@ fun JuridicoProdutosScreen(
         )
     }
 
+    val filteredProdutos = produtos.filter { produto ->
+        val matchesSearch = produto.nome.contains(searchQuery, ignoreCase = true)
+        val matchesCategoria = selectedCategoria == null || produto.categoria == selectedCategoria
+        val matchesStatus = selectedStatus == null || produto.status == selectedStatus
+        matchesSearch && matchesCategoria && matchesStatus
+    }
+
     Scaffold(
         topBar = {
             AppTopBar(
                 title = "Produtos Cadastrados",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-                onNavigationIconClick = { navController.popBackStack() },
+                onNavigationIconClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = { showFilterDialog = true }) {
                         Icon(
                             Icons.Default.FilterList,
                             contentDescription = "Filtrar",
-                            tint = androidx.compose.ui.graphics.Color.White
+                            tint = Color.White
                         )
                     }
                 }
@@ -94,97 +90,86 @@ fun JuridicoProdutosScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Search Bar
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = { },
-                active = false,
-                onActiveChange = {},
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 placeholder = { Text("Buscar produtos...") },
-                leadingIcon = { Icon(Icons.Default.Search, "Buscar") }
-            ) { }
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = "Buscar")
+                },
+                singleLine = true
+            )
 
-            // Estatísticas
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                StatisticCard(
-                    title = "Total",
-                    value = "${produtos.size}",
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                StatisticCard(
-                    title = "Ativos",
-                    value = "${produtos.count { it.status == "Ativo" }}",
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                StatisticCard(
-                    title = "Valor Total",
-                    value = "R$ ${produtos.sumOf { it.preco }.format(2)}",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Lista de Produtos
+            // Products list
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(produtos.filter {
-                    it.nome.contains(searchQuery, ignoreCase = true) &&
-                    (selectedCategoria == null || it.categoria == selectedCategoria) &&
-                    (selectedStatus == null || it.status == selectedStatus)
-                }) { produto ->
-                    ProdutoCard(produto = produto)
+                items(filteredProdutos) { produto ->
+                    ProdutoCard(
+                        produto = produto,
+                        onClick = { onProdutoClick(produto.id) }
+                    )
                 }
             }
         }
 
-        // Dialog de Filtros
         if (showFilterDialog) {
             AlertDialog(
                 onDismissRequest = { showFilterDialog = false },
-                title = { Text("Filtrar Produtos") },
+                title = { Text("Filtros") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text("Categoria")
-                        produtos.map { it.categoria }.distinct().forEach { categoria ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                RadioButton(
-                                    selected = selectedCategoria == categoria,
-                                    onClick = { selectedCategoria = categoria }
-                                )
-                                Text(categoria, modifier = Modifier.padding(start = 8.dp))
-                            }
-                        }
+                    Column {
+                        Text("Categoria", fontWeight = FontWeight.Bold)
+                        RadioButton(
+                            selected = selectedCategoria == null,
+                            onClick = { selectedCategoria = null }
+                        )
+                        Text("Todas")
+                        RadioButton(
+                            selected = selectedCategoria == "Jurídico",
+                            onClick = { selectedCategoria = "Jurídico" }
+                        )
+                        Text("Jurídico")
+                        RadioButton(
+                            selected = selectedCategoria == "Administrativo",
+                            onClick = { selectedCategoria = "Administrativo" }
+                        )
+                        Text("Administrativo")
+                        RadioButton(
+                            selected = selectedCategoria == "Financeiro",
+                            onClick = { selectedCategoria = "Financeiro" }
+                        )
+                        Text("Financeiro")
 
-                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        Text("Status")
-                        produtos.map { it.status }.distinct().forEach { status ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                RadioButton(
-                                    selected = selectedStatus == status,
-                                    onClick = { selectedStatus = status }
-                                )
-                                Text(status, modifier = Modifier.padding(start = 8.dp))
-                            }
-                        }
+                        Text("Status", fontWeight = FontWeight.Bold)
+                        RadioButton(
+                            selected = selectedStatus == null,
+                            onClick = { selectedStatus = null }
+                        )
+                        Text("Todos")
+                        RadioButton(
+                            selected = selectedStatus == "Ativo",
+                            onClick = { selectedStatus = "Ativo" }
+                        )
+                        Text("Ativo")
+                        RadioButton(
+                            selected = selectedStatus == "Inativo",
+                            onClick = { selectedStatus = "Inativo" }
+                        )
+                        Text("Inativo")
+                        RadioButton(
+                            selected = selectedStatus == "Pendente",
+                            onClick = { selectedStatus = "Pendente" }
+                        )
+                        Text("Pendente")
                     }
                 },
                 confirmButton = {
@@ -193,47 +178,14 @@ fun JuridicoProdutosScreen(
                     }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            selectedCategoria = null
-                            selectedStatus = null
-                            showFilterDialog = false
-                        }
-                    ) {
-                        Text("Limpar")
+                    TextButton(onClick = {
+                        selectedCategoria = null
+                        selectedStatus = null
+                        showFilterDialog = false
+                    }) {
+                        Text("Limpar Filtros")
                     }
                 }
-            )
-        }
-    }
-}
-
-@Composable
-private fun StatisticCard(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -243,97 +195,92 @@ private fun StatisticCard(
 @Composable
 private fun ProdutoCard(
     produto: ProdutoJuridico,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        onClick = { /* Navegar para detalhes */ }
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = produto.nome,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = produto.empresa,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = when (produto.status) {
-                        "Ativo" -> PrimaryOrange.copy(alpha = 0.1f)
-                        "Inativo" -> MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
-                        else -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
-                    }
-                ) {
-                    Text(
-                        text = produto.status,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = when (produto.status) {
-                            "Ativo" -> PrimaryOrange
-                            "Inativo" -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.secondary
-                        }
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
                 Text(
-                    text = produto.categoria,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "R$ ${produto.preco.format(2)}",
+                    text = produto.nome,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PrimaryOrange
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+                StatusChip(status = produto.status)
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                TextButton(onClick = { /* Editar */ }) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Editar")
-                }
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Categoria: ${produto.categoria}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Preço: R$ ${String.format("%.2f", produto.preco)}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Empresa: ${produto.empresa}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
 
-private fun Double.format(digits: Int) = "%.${digits}f".format(this)
+@Composable
+private fun StatusChip(status: String) {
+    val (backgroundColor, textColor) = when (status) {
+        "Ativo" -> Color(0xFF4CAF50) to Color.White
+        "Pendente" -> Color(0xFFFFC107) to Color.Black
+        "Inativo" -> Color(0xFFE91E63) to Color.White
+        else -> Color.Gray to Color.White
+    }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+    Surface(
+        color = backgroundColor,
+        shape = MaterialTheme.shapes.small
+    ) {
+        Text(
+            text = status,
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+}
+
+data class ProdutoJuridico(
+    val id: String,
+    val nome: String,
+    val categoria: String,
+    val preco: Double,
+    val status: String,
+    val empresa: String
+)
+
+@Preview(showBackground = true)
 @Composable
 fun JuridicoProdutosScreenPreview() {
     InfoHub_telasTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            JuridicoProdutosScreen(
-                navController = rememberNavController()
-            )
-        }
+        JuridicoProdutosScreen(
+            onNavigateBack = {},
+            onProdutoClick = {},
+            empresaId = null
+        )
     }
 }

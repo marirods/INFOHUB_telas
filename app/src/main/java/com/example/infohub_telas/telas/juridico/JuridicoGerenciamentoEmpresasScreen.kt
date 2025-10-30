@@ -12,35 +12,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.model.CompanyStatus
-import com.example.infohub_telas.navigation.JuridicoRoutes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.StatusActive
 import com.example.infohub_telas.ui.theme.StatusInactive
 import com.example.infohub_telas.ui.theme.StatusPending
 
-data class JuridicoEmpresa(
-    val id: String,
-    val nome: String,
-    val cnpj: String,
-    val status: CompanyStatus,
-    val dataAbertura: String,
-    val responsavel: String
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JuridicoGerenciamentoEmpresasScreen(
-    navController: NavController,
+    onNavigateBack: () -> Unit,
+    onNavigateToCadastroEmpresa: () -> Unit,
+    onEmpresaClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var showFilterDialog by remember { mutableStateOf(false) }
+    var selectedStatus by remember { mutableStateOf<CompanyStatus?>(null) }
 
     val empresas = remember {
         listOf(
@@ -71,12 +63,19 @@ fun JuridicoGerenciamentoEmpresasScreen(
         )
     }
 
+    val filteredEmpresas = empresas.filter { empresa ->
+        val matchesSearch = empresa.nome.contains(searchQuery, ignoreCase = true) ||
+                empresa.cnpj.contains(searchQuery)
+        val matchesStatus = selectedStatus == null || empresa.status == selectedStatus
+        matchesSearch && matchesStatus
+    }
+
     Scaffold(
         topBar = {
             AppTopBar(
                 title = "Gerenciamento Jurídico",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-                onNavigationIconClick = { navController.popBackStack() },
+                onNavigationIconClick = onNavigateBack,
                 actions = {
                     IconButton(onClick = { showFilterDialog = true }) {
                         Icon(
@@ -90,7 +89,7 @@ fun JuridicoGerenciamentoEmpresasScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(JuridicoRoutes.CADASTRO_EMPRESA) },
+                onClick = onNavigateToCadastroEmpresa,
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, "Adicionar Empresa")
@@ -102,33 +101,30 @@ fun JuridicoGerenciamentoEmpresasScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = { },
-                active = false,
-                onActiveChange = { },
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 placeholder = { Text("Buscar empresas...") },
-                leadingIcon = { Icon(Icons.Default.Search, "Buscar") }
-            ) { }
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = "Buscar")
+                },
+                singleLine = true
+            )
 
+            // List of companies
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(
-                    empresas.filter {
-                        it.nome.contains(searchQuery, ignoreCase = true) ||
-                        it.cnpj.contains(searchQuery)
-                    }
-                ) { empresa ->
-                    JuridicoEmpresaCard(
+                items(filteredEmpresas) { empresa ->
+                    EmpresaCard(
                         empresa = empresa,
-                        onEditClick = { navController.navigate(JuridicoRoutes.CADASTRO_EMPRESA + "/${empresa.id}") },
-                        onRelatorioClick = { navController.navigate(JuridicoRoutes.RELATORIOS + "/${empresa.id}") }
+                        onClick = { onEmpresaClick(empresa.id) }
                     )
                 }
             }
@@ -137,41 +133,45 @@ fun JuridicoGerenciamentoEmpresasScreen(
         if (showFilterDialog) {
             AlertDialog(
                 onDismissRequest = { showFilterDialog = false },
-                title = { Text("Filtrar Empresas") },
+                title = { Text("Filtrar por Status") },
                 text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Status")
-                        Column {
-                            CompanyStatus.values().forEach { status ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Checkbox(
-                                        checked = true,
-                                        onCheckedChange = { }
-                                    )
-                                    Text(
-                                        text = when (status) {
-                                            CompanyStatus.ACTIVE -> "Ativa"
-                                            CompanyStatus.PENDING -> "Pendente"
-                                            CompanyStatus.INACTIVE -> "Inativa"
-                                        },
-                                        modifier = Modifier.padding(start = 8.dp)
-                                    )
-                                }
-                            }
-                        }
+                    Column {
+                        RadioButton(
+                            selected = selectedStatus == null,
+                            onClick = { selectedStatus = null }
+                        )
+                        Text("Todos")
+
+                        RadioButton(
+                            selected = selectedStatus == CompanyStatus.ACTIVE,
+                            onClick = { selectedStatus = CompanyStatus.ACTIVE }
+                        )
+                        Text("Ativo")
+
+                        RadioButton(
+                            selected = selectedStatus == CompanyStatus.PENDING,
+                            onClick = { selectedStatus = CompanyStatus.PENDING }
+                        )
+                        Text("Pendente")
+
+                        RadioButton(
+                            selected = selectedStatus == CompanyStatus.INACTIVE,
+                            onClick = { selectedStatus = CompanyStatus.INACTIVE }
+                        )
+                        Text("Inativo")
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = { showFilterDialog = false }) {
-                        Text("Aplicar")
+                        Text("Confirmar")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showFilterDialog = false }) {
-                        Text("Cancelar")
+                    TextButton(onClick = {
+                        selectedStatus = null
+                        showFilterDialog = false
+                    }) {
+                        Text("Limpar Filtros")
                     }
                 }
             )
@@ -181,125 +181,97 @@ fun JuridicoGerenciamentoEmpresasScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun JuridicoEmpresaCard(
+private fun EmpresaCard(
     empresa: JuridicoEmpresa,
-    onEditClick: () -> Unit,
-    onRelatorioClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = empresa.nome,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = empresa.cnpj,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Surface(
-                    color = when (empresa.status) {
-                        CompanyStatus.ACTIVE -> StatusActive
-                        CompanyStatus.INACTIVE -> StatusInactive
-                        CompanyStatus.PENDING -> StatusPending
-                    }.copy(alpha = 0.2f),
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(
-                        text = when (empresa.status) {
-                            CompanyStatus.ACTIVE -> "Ativa"
-                            CompanyStatus.INACTIVE -> "Inativa"
-                            CompanyStatus.PENDING -> "Pendente"
-                        },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = when (empresa.status) {
-                            CompanyStatus.ACTIVE -> StatusActive
-                            CompanyStatus.INACTIVE -> StatusInactive
-                            CompanyStatus.PENDING -> StatusPending
-                        }
-                    )
-                }
+                Text(
+                    text = empresa.nome,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+                StatusChip(status = empresa.status)
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                DetailItem(
-                    label = "Data Abertura",
-                    value = empresa.dataAbertura
-                )
-                DetailItem(
-                    label = "Responsável",
-                    value = empresa.responsavel
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onRelatorioClick) {
-                    Icon(Icons.Default.Assessment, contentDescription = null)
-                    Spacer(Modifier.width(4.dp))
-                    Text("Relatórios")
-                }
-                TextButton(onClick = onEditClick) {
-                    Icon(Icons.Default.Edit, contentDescription = null)
-                    Spacer(Modifier.width(4.dp))
-                    Text("Editar")
-                }
-            }
+            Text(
+                text = "CNPJ: ${empresa.cnpj}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Data de Abertura: ${empresa.dataAbertura}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Text(
+                text = "Responsável: ${empresa.responsavel}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
 
 @Composable
-private fun DetailItem(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
+private fun StatusChip(status: CompanyStatus) {
+    val (backgroundColor, textColor) = when (status) {
+        CompanyStatus.ACTIVE -> StatusActive to Color.White
+        CompanyStatus.PENDING -> StatusPending to Color.Black
+        CompanyStatus.INACTIVE -> StatusInactive to Color.White
+    }
+
+    Surface(
+        color = backgroundColor,
+        shape = MaterialTheme.shapes.small
+    ) {
         Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium
+            text = when (status) {
+                CompanyStatus.ACTIVE -> "Ativo"
+                CompanyStatus.PENDING -> "Pendente"
+                CompanyStatus.INACTIVE -> "Inativo"
+            },
+            color = textColor,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelMedium
         )
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+data class JuridicoEmpresa(
+    val id: String,
+    val nome: String,
+    val cnpj: String,
+    val status: CompanyStatus,
+    val dataAbertura: String,
+    val responsavel: String
+)
+
+@Preview(showBackground = true)
 @Composable
 fun JuridicoGerenciamentoEmpresasScreenPreview() {
     InfoHub_telasTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            JuridicoGerenciamentoEmpresasScreen(
-                navController = rememberNavController()
-            )
-        }
+        JuridicoGerenciamentoEmpresasScreen(
+            onNavigateBack = {},
+            onNavigateToCadastroEmpresa = {},
+            onEmpresaClick = {}
+        )
     }
 }

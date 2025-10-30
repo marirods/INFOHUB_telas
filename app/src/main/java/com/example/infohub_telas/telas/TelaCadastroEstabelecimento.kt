@@ -1,28 +1,24 @@
 package com.example.infohub_telas.telas
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.model.Estabelecimento
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
@@ -54,11 +50,10 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
     // Se um ID for fornecido, carregue os dados do estabelecimento
     LaunchedEffect(id) {
         if (id != null && id != 0) {
-            // TODO: Implementar a chamada à API para buscar os dados do estabelecimento pelo ID
-            // Exemplo de como preencher os campos:
-            // nomeEstabelecimento = "Nome do Estabelecimento"
-            // cnpj = "12345678000199"
-            // ...
+            // TODO: Implement fetch establishment by ID when API endpoint is available
+            // For now, we'll show an error message
+            errorMessage = "Funcionalidade de edição ainda não disponível"
+            showErrorDialog = true
         }
     }
 
@@ -79,7 +74,79 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ... (campos de texto) ...
+            OutlinedTextField(
+                value = nomeEstabelecimento,
+                onValueChange = { nomeEstabelecimento = it },
+                label = { Text("Nome do Estabelecimento*") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedContainerColor = textFieldBackground,
+                    unfocusedContainerColor = textFieldBackground
+                )
+            )
+
+            OutlinedTextField(
+                value = cnpj,
+                onValueChange = { if (it.length <= 14) cnpj = it.filter { char -> char.isDigit() } },
+                label = { Text("CNPJ*") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedContainerColor = textFieldBackground,
+                    unfocusedContainerColor = textFieldBackground
+                )
+            )
+
+            OutlinedTextField(
+                value = endereco,
+                onValueChange = { endereco = it },
+                label = { Text("Endereço*") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedContainerColor = textFieldBackground,
+                    unfocusedContainerColor = textFieldBackground
+                )
+            )
+
+            OutlinedTextField(
+                value = telefone,
+                onValueChange = { if (it.length <= 11) telefone = it.filter { char -> char.isDigit() } },
+                label = { Text("Telefone*") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedContainerColor = textFieldBackground,
+                    unfocusedContainerColor = textFieldBackground
+                )
+            )
+
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email*") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Gray,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedContainerColor = textFieldBackground,
+                    unfocusedContainerColor = textFieldBackground
+                )
+            )
+
             ExposedDropdownMenuBox(
                 expanded = categoriaExpandida,
                 onExpandedChange = { categoriaExpandida = !categoriaExpandida },
@@ -94,7 +161,6 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
                     label = { Text("Categoria do Negócio*") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
                     modifier = Modifier
-                        .menuAnchor()
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(28.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -104,6 +170,7 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
                         unfocusedContainerColor = textFieldBackground
                     )
                 )
+
                 ExposedDropdownMenu(
                     expanded = categoriaExpandida,
                     onDismissRequest = { categoriaExpandida = false }
@@ -122,7 +189,37 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
 
             Button(
                 onClick = {
-                    // ... (lógica de validação e salvamento) ...
+                    if (validarCampos(nomeEstabelecimento, cnpj, endereco, telefone, email, { errorMessage = it }, { showErrorDialog = it })) {
+                        val estabelecimento = Estabelecimento(
+                            id = id ?: 0,
+                            nome = nomeEstabelecimento,
+                            cnpj = cnpj,
+                            endereco = endereco,
+                            telefone = telefone,
+                            email = email,
+                            categoria = categoriaSelecionada
+                        )
+
+                        // For now, we only have the cadastrar (create) endpoint
+                        estabelecimentoApi.cadastrarEstabelecimento(estabelecimento).enqueue(object : Callback<Estabelecimento> {
+                            override fun onResponse(
+                                call: Call<Estabelecimento>,
+                                response: Response<Estabelecimento>
+                            ) {
+                                if (response.isSuccessful) {
+                                    showSuccessDialog = true
+                                } else {
+                                    errorMessage = "Erro ao cadastrar estabelecimento"
+                                    showErrorDialog = true
+                                }
+                            }
+
+                            override fun onFailure(call: Call<Estabelecimento>, t: Throwable) {
+                                errorMessage = "Erro de conexão: ${t.message}"
+                                showErrorDialog = true
+                            }
+                        })
+                    }
                 },
                 modifier = Modifier
                     .width(220.dp)
@@ -139,7 +236,81 @@ fun TelaCadastroEstabelecimento(navController: NavController, id: Int?, categori
             }
         }
 
-        // ... (Diálogos de sucesso e erro) ...
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    navController.popBackStack()
+                },
+                title = { Text("Sucesso") },
+                text = { Text(if (id != null) "Estabelecimento atualizado com sucesso!" else "Estabelecimento cadastrado com sucesso!") },
+                confirmButton = {
+                    Button(onClick = {
+                        showSuccessDialog = false
+                        navController.popBackStack()
+                    }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+
+        if (showErrorDialog) {
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                title = { Text("Erro") },
+                text = { Text(errorMessage) },
+                confirmButton = {
+                    Button(onClick = { showErrorDialog = false }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
     }
 }
-// ... (Restante do código: CustomTextField, validações, preview, etc) ...
+
+private fun validarCampos(
+    nomeEstabelecimento: String,
+    cnpj: String,
+    endereco: String,
+    telefone: String,
+    email: String,
+    setErrorMessage: (String) -> Unit,
+    setShowErrorDialog: (Boolean) -> Unit
+): Boolean {
+    if (nomeEstabelecimento.isBlank()) {
+        setErrorMessage("Nome do estabelecimento é obrigatório")
+        setShowErrorDialog(true)
+        return false
+    }
+    if (cnpj.length != 14) {
+        setErrorMessage("CNPJ deve ter 14 dígitos")
+        setShowErrorDialog(true)
+        return false
+    }
+    if (endereco.isBlank()) {
+        setErrorMessage("Endereço é obrigatório")
+        setShowErrorDialog(true)
+        return false
+    }
+    if (telefone.length < 10) {
+        setErrorMessage("Telefone deve ter pelo menos 10 dígitos")
+        setShowErrorDialog(true)
+        return false
+    }
+    if (!email.contains("@") || !email.contains(".")) {
+        setErrorMessage("Email inválido")
+        setShowErrorDialog(true)
+        return false
+    }
+    return true
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TelaCadastroEstabelecimentoPreview() {
+    InfoHub_telasTheme {
+        TelaCadastroEstabelecimento(NavController(LocalContext.current), null, null)
+    }
+}

@@ -7,30 +7,67 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.components.juridico.JuridicoMenuCard
-import com.example.infohub_telas.components.juridico.JuridicoSectionTitle
-import com.example.infohub_telas.navigation.JuridicoRoutes
+import com.example.infohub_telas.navigation.AppScreens
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaHomeJuridico(
-    navController: NavController,
+    onNavigateToGerenciamentoEmpresas: () -> Unit,
+    onNavigateToProdutos: () -> Unit,
+    onNavigateToRelatorios: () -> Unit,
+    onNavigateToNovaEmpresa: () -> Unit,
+    onNavigateToDocumentos: () -> Unit,
+    onNavigateToConfiguracoes: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val menuItems = listOf(
-        Triple(Icons.Default.Business, "Gerenciar Empresas", JuridicoRoutes.GERENCIAMENTO_EMPRESAS),
-        Triple(Icons.Default.Assessment, "Relatórios", JuridicoRoutes.RELATORIOS),
-        Triple(Icons.Default.Inventory, "Produtos", JuridicoRoutes.PRODUTOS),
-        Triple(Icons.Default.Add, "Nova Empresa", JuridicoRoutes.CADASTRO_EMPRESA),
-        Triple(Icons.Default.Settings, "Configurações", JuridicoRoutes.CONFIGURACOES)
+        MenuItem(
+            icon = Icons.Default.Business,
+            title = "Gerenciar Empresas",
+            color = Color(0xFF2196F3),
+            onClick = onNavigateToGerenciamentoEmpresas
+        ),
+        MenuItem(
+            icon = Icons.Default.Assessment,
+            title = "Relatórios",
+            color = Color(0xFF4CAF50),
+            onClick = onNavigateToRelatorios
+        ),
+        MenuItem(
+            icon = Icons.Default.ShoppingCart,
+            title = "Produtos",
+            color = Color(0xFF9C27B0),
+            onClick = onNavigateToProdutos
+        ),
+        MenuItem(
+            icon = Icons.Default.Add,
+            title = "Nova Empresa",
+            color = Color(0xFFF9A825),
+            onClick = onNavigateToNovaEmpresa
+        ),
+        MenuItem(
+            icon = Icons.Default.Description,
+            title = "Documentos",
+            color = Color(0xFF795548),
+            onClick = onNavigateToDocumentos
+        ),
+        MenuItem(
+            icon = Icons.Default.Settings,
+            title = "Configurações",
+            color = Color(0xFF607D8B),
+            onClick = onNavigateToConfiguracoes
+        )
     )
 
     Scaffold(
@@ -53,7 +90,7 @@ fun TelaHomeJuridico(
                     .fillMaxWidth()
                     .padding(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                    containerColor = Color(0xFF1976D2)
                 )
             ) {
                 Column(
@@ -62,106 +99,46 @@ fun TelaHomeJuridico(
                 ) {
                     Text(
                         "Bem-vindo ao Portal Jurídico",
-                        style = MaterialTheme.typography.headlineSmall
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         "Gerencie suas empresas e documentos em um só lugar",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
                     )
                 }
             }
 
-            JuridicoSectionTitle(
-                text = "Menu Principal",
-                modifier = Modifier.padding(horizontal = 16.dp)
+            Text(
+                "Menu Principal",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
 
             // Menu Grid
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    menuItems.take(2).forEach { (icon, title, route) ->
-                        JuridicoMenuCard(
-                            icon = icon,
-                            title = title,
-                            backgroundColor = when (title) {
-                                "Gerenciar Empresas" -> Color(0xFF2196F3)
-                                "Relatórios" -> Color(0xFF4CAF50)
-                                else -> MaterialTheme.colorScheme.primary
-                            },
-                            onClick = { navController.navigate(route) }
-                        )
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    menuItems.drop(2).forEach { (icon, title, route) ->
-                        JuridicoMenuCard(
-                            icon = icon,
-                            title = title,
-                            backgroundColor = when (title) {
-                                "Nova Empresa" -> Color(0xFFF9A825)
-                                "Configurações" -> Color(0xFF607D8B)
-                                else -> MaterialTheme.colorScheme.primary
-                            },
-                            onClick = { navController.navigate(route) }
-                        )
-                    }
-                }
-            }
-
-            JuridicoSectionTitle(
-                text = "Atividades Recentes",
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            // Recent Activities
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    listOf(
-                        Triple("Nova empresa cadastrada", "Empresa ABC Ltda", "2h atrás"),
-                        Triple("Relatório gerado", "Relatório Mensal", "3h atrás"),
-                        Triple("Documento atualizado", "Contrato XYZ", "5h atrás")
-                    ).forEach { (title, desc, time) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.titleSmall
-                                )
-                                Text(
-                                    text = desc,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            Text(
-                                text = time,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                menuItems.chunked(2).forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        rowItems.forEach { menuItem ->
+                            MenuCard(
+                                menuItem = menuItem,
+                                modifier = Modifier.weight(1f)
                             )
                         }
-                        if (time != "5h atrás") {
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        // If odd number of items, add empty space to maintain grid
+                        if (rowItems.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -170,17 +147,60 @@ fun TelaHomeJuridico(
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MenuCard(
+    menuItem: MenuItem,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        onClick = menuItem.onClick,
+        modifier = modifier.height(120.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = menuItem.color.copy(alpha = 0.1f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = menuItem.icon,
+                contentDescription = menuItem.title,
+                tint = menuItem.color,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = menuItem.title,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+private data class MenuItem(
+    val icon: ImageVector,
+    val title: String,
+    val color: Color,
+    val onClick: () -> Unit
+)
+
+@Preview(showBackground = true)
 @Composable
 fun TelaHomeJuridicoPreview() {
     InfoHub_telasTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            TelaHomeJuridico(
-                navController = rememberNavController()
-            )
-        }
+        TelaHomeJuridico(
+            onNavigateToGerenciamentoEmpresas = {},
+            onNavigateToProdutos = {},
+            onNavigateToRelatorios = {},
+            onNavigateToNovaEmpresa = {},
+            onNavigateToDocumentos = {},
+            onNavigateToConfiguracoes = {}
+        )
     }
 }

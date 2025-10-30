@@ -11,14 +11,6 @@
             </PendingDiffInfo>
           </value>
         </entry>
-        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Models.kt">
-          <value>
-            <PendingDiffInfo>
-              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Models.kt" />
-              <option name="updatedContent" value="package com.example.infohub_telas.model&#10;&#10;import java.time.LocalDate&#10;import java.util.Date&#10;&#10;enum class StatusPromocao {&#10;    ATIVA,&#10;    AGENDADA,&#10;    ENCERRADA&#10;}&#10;&#10;data class DashboardData(&#10;    val totalVendasMes: Double,&#10;    val totalPromocoesAtivas: Int,&#10;    val totalProdutos: Int,&#10;    val avaliacaoMedia: Float,&#10;    val ultimasPromocoes: List&lt;Promocao&gt;&#10;) {&#10;    fun getFormattedVendas(): String = &quot;R$ %.2f&quot;.format(totalVendasMes)&#10;    fun getFormattedAvaliacao(): String = &quot;%.1f&quot;.format(avaliacaoMedia)&#10;&#10;    companion object {&#10;        fun getPreview() = DashboardData(&#10;            totalVendasMes = 15420.50,&#10;            totalPromocoesAtivas = 8,&#10;            totalProdutos = 143,&#10;            avaliacaoMedia = 4.5f,&#10;            ultimasPromocoes = listOf(&#10;                Promocao(&#10;                    nome = &quot;Promoção de Verão&quot;,&#10;                    data = LocalDate.now(),&#10;                    status = StatusPromocao.ATIVA,&#10;                    desconto = 20&#10;                ),&#10;                Promocao(&#10;                    nome = &quot;Black Friday&quot;,&#10;                    data = LocalDate.now().plusDays(30),&#10;                    status = StatusPromocao.AGENDADA,&#10;                    desconto = 50&#10;                ),&#10;                Promocao(&#10;                    nome = &quot;Liquidação de Inverno&quot;,&#10;                    data = LocalDate.now().minusDays(15),&#10;                    status = StatusPromocao.ENCERRADA,&#10;                    desconto = 30&#10;                )&#10;            )&#10;        )&#10;    }&#10;}&#10;&#10;data class Promocao(&#10;    val nome: String,&#10;    val data: LocalDate,&#10;    val status: StatusPromocao,&#10;    val desconto: Int&#10;)&#10;&#10;data class PromocaoProduto(&#10;    val nomeProduto: String,&#10;    val categoria: String,&#10;    val precoPromocional: String,&#10;    val dataInicio: Date,&#10;    val dataTermino: Date,&#10;    val descricao: String,&#10;    val imagemUrl: String,&#10;    val status: StatusPromocao = StatusPromocao.ATIVA&#10;)" />
-            </PendingDiffInfo>
-          </value>
-        </entry>
         <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Promocao.kt">
           <value>
             <PendingDiffInfo>
