@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/components/MyTopAppBar.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/components/MyTopAppBar.kt" />
+              <option name="updatedContent" value="package com.example.infohub_telas.components&#10;&#10;import androidx.compose.material3.ExperimentalMaterial3Api&#10;import androidx.compose.material3.Icon&#10;import androidx.compose.material3.IconButton&#10;import androidx.compose.material3.MaterialTheme&#10;import androidx.compose.material3.Text&#10;import androidx.compose.material3.TopAppBar&#10;import androidx.compose.material3.TopAppBarDefaults&#10;import androidx.compose.runtime.Composable&#10;import androidx.compose.ui.graphics.vector.ImageVector&#10;import com.example.infohub_telas.ui.theme.PrimaryOrange&#10;&#10;@OptIn(ExperimentalMaterial3Api::class)&#10;@Composable&#10;fun DashboardTopAppBar(&#10;    title: String,&#10;    navigationIcon: ImageVector? = null,&#10;    onNavigationIconClick: (() -&gt; Unit)? = null,&#10;    actions: @Composable (() -&gt; Unit)? = null&#10;) {&#10;    TopAppBar(&#10;        title = {&#10;            Text(&#10;                text = title,&#10;                style = MaterialTheme.typography.titleLarge&#10;            )&#10;        },&#10;        navigationIcon = {&#10;            if (navigationIcon != null &amp;&amp; onNavigationIconClick != null) {&#10;                IconButton(onClick = onNavigationIconClick) {&#10;                    Icon(&#10;                        imageVector = navigationIcon,&#10;                        contentDescription = &quot;Voltar&quot;&#10;                    )&#10;                }&#10;            }&#10;        },&#10;        actions = { actions?.invoke() },&#10;        colors = TopAppBarDefaults.topAppBarColors(&#10;            containerColor = PrimaryOrange,&#10;            titleContentColor = MaterialTheme.colorScheme.onPrimary,&#10;            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,&#10;            actionIconContentColor = MaterialTheme.colorScheme.onPrimary&#10;        )&#10;    )&#10;}" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Models.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Models.kt" />
+              <option name="updatedContent" value="package com.example.infohub_telas.model&#10;&#10;import java.time.LocalDate&#10;import java.util.Date&#10;&#10;enum class StatusPromocao {&#10;    ATIVA,&#10;    AGENDADA,&#10;    ENCERRADA&#10;}&#10;&#10;data class DashboardData(&#10;    val totalVendasMes: Double,&#10;    val totalPromocoesAtivas: Int,&#10;    val totalProdutos: Int,&#10;    val avaliacaoMedia: Float,&#10;    val ultimasPromocoes: List&lt;Promocao&gt;&#10;) {&#10;    fun getFormattedVendas(): String = &quot;R$ %.2f&quot;.format(totalVendasMes)&#10;    fun getFormattedAvaliacao(): String = &quot;%.1f&quot;.format(avaliacaoMedia)&#10;&#10;    companion object {&#10;        fun getPreview() = DashboardData(&#10;            totalVendasMes = 15420.50,&#10;            totalPromocoesAtivas = 8,&#10;            totalProdutos = 143,&#10;            avaliacaoMedia = 4.5f,&#10;            ultimasPromocoes = listOf(&#10;                Promocao(&#10;                    nome = &quot;Promoção de Verão&quot;,&#10;                    data = LocalDate.now(),&#10;                    status = StatusPromocao.ATIVA,&#10;                    desconto = 20&#10;                ),&#10;                Promocao(&#10;                    nome = &quot;Black Friday&quot;,&#10;                    data = LocalDate.now().plusDays(30),&#10;                    status = StatusPromocao.AGENDADA,&#10;                    desconto = 50&#10;                ),&#10;                Promocao(&#10;                    nome = &quot;Liquidação de Inverno&quot;,&#10;                    data = LocalDate.now().minusDays(15),&#10;                    status = StatusPromocao.ENCERRADA,&#10;                    desconto = 30&#10;                )&#10;            )&#10;        )&#10;    }&#10;}&#10;&#10;data class Promocao(&#10;    val nome: String,&#10;    val data: LocalDate,&#10;    val status: StatusPromocao,&#10;    val desconto: Int&#10;)&#10;&#10;data class PromocaoProduto(&#10;    val nomeProduto: String,&#10;    val categoria: String,&#10;    val precoPromocional: String,&#10;    val dataInicio: Date,&#10;    val dataTermino: Date,&#10;    val descricao: String,&#10;    val imagemUrl: String,&#10;    val status: StatusPromocao = StatusPromocao.ATIVA&#10;)" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Promocao.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/Promocao.kt" />
+              <option name="updatedContent" value="package com.example.infohub_telas.model&#10;&#10;// This class has been moved to Models.kt to avoid duplication&#10;// If you need to use Promocao, please import it from Models.kt" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/PromocaoProduto.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/PromocaoProduto.kt" />
+              <option name="updatedContent" value="package com.example.infohub_telas.model&#10;&#10;// This class has been moved to Models.kt to avoid duplication" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/StatusPromocao.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/com/example/infohub_telas/model/StatusPromocao.kt" />
+              <option name="updatedContent" value="package com.example.infohub_telas.model&#10;&#10;// This enum has been moved to Models.kt to avoid duplication" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

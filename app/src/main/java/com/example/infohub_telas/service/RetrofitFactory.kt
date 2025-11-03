@@ -1,12 +1,7 @@
 package com.example.infohub_telas.service
 
-import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.create
-
-
-
 
 class RetrofitFactory {
 
@@ -24,9 +19,35 @@ class RetrofitFactory {
             return retrofitFactory.create(InfoHub_User::class.java)
         }
 
+        fun getInfoHub_EstabelecimentoService(): InfoHub_EstabelecimentoService{
+            return retrofitFactory.create(InfoHub_EstabelecimentoService::class.java)
+        }
+
+
+    private fun viaCepRetrofit(): Retrofit{
+        return Retrofit.Builder()
+            .baseUrl("https://viacep.com.br/ws/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
 
 
+    fun getViaCepService(): ViaCepApi {
+       return viaCepRetrofit().create(ViaCepApi::class.java)
+
+    }
+
+    private fun brasilApiRetrofit(): Retrofit{
+        return Retrofit.Builder()
+            .baseUrl("https://brasilapi.com.br/api/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+    }
+
+    fun getBrasilApiService(): BrasilApi {
+        return brasilApiRetrofit().create(BrasilApi::class.java)
+    }
 
 
-
+    }
