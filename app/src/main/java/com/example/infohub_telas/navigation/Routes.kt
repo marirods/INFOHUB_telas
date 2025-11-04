@@ -21,6 +21,7 @@ object Routes {
     const val PERFIL = "perfil"
     const val PERFIL_PREVIEW = "perfil_preview"
     const val CONFIGURACAO_PERFIL = "configuracao_perfil"
+    const val INFO_CASH = "info_cash"
 
     // Shopping Routes
     const val LISTA_PRODUTOS = "lista_produtos"

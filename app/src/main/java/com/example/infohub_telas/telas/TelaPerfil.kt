@@ -9,7 +9,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -29,13 +45,16 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenuWithCart
 
-// Define the main colors from the image for easy reuse
 private val OrangeColor = Color(0xFFF9A01B)
-private val DarkOrangeColor = Color(0xFFF9A01B)
+private val LightOrangeColor = Color(0xFFFFF3E0)
 private val LightGrayColor = Color(0xFFF7F7F7)
 private val TextGrayColor = Color(0xFF888888)
-private val GreenColor = Color(0xFF25992E)
-private val RedColor = Color(0xFFDA312A)
+private val DarkGrayColor = Color(0xFF424242)
+private val GreenColor = Color(0xFF4CAF50)
+private val RedColor = Color(0xFFE53935)
+private val BlueGrayColor = Color(0xFF607D8B)
+private val SoftBlueColor = Color(0xFF64B5F6)
+private val CardBackgroundColor = Color(0xFFFAFAFA)
 
 /**
  * The main entry point for the Profile Screen.
@@ -60,13 +79,13 @@ fun TelaPerfil(navController: NavController?) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item { ProfileHeader() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
             item { HubCoinCard() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
             item { FavoriteMarketsCard() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item { Spacer(modifier = Modifier.height(20.dp)) }
             item { SettingsCard() }
-            item { Spacer(modifier = Modifier.height(24.dp)) }
+            item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }
@@ -122,10 +141,17 @@ fun ProfileHeader() {
             verticalArrangement = Arrangement
                 .spacedBy(8.dp)
         ) {
-            Box(contentAlignment = Alignment.TopEnd) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Círculo com iniciais
                 Box(
                     modifier = Modifier
-                        .size(110.dp)
+                        .size(90.dp)
                         .clip(CircleShape)
                         .background(OrangeColor),
                     contentAlignment = Alignment.Center
@@ -133,50 +159,62 @@ fun ProfileHeader() {
                     Text(
                         text = "iJ",
                         color = Color.White,
-                        fontSize = 48.sp,
+                        fontSize = 36.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons
-                            .Default.Edit,
-                        contentDescription = "Editar Perfil"
+                
+                // Informações do usuário
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "ISRAEL JUNIOR",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
+                        )
+                        IconButton(onClick = {}) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar Perfil",
+                                tint = TextGrayColor
+                            )
+                        }
+                    }
+                    
+                    Text(
+                        "raraeldev@gmail.com",
+                        color = TextGrayColor,
+                        fontSize = 14.sp
                     )
+                    
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(OrangeColor.copy(alpha = 0.8f))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = "Localização",
+                            tint = Color.White,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            "São Paulo, SP",
+                            color = Color.White,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
-            }
-            Text(
-                "ISRAEL JUNIOR",
-                fontWeight = FontWeight
-                    .Bold, fontSize = 20.sp
-            )
-            Text(
-                "raraeldev@gmail.com",
-                color = TextGrayColor,
-                fontSize = 14.sp
-            )
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(OrangeColor.copy(alpha = 0.8f))
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = "Localização",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(16.dp)
-                )
-                Spacer(
-                    Modifier.width(4.dp)
-                )
-                Text(
-                    "São Paulo, SP",
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
             }
             Spacer(
                 Modifier.height(16.dp)
@@ -191,61 +229,81 @@ fun ProfileHeader() {
                     modifier = Modifier.weight(1f),
                     value = "R$ 1250.80",
                     label = "Total economizado",
+                    icon = Icons.Default.MonetizationOn,
+                    backgroundColor = CardBackgroundColor,
                     valueColor = GreenColor)
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "45",
                     label = "Promoções usadas",
+                    icon = Icons.Default.LocalOffer,
+                    backgroundColor = CardBackgroundColor,
                     valueColor = OrangeColor
                 )
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "12",
                     label = "Avaliações feitas",
-                    valueColor = RedColor
+                    icon = Icons.Default.Star,
+                    backgroundColor = CardBackgroundColor,
+                    valueColor = SoftBlueColor
                 )
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "#12",
                     label = "Ranking geral",
-                    valueColor = GreenColor
+                    icon = Icons.Default.EmojiEvents,
+                    backgroundColor = CardBackgroundColor,
+                    valueColor = BlueGrayColor
                 )
             }
         }
     }
 }
-
 @Composable
 fun StatItem(
     value: String,
     label: String,
+    icon: ImageVector,
+    backgroundColor: Color,
     valueColor: Color = Color.Unspecified,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .height(100.dp),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFFEAEAEA)),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 12.dp).fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 6.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = valueColor,
+                modifier = Modifier.size(20.dp)
+            )
             Text(
                 value,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
+                fontSize = 14.sp,
                 color = valueColor,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
-            Spacer(Modifier.height(4.dp))
             Text(
                 label,
                 color = TextGrayColor,
-                fontSize = 10.sp,
-                textAlign = TextAlign.Center
+                fontSize = 9.sp,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 10.sp
             )
         }
     }
@@ -259,7 +317,7 @@ fun HubCoinCard() {
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults
-            .cardColors(containerColor = Color.White),
+            .cardColors(containerColor = LightOrangeColor),
         elevation = CardDefaults
             .cardElevation(defaultElevation = 2.dp)
     ) {
@@ -275,7 +333,7 @@ fun HubCoinCard() {
                     Icons
                         .Default.MonetizationOn,
                     contentDescription = "HubCoin",
-                    tint = DarkOrangeColor
+                    tint = OrangeColor
                 )
                 Spacer(
                     Modifier
@@ -284,7 +342,8 @@ fun HubCoinCard() {
                 Text(
                     "HubCoin",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = DarkGrayColor
                 )
             }
             Spacer(
@@ -295,7 +354,7 @@ fun HubCoinCard() {
                 "1.285HC",
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = DarkOrangeColor
+                color = DarkGrayColor
             )
             Spacer(
                 Modifier
@@ -307,8 +366,8 @@ fun HubCoinCard() {
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = GreenColor,
-                trackColor = OrangeColor.copy(alpha = 0.3f)
+                color = OrangeColor,
+                trackColor = OrangeColor.copy(alpha = 0.2f)
             )
         }
     }
@@ -321,7 +380,7 @@ fun FavoriteMarketsCard() {
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = BlueGrayColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -337,7 +396,7 @@ fun FavoriteMarketsCard() {
                         .Default
                         .Favorite,
                     contentDescription = "Favoritos",
-                    tint = RedColor
+                    tint = Color.White
                 )
                 Spacer(
                     Modifier
@@ -346,7 +405,8 @@ fun FavoriteMarketsCard() {
                 Text(
                     "Mercados Favoritos",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = Color.White
                 )
             }
             Spacer(
@@ -358,13 +418,15 @@ fun FavoriteMarketsCard() {
             )
             HorizontalDivider(
                 modifier = Modifier
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 8.dp),
+                color = Color.White.copy(alpha = 0.5f)
             )
             MarketItem(
                 "Supermercado Japão", "5 visitas"
             )
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(vertical = 8.dp),
+                color = Color.White.copy(alpha = 0.5f)
             )
             MarketItem(
                 "Supermercado Japão", "3 visitas"
@@ -394,7 +456,7 @@ fun MarketItem(
                 modifier = Modifier
                     .size(30.dp)
                     .clip(CircleShape)
-                    .background(LightGrayColor),
+                    .background(Color.White.copy(alpha = 0.2f)),
                 contentAlignment = Alignment
                     .Center
             ) {
@@ -403,7 +465,7 @@ fun MarketItem(
                     fontSize = 12.sp,
                     fontWeight = FontWeight
                         .Bold,
-                    color = TextGrayColor
+                    color = Color.White
                 )
             }
             Spacer(
@@ -415,11 +477,12 @@ fun MarketItem(
                     name,
                     fontWeight = FontWeight
                         .SemiBold,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    color = Color.White
                 )
                 Text(
                     "500m",
-                    color = TextGrayColor,
+                    color = Color.White.copy(alpha = 0.7f),
                     fontSize = 12.sp
                 )
             }
@@ -434,87 +497,15 @@ fun MarketItem(
                     .split(" ")[0],
                 fontWeight = FontWeight
                     .Bold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = Color.White
             )
 
             Text(
                 "visitas",
-                color = TextGrayColor,
+                color = Color.White.copy(alpha = 0.7f),
                 fontSize = 10.sp
             )
-        }
-    }
-}
-
-@Composable
-fun SettingsCard() {
-    var pushNotifications
-            by remember { mutableStateOf(true) }
-    var location by remember { mutableStateOf(true) }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults
-            .cardColors(
-                containerColor = Color.White
-            ),
-        elevation = CardDefaults
-            .cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment
-                    .CenterVertically
-            ) {
-                Icon(
-                    Icons
-                        .Default.Settings,
-                    contentDescription = "Configurações"
-                )
-                Spacer(
-                    Modifier.width(8.dp)
-                )
-                Text(
-                    "Configurações",
-                    fontWeight = FontWeight
-                        .Bold,
-                    fontSize = 16.sp
-                )
-            }
-            Spacer(Modifier.height(16.dp))
-            SettingToggleItem(
-                "Notificações push",
-                "Receba alertas de promoções",
-                pushNotifications
-            ) {
-                pushNotifications = it
-            }
-            SettingToggleItem("Localização", "Para mostrar ofertas próximas", location) {
-                location = it
-            }
-            Spacer(Modifier.height(16.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(16.dp))
-            SettingsButton(text = "Gerenciar Notificações", icon = Icons.Default.Notifications)
-            Spacer(Modifier.height(8.dp))
-            SettingsButton(text = "Alterar localização", icon = Icons.Default.LocationOn)
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { /* Sair da conta */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = RedColor),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
-                Spacer(Modifier.width(8.dp))
-                Text("Sair da Conta")
-            }
         }
     }
 }
@@ -532,8 +523,8 @@ fun SettingToggleItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(title, fontWeight = FontWeight.SemiBold)
-            Text(subtitle, color = TextGrayColor, fontSize = 12.sp)
+            Text(title, fontWeight = FontWeight.SemiBold, color = Color.White)
+            Text(subtitle, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp)
         }
         Switch(
             checked = checked,
@@ -552,16 +543,95 @@ fun SettingsButton(text: String, icon: ImageVector) {
         onClick = { /* Handle click */ },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, Color.LightGray)
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = Color.White
+        )
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            Icon(icon, contentDescription = null, tint = Color.Gray)
+            Icon(icon, contentDescription = null, tint = Color.White)
             Spacer(Modifier.width(16.dp))
-            Text(text, color = Color.Gray, fontWeight = FontWeight.Normal)
+            Text(text, color = Color.White, fontWeight = FontWeight.Normal)
+        }
+    }
+}
+
+@Composable
+fun SettingsCard() {
+    var pushNotifications
+            by remember { mutableStateOf(true) }
+    var location by remember { mutableStateOf(true) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults
+            .cardColors(
+                containerColor = DarkGrayColor
+            ),
+        elevation = CardDefaults
+            .cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment
+                    .CenterVertically
+            ) {
+                Icon(
+                    Icons
+                        .Default.Settings,
+                    contentDescription = "Configurações",
+                    tint = Color.White
+                )
+                Spacer(
+                    Modifier.width(8.dp)
+                )
+                Text(
+                    "Configurações",
+                    fontWeight = FontWeight
+                        .Bold,
+                    fontSize = 16.sp,
+                    color = Color.White
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            SettingToggleItem(
+                "Notificações push",
+                "Receba alertas de promoções",
+                pushNotifications
+            ) {
+                pushNotifications = it
+            }
+            SettingToggleItem("Localização", "Para mostrar ofertas próximas", location) {
+                location = it
+            }
+            Spacer(Modifier.height(16.dp))
+            HorizontalDivider(color = Color.White.copy(alpha = 0.5f))
+            Spacer(Modifier.height(16.dp))
+            SettingsButton(text = "Gerenciar Notificações", icon = Icons.Default.Notifications)
+            Spacer(Modifier.height(8.dp))
+            SettingsButton(text = "Alterar localização", icon = Icons.Default.LocationOn)
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = { /* Sair da conta */ },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = RedColor),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
+                Spacer(Modifier.width(8.dp))
+                Text("Sair da Conta", color = Color.White)
+            }
         }
     }
 }

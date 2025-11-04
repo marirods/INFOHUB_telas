@@ -130,9 +130,9 @@ fun BottomMenuWithCart(navController: NavController) {
             )
             MenuItem(
                 icon = Icons.Filled.AttachMoney,
-                label = "Chat",
+                label = "InfoCash",
                 navController = navController,
-                route = Routes.CHAT_PRECOS
+                route = Routes.INFO_CASH
             )
             MenuItem(
                 icon = Icons.Default.Person,

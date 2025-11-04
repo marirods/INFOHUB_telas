@@ -85,6 +85,10 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
+        composable(Routes.INFO_CASH) {
+            TelaInfoCash(navController)
+        }
+
         // Shopping Flow
         composable(Routes.LISTA_PRODUTOS) {
             TelaListaProdutos(navController)
