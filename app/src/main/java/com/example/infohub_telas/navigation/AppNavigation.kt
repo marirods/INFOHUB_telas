@@ -85,6 +85,10 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
 
+        composable(Routes.EDICAO_PERFIL) {
+            TelaEdicaoPerfil(navController)
+        }
+
         composable(Routes.INFO_CASH) {
             TelaInfoCash(navController)
         }

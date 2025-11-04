@@ -44,6 +44,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenuWithCart
+import com.example.infohub_telas.navigation.Routes
 
 private val OrangeColor = Color(0xFFF9A01B)
 private val LightOrangeColor = Color(0xFFFFF3E0)
@@ -78,7 +79,7 @@ fun TelaPerfil(navController: NavController?) {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item { ProfileHeader() }
+            item { ProfileHeader(navController) }
             item { Spacer(modifier = Modifier.height(20.dp)) }
             item { HubCoinCard() }
             item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -123,7 +124,7 @@ fun TopBar() {
 
 // All the content cards remain the same as before.
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(navController: NavController?) {
 
     Card(
         modifier = Modifier
@@ -179,7 +180,9 @@ fun ProfileHeader() {
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         )
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = { 
+                            navController?.navigate(Routes.EDICAO_PERFIL)
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "Editar Perfil",
