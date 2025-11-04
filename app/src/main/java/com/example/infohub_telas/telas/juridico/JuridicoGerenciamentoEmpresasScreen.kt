@@ -77,16 +77,15 @@ fun JuridicoGerenciamentoEmpresasScreen(
                 title = "Gerenciamento Jurídico",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationIconClick = { navController.popBackStack() },
-                actions = {
-                    IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filtrar",
-                            tint = Color.White
-                        )
-                    }
+            ) {
+                IconButton(onClick = { showFilterDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filtrar",
+                        tint = Color.White
+                    )
                 }
-            )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(

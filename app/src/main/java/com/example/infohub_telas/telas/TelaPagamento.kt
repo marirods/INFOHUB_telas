@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.Header
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.viewmodel.PagamentoViewModel
 
@@ -33,16 +33,28 @@ import com.example.infohub_telas.viewmodel.PagamentoViewModel
 fun TelaPagamento(navController: NavController, pagamentoViewModel: PagamentoViewModel = viewModel()) {
     val uiState by pagamentoViewModel.uiState.collectAsState()
 
+    fun navigateToPaymentSuccess() {
+        navController.navigate(Routes.PAGAMENTO_SUCESSO) {
+            popUpTo(Routes.HOME) { inclusive = false }
+        }
+    }
+
+    fun navigateBack() {
+        navController.navigateUp()
+    }
+
     Scaffold(
-        topBar = { Header(title = "Pagamento") },
-        bottomBar = { BottomMenu(navController = navController) }
+        topBar = { Header(title = "Pagamento", onBackClick = { navigateBack() }) }
     ) { paddingValues ->
         Crossfade(targetState = uiState.etapa, modifier = Modifier.padding(paddingValues)) { etapa ->
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 when (etapa) {
                     1 -> EtapaDadosCartao(pagamentoViewModel)
                     2 -> EtapaEnderecoCobranca(pagamentoViewModel)
-                    3 -> EtapaConfirmacao(pagamentoViewModel, navController)
+                    3 -> EtapaConfirmacao(pagamentoViewModel) {
+                        // Callback para navegação após confirmação
+                        navigateToPaymentSuccess()
+                    }
                 }
             }
         }
@@ -242,14 +254,12 @@ fun EtapaEnderecoCobranca(viewModel: PagamentoViewModel) {
 }
 
 @Composable
-fun EtapaConfirmacao(viewModel: PagamentoViewModel, navController: NavController) {
+fun EtapaConfirmacao(viewModel: PagamentoViewModel, onConfirm: () -> Unit) {
     val uiState by viewModel.uiState.collectAsState()
 
     if (uiState.pagamentoRealizado) {
         LaunchedEffect(Unit) {
-            navController.navigate("pagamento_sucesso") {
-                popUpTo("inicio") { inclusive = false }
-            }
+            onConfirm()
         }
     }
 

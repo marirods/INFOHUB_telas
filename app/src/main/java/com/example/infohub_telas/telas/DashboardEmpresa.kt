@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Inventory
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -27,14 +26,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.components.DashboardStatisticCard
 import com.example.infohub_telas.components.PromocaoListItem
-import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.model.DashboardData
-import com.example.infohub_telas.model.Promocao
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.PrimaryOrange
-import com.example.infohub_telas.ui.theme.SecondaryOrange
 import com.example.infohub_telas.ui.theme.BackgroundGray
-import java.time.LocalDate
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)

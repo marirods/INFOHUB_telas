@@ -1,5 +1,6 @@
 package com.example.infohub_telas.components
 
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,7 +23,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RelatorioCard(
-    relatorio: RelatorioItem,
+    relatorio: Relatorio,
     onVisualizarClick: () -> Unit,
     onExportarClick: () -> Unit,
     onCompartilharClick: () -> Unit,
@@ -228,5 +229,36 @@ fun CircularProgressIndicator(
             fontWeight = FontWeight.Bold,
             color = color
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RelatorioCardPreview() {
+    val sampleRelatorio = Relatorio(
+        id = "1",
+        nome = "Relatório de Vendas Mensal",
+        descricao = "Análise detalhada das vendas do último mês",
+        dataGeracao = Date(),
+        tipo = TipoRelatorio.VENDAS,
+        periodo = PeriodoRelatorio.MENSAL,
+        autor = "Sistema",
+        metricas = mapOf(
+            "Crescimento" to 15.7,
+            "Satisfação" to 4.5,
+            "Conversão" to 68.3
+        ),
+        tags = listOf("Vendas", "Mensal", "KPIs")
+    )
+
+    MaterialTheme {
+        Surface {
+            RelatorioCard(
+                relatorio = sampleRelatorio,
+                onVisualizarClick = {},
+                onExportarClick = {},
+                onCompartilharClick = {}
+            )
+        }
     }
 }

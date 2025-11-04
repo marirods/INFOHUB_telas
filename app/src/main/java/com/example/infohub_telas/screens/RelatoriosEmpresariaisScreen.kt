@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.model.*
 import com.example.infohub_telas.ui.theme.*
+import com.example.infohub_telas.components.StatusChip
 import kotlin.math.min
 
 @OptIn(ExperimentalMaterial3Api::class)

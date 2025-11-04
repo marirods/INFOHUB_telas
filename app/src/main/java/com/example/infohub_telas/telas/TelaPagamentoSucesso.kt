@@ -18,11 +18,24 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.DetalhesDoPedido
 import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.components.MensagemSucesso
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaPagamentoSucesso(navController: NavController) {
+    fun navigateToHome() {
+        navController.navigate(Routes.HOME) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+
+    fun navigateToOrders() {
+        navController.navigate(Routes.PERFIL) {
+            popUpTo(Routes.PAGAMENTO_SUCESSO) { inclusive = true }
+        }
+    }
+
     Scaffold(
         topBar = { Header(title = "Pagamento Aprovado") }
     ) {
@@ -40,7 +53,10 @@ fun TelaPagamentoSucesso(navController: NavController) {
         ) {
             MensagemSucesso()
             Spacer(modifier = Modifier.height(24.dp))
-            DetalhesDoPedido(navController)
+            DetalhesDoPedido(
+                onVoltarClick = { navigateToHome() },
+                onPedidosClick = { navigateToOrders() }
+            )
         }
     }
 }

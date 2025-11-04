@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.navigation.Routes
 
 // Item do menu com navegação
 @Composable
@@ -25,7 +26,19 @@ fun MenuItem(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { navController.navigate(route) }
+        modifier = Modifier.clickable { 
+            try {
+                navController.navigate(route) {
+                    // Evita múltiplas instâncias da mesma tela
+                    launchSingleTop = true
+                    // Restaura o estado se a tela já existir na pilha
+                    restoreState = true
+                }
+            } catch (e: Exception) {
+                // Se a rota não existir, não faz nada
+                e.printStackTrace()
+            }
+        }
     ) {
         Image(
             painter = painterResource(id = iconRes),
@@ -53,31 +66,31 @@ fun BottomMenu(navController: NavController) {
             iconRes = R.drawable.loja_menu,
             label = "Início",
             navController = navController,
-            route = "inicio"
+            route = Routes.HOME
         )
         MenuItem(
             iconRes = R.drawable.etiqueta_menu,
-            label = "Promoções",
+            label = "Produtos",
             navController = navController,
-            route = "promocoes"
+            route = Routes.LISTA_PRODUTOS
         )
         MenuItem(
             iconRes = R.drawable.local,
             label = "Localização",
             navController = navController,
-            route = "localizacao"
+            route = Routes.LOCALIZACAO
         )
         MenuItem(
             iconRes = R.drawable.cash_menu,
-            label = "InfoCash",
+            label = "Chat",
             navController = navController,
-            route = "infocash"
+            route = Routes.CHAT_PRECOS
         )
         MenuItem(
             iconRes = R.drawable.perfil_icon,
             label = "Meu Perfil",
             navController = navController,
-            route = "perfil"
+            route = Routes.PERFIL
         )
     }
 }

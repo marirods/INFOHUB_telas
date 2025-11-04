@@ -57,13 +57,4 @@ data class Promocao(
     val desconto: Int
 )
 
-data class PromocaoProduto(
-    val nomeProduto: String,
-    val categoria: String,
-    val precoPromocional: String,
-    val dataInicio: Date,
-    val dataTermino: Date,
-    val descricao: String,
-    val imagemUrl: String,
-    val status: StatusPromocao = StatusPromocao.ATIVA
-)
+// A classe PromocaoProduto foi movida para seu próprio arquivo: PromocaoProduto.kt

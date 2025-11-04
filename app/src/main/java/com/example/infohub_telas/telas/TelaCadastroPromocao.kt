@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -41,7 +40,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCadastroPromocao(navController: NavController) {
-    var nomeProduto by remember { mutableStateOf("") }
+    var nome by remember { mutableStateOf("") }
     var precoPromocional by remember { mutableStateOf("") }
     var dataInicio by remember { mutableStateOf<Long?>(null) }
     var dataTermino by remember { mutableStateOf<Long?>(null) }
@@ -77,7 +76,7 @@ fun TelaCadastroPromocao(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Nome do Produto
-            StyledTextField(value = nomeProduto, onValueChange = { nomeProduto = it }, placeholder = "Nome do Produto", icon = Icons.Default.ShoppingBag)
+            StyledTextField(value = nome, onValueChange = { nome = it }, placeholder = "Nome do Produto", icon = Icons.Default.ShoppingBag)
 
             // Card para Categoria e Foto
             StyledCard {
@@ -141,7 +140,7 @@ fun TelaCadastroPromocao(navController: NavController) {
                 onClick = {
                     // Validação dos campos
                     when {
-                        nomeProduto.isBlank() -> {
+                        nome.isBlank() -> {
                             Toast.makeText(context, "Preencha o nome do produto", Toast.LENGTH_SHORT).show()
                         }
                         precoPromocional.isBlank() -> {
@@ -167,7 +166,7 @@ fun TelaCadastroPromocao(navController: NavController) {
                         }
                         else -> {
                             val novaPromocao = PromocaoProduto(
-                                nomeProduto = nomeProduto,
+                                nome = nome,
                                 categoria = categoriaSelecionada,
                                 precoPromocional = precoPromocional.replace(",", "."),
                                 dataInicio = Date(dataInicio!!),

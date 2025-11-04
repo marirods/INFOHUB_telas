@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.infohub_telas.navigation.Routes
 
 @Composable
 fun FormularioCheckout(navController: NavController) {
@@ -32,7 +33,7 @@ fun FormularioCheckout(navController: NavController) {
         ResumoPedidoCheckout()
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("pagamento") },
+            onClick = { navController.navigate(Routes.PAGAMENTO) },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
             modifier = Modifier
                 .fillMaxWidth()

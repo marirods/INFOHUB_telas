@@ -52,13 +52,15 @@ dependencies {
     implementation(libs.androidx.compose.ui.text)
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.camera.core)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
 
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.2")
-    implementation("androidx.navigation:navigation-runtime-ktx:2.7.2")
+    implementation("androidx.navigation:navigation-compose:2.7.5")
+    implementation("androidx.navigation:navigation-runtime-ktx:2.7.5")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     // AndroidX Core & Lifecycle
     implementation("androidx.core:core-ktx:1.12.0")

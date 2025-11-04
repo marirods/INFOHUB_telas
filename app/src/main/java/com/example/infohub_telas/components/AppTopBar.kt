@@ -60,17 +60,18 @@ fun AppTopBar(
 @Preview(showBackground = true)
 @Composable
 fun AppTopBarPreview() {
-    AppTopBar(
-        title = "Título do App",
-        navigationIcon = Icons.Default.ArrowBack,
-        onNavigationIconClick = { },
-        actions = {
+    MaterialTheme {
+        AppTopBar(
+            title = "Título do App",
+            navigationIcon = Icons.Default.ArrowBack,
+            onNavigationIconClick = { }
+        ) {
             IconButton(onClick = { }) {
-                Icon(Icons.Default.Share, "Compartilhar")
+                Icon(Icons.Default.Share, contentDescription = "Compartilhar")
             }
             IconButton(onClick = { }) {
-                Icon(Icons.Default.Settings, "Configurações")
+                Icon(Icons.Default.Settings, contentDescription = "Configurações")
             }
         }
-    )
+    }
 }

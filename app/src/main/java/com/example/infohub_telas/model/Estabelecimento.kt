@@ -11,13 +11,13 @@ data class Estabelecimento(
     val id: Int? = null, // ID gerado pelo backend (opcional no cadastro)
 
     @SerializedName("nome")
-    val nome: String,
+    val nome: String = "",
 
     @SerializedName("cnpj")
-    val cnpj: String,
+    val cnpj: String = "",
 
     @SerializedName("endereco")
-    val endereco: String,
+    val endereco: String = "",
 
     @SerializedName("telefone")
     val telefone: String,

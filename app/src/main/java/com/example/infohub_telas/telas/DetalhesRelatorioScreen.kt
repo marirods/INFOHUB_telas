@@ -19,7 +19,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
@@ -55,25 +54,24 @@ fun DetalhesRelatorioScreen(
                 title = "Detalhes do Relatório",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationIconClick = { navController.popBackStack() },
-                actions = {
-                    // Filtro
-                    IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(Icons.Default.FilterList, "Filtrar", tint = Color.White)
-                    }
-                    // Comentário
-                    IconButton(onClick = { showCommentDialog = true }) {
-                        Icon(Icons.Default.Comment, "Comentar", tint = Color.White)
-                    }
-                    // Compartilhar
-                    IconButton(onClick = { showShareDialog = true }) {
-                        Icon(Icons.Default.Share, "Compartilhar", tint = Color.White)
-                    }
-                    // Exportar
-                    IconButton(onClick = { showExportDialog = true }) {
-                        Icon(Icons.Default.Download, "Exportar", tint = Color.White)
-                    }
+            ) {
+                // Filtro
+                IconButton(onClick = { showFilterDialog = true }) {
+                    Icon(Icons.Default.FilterList, "Filtrar", tint = Color.White)
                 }
-            )
+                // Comentário
+                IconButton(onClick = { showCommentDialog = true }) {
+                    Icon(Icons.Default.Comment, "Comentar", tint = Color.White)
+                }
+                // Compartilhar
+                IconButton(onClick = { showShareDialog = true }) {
+                    Icon(Icons.Default.Share, "Compartilhar", tint = Color.White)
+                }
+                // Exportar
+                IconButton(onClick = { showExportDialog = true }) {
+                    Icon(Icons.Default.Download, "Exportar", tint = Color.White)
+                }
+            }
         }
     ) { padding ->
         LazyColumn(

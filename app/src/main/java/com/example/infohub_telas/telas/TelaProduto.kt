@@ -29,12 +29,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaProduto(navController: NavHostController?) {
+fun TelaProduto(navController: NavController, id: String) {
     Scaffold(
         topBar = { TopBarPromocao() },
         bottomBar = { BottomBarPromocao() }
@@ -95,13 +98,7 @@ fun SearchBarPromocao() {
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
-        shape = RoundedCornerShape(30.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        )
+        shape = RoundedCornerShape(30.dp)
     )
 }
 
@@ -477,6 +474,9 @@ fun BottomNavigationItemAnimated(
 @Composable
 fun DefaultPreview() {
     InfoHub_telasTheme {
-        TelaProduto(null)
+        TelaProduto(
+            navController = rememberNavController(),
+            id = "1"
+        )
     }
 }

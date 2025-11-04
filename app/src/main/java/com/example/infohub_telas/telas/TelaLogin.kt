@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -22,12 +21,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
@@ -53,6 +52,26 @@ fun TelaLogin(navController: NavController) {
         val emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches()
         val senhaValida = senha.isNotEmpty()
         return emailValido && senhaValida
+    }
+
+    // Credenciais de teste
+    fun isTestUser(): Boolean {
+        return (email == "teste@infohub.com" && senha == "123456") ||
+               (email == "admin@infohub.com" && senha == "admin123")
+    }
+
+    fun navigateToHome() {
+        navController.navigate(Routes.HOME) {
+            popUpTo(Routes.LOGIN) { inclusive = true }
+        }
+    }
+
+    fun navigateToForgotPassword() {
+        navController.navigate(Routes.REDEFINICAO_SENHA)
+    }
+
+    fun navigateToSignUp() {
+        navController.navigate(Routes.CADASTRO)
     }
 
     Column(
@@ -96,6 +115,14 @@ fun TelaLogin(navController: NavController) {
                     fontWeight = FontWeight.Bold,
                     fontSize = 25.sp,
                     modifier = Modifier.padding(top = 20.dp)
+                )
+                
+                // Informações de teste
+                Text(
+                    text = "Para teste use:\nteste@infohub.com / 123456\nou\nadmin@infohub.com / admin123",
+                    fontSize = 12.sp,
+                    color = Color.Black.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(top = 8.dp)
                 )
 
                 OutlinedTextField(
@@ -148,7 +175,7 @@ fun TelaLogin(navController: NavController) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(
-                        onClick = { navController.navigate("redefinicao_senha") }
+                        onClick = { navigateToForgotPassword() }
                     ) {
                         Text(
                             text = "Recuperar senha",
@@ -165,30 +192,39 @@ fun TelaLogin(navController: NavController) {
                     onClick = {
                         if (validar()) {
                             isLoading = true
-                            val loginReq = LoginUsuario(email, senha)
+                            
+                            // Verificar se é usuário de teste
+                            if (isTestUser()) {
+                                // Login de teste - navegar diretamente
+                                isLoading = false
+                                val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                                prefs.edit().putString("token", "test_token_123").apply()
+                                navigateToHome()
+                            } else {
+                                // Login real via API
+                                val loginReq = LoginUsuario(email, senha)
 
-                            userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
-                                override fun onResponse(
-                                    call: Call<LoginResponse>,
-                                    response: Response<LoginResponse>
-                                ) {
-                                    isLoading = false
-                                    if (response.isSuccessful) {
-                                        val body = response.body()
-                                        if (body != null && body.status) {
-                                            val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                                            prefs.edit().putString("token", body.token).apply()
-                                            navController.navigate("home") {
-                                                popUpTo("login") { inclusive = true }
+                                userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
+                                    override fun onResponse(
+                                        call: Call<LoginResponse>,
+                                        response: Response<LoginResponse>
+                                    ) {
+                                        isLoading = false
+                                        if (response.isSuccessful) {
+                                            val body = response.body()
+                                            if (body != null && body.status) {
+                                                val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                                                prefs.edit().putString("token", body.token).apply()
+                                                navigateToHome()
                                             }
                                         }
                                     }
-                                }
 
-                                override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                                    isLoading = false
-                                }
-                            })
+                                    override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                                        isLoading = false
+                                    }
+                                })
+                            }
                         }
                     },
                     modifier = Modifier

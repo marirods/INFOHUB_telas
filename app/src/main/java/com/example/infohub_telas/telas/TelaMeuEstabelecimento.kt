@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaMeuEstabelecimento(navController: NavController, estabelecimento: Estabelecimento?) {
+fun TelaMeuEstabelecimento(navController: NavController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -71,80 +71,72 @@ fun TelaMeuEstabelecimento(navController: NavController, estabelecimento: Estabe
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (estabelecimento != null) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(4.dp, RoundedCornerShape(12.dp)),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Column(modifier = Modifier.padding(20.dp)) {
-                            InfoRow(icon = Icons.Default.Business, label = "Nome", text = estabelecimento.nome)
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            InfoRow(icon = Icons.Default.Receipt, label = "CNPJ", text = estabelecimento.cnpj)
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            InfoRow(icon = Icons.Default.LocationOn, label = "Endereço", text = estabelecimento.endereco)
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            InfoRow(icon = Icons.Default.Phone, label = "Telefone", text = estabelecimento.telefone)
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            InfoRow(icon = Icons.Default.Email, label = "E-mail", text = estabelecimento.email)
-                            Divider(modifier = Modifier.padding(vertical = 8.dp))
-                            InfoRow(icon = Icons.Default.Category, label = "Categoria", text = estabelecimento.categoria)
-                        }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(4.dp, RoundedCornerShape(12.dp)),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(modifier = Modifier.padding(20.dp)) {
+                        InfoRow(icon = Icons.Default.Business, label = "Nome", text = "Estabelecimento Exemplo")
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        InfoRow(icon = Icons.Default.Receipt, label = "CNPJ", text = "12.345.678/0001-99")
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        InfoRow(icon = Icons.Default.LocationOn, label = "Endereço", text = "Rua Exemplo, 123")
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        InfoRow(icon = Icons.Default.Phone, label = "Telefone", text = "(11) 99999-8888")
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        InfoRow(icon = Icons.Default.Email, label = "E-mail", text = "contato@exemplo.com")
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                        InfoRow(icon = Icons.Default.Category, label = "Categoria", text = "Alimentação")
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                    Column(
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        Button(
+                            onClick = {
+                                navController.navigate("cadastroEstabelecimento?id=1&categoria=Alimentação")
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03A9F4)),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Button(
-                                onClick = {
-                                    navController.navigate("cadastroEstabelecimento?id=${estabelecimento.id}&categoria=${estabelecimento.categoria}")
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03A9F4)),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = "Editar Dados")
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Editar Dados", color = Color.White, fontWeight = FontWeight.Bold)
-                            }
-
-                            Button(
-                                onClick = { navController.navigate("promocoes") },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("Ver Promoções", color = Color.White, fontWeight = FontWeight.Bold)
-                            }
+                            Icon(Icons.Default.Edit, contentDescription = "Editar Dados")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Editar Dados", color = Color.White, fontWeight = FontWeight.Bold)
                         }
 
                         Button(
-                            onClick = { navController.navigate("criarPromocao") },
+                            onClick = { navController.navigate("promocoes") },
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)), // Green color for "create"
-                            modifier = Modifier.fillMaxWidth()
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Criar Promoção")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Criar Promoção", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Ver Promoções", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     }
-                } else {
-                    Text(
-                        text = "Nenhum estabelecimento encontrado.",
-                        fontSize = 18.sp,
-                        color = Color.Gray
-                    )
+
+                    Button(
+                        onClick = { navController.navigate("criarPromocao") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)), // Green color for "create"
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Criar Promoção")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Criar Promoção", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -156,15 +148,6 @@ fun TelaMeuEstabelecimento(navController: NavController, estabelecimento: Estabe
 @Composable
 fun TelaMeuEstabelecimentoPreview() {
     InfoHub_telasTheme {
-        val sampleEstabelecimento = Estabelecimento(
-            id = 1,
-            nome = "Padaria do Zé",
-            cnpj = "12.345.678/0001-99",
-            endereco = "Rua das Flores, 123",
-            telefone = "(11) 99999-8888",
-            email = "contato@padariadoze.com",
-            categoria = "Alimentação"
-        )
-        TelaMeuEstabelecimento(navController = rememberNavController(), estabelecimento = sampleEstabelecimento)
+        TelaMeuEstabelecimento(navController = rememberNavController())
     }
 }

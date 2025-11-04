@@ -17,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.CarrinhoCheio
 import com.example.infohub_telas.components.CarrinhoVazio
 import com.example.infohub_telas.components.Header
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,8 +26,22 @@ fun TelaCarrinho(navController: NavController) {
     // Estado para simular se o carrinho está vazio ou não
     var carrinhoVazio by remember { mutableStateOf(false) }
 
+    fun navigateToCheckout() {
+        navController.navigate(Routes.CHECKOUT)
+    }
+
+    fun navigateToHome() {
+        navController.navigate(Routes.HOME) {
+            popUpTo(Routes.HOME) { inclusive = true }
+        }
+    }
+
+    fun navigateBack() {
+        navController.navigateUp()
+    }
+
     Scaffold(
-        topBar = { Header(title = "Meu Carrinho") }
+        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

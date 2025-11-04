@@ -14,13 +14,22 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.FormularioCheckout
 import com.example.infohub_telas.components.Header
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCheckout(navController: NavController) {
+    fun navigateToPayment() {
+        navController.navigate(Routes.PAGAMENTO)
+    }
+
+    fun navigateBack() {
+        navController.navigateUp()
+    }
+
     Scaffold(
-        topBar = { Header(title = "Finalizar Compra") }
+        topBar = { Header(title = "Finalizar Compra", onBackClick = { navigateBack() }) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

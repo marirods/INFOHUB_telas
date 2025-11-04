@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,7 +25,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.*
 import com.example.infohub_telas.model.PeriodoRelatorio
-import com.example.infohub_telas.model.RelatorioItem
+import com.example.infohub_telas.model.Relatorio
+import com.example.infohub_telas.model.RelatorioMetrics
 import com.example.infohub_telas.model.RelatorioMockData
 import com.example.infohub_telas.model.TipoRelatorio
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
@@ -61,25 +61,24 @@ fun RelatoriosScreen(
                 title = "Relatórios do Sistema",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationIconClick = { navController.popBackStack() },
-                actions = {
-                    // Filtro
-                    IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filtrar",
-                            tint = Color.White
-                        )
-                    }
-                    // Período
-                    IconButton(onClick = { showPeriodoDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Período",
-                            tint = Color.White
-                        )
-                    }
+            ) {
+                // Filtro
+                IconButton(onClick = { showFilterDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filtrar",
+                        tint = Color.White
+                    )
                 }
-            )
+                // Período
+                IconButton(onClick = { showPeriodoDialog = true }) {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Período",
+                        tint = Color.White
+                    )
+                }
+            }
         }
     ) { paddingValues ->
         Column(
@@ -183,7 +182,7 @@ fun RelatoriosScreen(
 
                 // Lista de relatórios filtrados
                 items(filteredRelatorios) { relatorio ->
-                    RelatorioCard(
+                    com.example.infohub_telas.components.RelatorioCard(
                         relatorio = relatorio,
                         onVisualizarClick = {
                             navController.navigate("detalhesRelatorio/${relatorio.id}")
@@ -393,163 +392,6 @@ private fun GraficoDesempenho() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RelatorioCard(
-    relatorio: RelatorioItem,
-    onVisualizarClick: () -> Unit,
-    onExportarClick: () -> Unit,
-    onCompartilharClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR")) }
-
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = relatorio.nome,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = dateFormat.format(relatorio.dataGeracao),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = relatorio.descricao,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = PrimaryOrange.copy(alpha = 0.2f)
-                ) {
-                    Text(
-                        text = relatorio.tipo.name,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = PrimaryOrange
-                    )
-                }
-            }
-
-            // Métricas
-            if (relatorio.metricas.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    relatorio.metricas.entries.take(3).forEach { (key, value) ->
-                        MetricaChip(label = key, value = value, modifier = Modifier.weight(1f))
-                    }
-                }
-            }
-
-            // Tags
-            if (relatorio.tags.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    relatorio.tags.forEach { tag ->
-                        TagChip(tag = tag)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = onExportarClick,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Exportar")
-                }
-                OutlinedButton(
-                    onClick = onCompartilharClick,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Compartilhar")
-                }
-                Button(
-                    onClick = onVisualizarClick,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
-                ) {
-                    Text("Visualizar")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MetricaChip(
-    label: String,
-    value: Double,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(8.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = String.format("%.1f", value),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun TagChip(tag: String) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-    ) {
-        Text(
-            text = tag,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
-        )
-    }
-}
 
 
 

@@ -74,7 +74,6 @@ fun JuridicoHomeScreen(
         topBar = {
             AppTopBar(
                 title = "Portal Jurídico",
-                navigationIcon = null
             )
         }
     ) { padding ->
