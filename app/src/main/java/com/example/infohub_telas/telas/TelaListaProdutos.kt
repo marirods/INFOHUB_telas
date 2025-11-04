@@ -1,6 +1,7 @@
 package com.example.infohub_telas.telas
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,8 +18,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,9 +31,14 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.infohub_telas.R
 import com.example.infohub_telas.model.PromocaoProduto
+import com.example.infohub_telas.components.BottomMenuWithCart
+import com.example.infohub_telas.navigation.Routes
 import kotlinx.coroutines.launch
 import java.util.*
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,82 +72,94 @@ fun TelaListaProdutos(navController: NavController) {
             }
         }
     ) {
-        Scaffold(
-            topBar = {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                        Text(
-                            "Lista de Produtos",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        // Espaço vazio para manter o título centralizado
-                        Box(modifier = Modifier.size(48.dp))
-                    }
-
-                    OutlinedTextField(
-                        value = searchQuery.value,
-                        onValueChange = { searchQuery.value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        placeholder = { Text("Buscar produtos...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
-                    )
-
-                    LazyRow(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(categorias) { categoria ->
-                            val isSelected = selectedCategoria.value == categoria
-                            SuggestionChip(
-                                onClick = {
-                                    selectedCategoria.value = if (isSelected) null else categoria
-                                },
-                                label = { Text(categoria) },
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surface
-                                )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                topBar = {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Menu")
+                            }
+                            Text(
+                                "Lista de Produtos",
+                                style = MaterialTheme.typography.titleLarge
                             )
+                            Box(modifier = Modifier.size(48.dp))
+                        }
+
+                        OutlinedTextField(
+                            value = searchQuery.value,
+                            onValueChange = { searchQuery.value = it },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            placeholder = { Text("Buscar produtos...") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+                        )
+
+                        LazyRow(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(categorias) { categoria ->
+                                val isSelected = selectedCategoria.value == categoria
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedCategoria.value = if (isSelected) null else categoria
+                                    },
+                                    label = { Text(categoria) },
+                                    colors = SuggestionChipDefaults.suggestionChipColors(
+                                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.surface
+                                    )
+                                )
+                            }
                         }
                     }
-                }
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navController.navigate("criarPromocao") },
-                    containerColor = MaterialTheme.colorScheme.primary
+                },
+                bottomBar = { BottomMenuWithCart(navController = navController) }
+            ) { paddingValues ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar Produto")
+                    items(
+                        produtos.filter {
+                            val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
+                            val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
+                            matchesSearch && matchesCategoria
+                        }
+                    ) { produto ->
+                        ProdutoCard(produto = produto)
+                    }
                 }
             }
-        ) { paddingValues ->
-            LazyColumn(
+
+            FloatingActionButton(
+                onClick = { navController.navigate(Routes.CHAT_PRECOS) },
+                containerColor = Laranja,
+                shape = CircleShape,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 80.dp)
+                    .size(64.dp)
+                    .shadow(8.dp, CircleShape)
             ) {
-                items(
-                    produtos.filter {
-                        val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
-                        val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
-                        matchesSearch && matchesCategoria
-                    }
-                ) { produto ->
-                    ProdutoCard(produto = produto)
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.robo),
+                    contentDescription = "Chat de Preços",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
     }
@@ -147,7 +169,7 @@ fun TelaListaProdutos(navController: NavController) {
 fun ProdutoCard(produto: PromocaoProduto) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val elevation by animateDpAsState(if (isPressed) 2.dp else 4.dp)
+    val elevation by animateDpAsState(if (isPressed) 2.dp else 4.dp, label = "elevation")
 
     Card(
         modifier = Modifier
@@ -231,18 +253,6 @@ fun ProdutoCard(produto: PromocaoProduto) {
 @Preview(showBackground = true)
 @Composable
 fun TelaListaProdutosPreview() {
-    val sampleProdutos = listOf(
-        PromocaoProduto(
-            nome = "Hambúrguer de Picanha",
-            categoria = "Alimentação",
-            precoPromocional = "29.90",
-            dataInicio = Date(),
-            dataTermino = Date(System.currentTimeMillis() + 86400000),
-            descricao = "",
-            imagemUrl = "https://picsum.photos/seed/1/200"
-        )
-    )
-
     Surface {
         TelaListaProdutos(
             navController = rememberNavController()

@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomAppBarWithAnimation
+import com.example.infohub_telas.components.BottomMenuWithCart
 
 // Define the main colors from the image for easy reuse
 private val OrangeColor = Color(0xFFF9A01B)
@@ -43,18 +43,12 @@ private val RedColor = Color(0xFFDA312A)
  */
 @Composable
 fun TelaPerfil(navController: NavController?) {
-    var currentRoute by remember {
-        mutableStateOf("profile")
-    }
-
     Scaffold(
         topBar = { TopBar() },
         bottomBar = {
-            BottomAppBarWithAnimation(
-                navController = navController ?: return@Scaffold, // evita null
-                currentRoute = currentRoute,
-                onTabSelected = { newRoute -> currentRoute = newRoute }
-            )
+            if (navController != null) {
+                BottomMenuWithCart(navController = navController)
+            }
         },
         containerColor = LightGrayColor
     ) { paddingValues ->
@@ -203,13 +197,13 @@ fun ProfileHeader() {
                     value = "45",
                     label = "Promoções usadas",
                     valueColor = OrangeColor
-                    )
+                )
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "12",
                     label = "Avaliações feitas",
                     valueColor = RedColor
-                    )
+                )
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "#12",
@@ -362,14 +356,14 @@ fun FavoriteMarketsCard() {
             MarketItem(
                 "Supermercado Japão", "8 visitas"
             )
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier
                     .padding(vertical = 8.dp)
             )
             MarketItem(
                 "Supermercado Japão", "5 visitas"
             )
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             MarketItem(
@@ -505,7 +499,7 @@ fun SettingsCard() {
                 location = it
             }
             Spacer(Modifier.height(16.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(Modifier.height(16.dp))
             SettingsButton(text = "Gerenciar Notificações", icon = Icons.Default.Notifications)
             Spacer(Modifier.height(8.dp))
@@ -580,7 +574,7 @@ fun SettingsButton(text: String, icon: ImageVector) {
 @Composable
 fun TelaPerfilScreenPreview() {
     MaterialTheme {
-        TelaPerfil(navController = null)
+        TelaPerfil(navController = rememberNavController())
     }
 }
 
@@ -615,17 +609,5 @@ fun MarketItemPreview() {
 fun SettingsCardPreview() {
     MaterialTheme {
         SettingsCard()
-    }
-}
-@Preview(showBackground = true, name = "BottomAppBarWithAnimation")
-@Composable
-fun BottomAppBarWithAnimationPreview() {
-    MaterialTheme {
-        val navController = rememberNavController()
-        BottomAppBarWithAnimation(
-            navController = navController,
-            currentRoute = "profile",
-            onTabSelected = {}
-        )
     }
 }

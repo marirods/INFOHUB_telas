@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -23,13 +24,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomMenu
-import com.example.infohub_telas.components.Header
+import com.example.infohub_telas.components.BottomMenuWithCart
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.launch
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +44,6 @@ fun TelaLocalizacao(navController: NavController) {
     var cep by remember { mutableStateOf("") }
     var endereco by remember { mutableStateOf<String?>(null) }
     var feedbackMessage by remember { mutableStateOf<Pair<String, Color>?>(null) }
-
 
     val mapView = if (!isPreview) {
         remember {
@@ -61,167 +62,182 @@ fun TelaLocalizacao(navController: NavController) {
         }
     } else null
 
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-
-
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-
-            Row(
+    Scaffold(
+        bottomBar = { BottomMenuWithCart(navController = navController) }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF9A01B))
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .background(Color.White),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .background(Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Logo",
-                        modifier = Modifier.size(50.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-
-            if (!isPreview) {
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(6.dp),
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .height(300.dp)
-                ) {
-                    AndroidView(factory = { mapView!! }, modifier = Modifier.fillMaxSize())
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .height(300.dp)
-                        .background(Color.LightGray),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Mapa (Preview)")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-
-
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .background(Color.White, RoundedCornerShape(16.dp))
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    TextField(
-                        value = cep,
-                        onValueChange = {
-                            cep = it
-                            feedbackMessage = null // Limpa a mensagem ao digitar
-                        },
-                        placeholder = { Text("Digite um endereço ou CEP (ex: 01310-100...)") },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f)
-                    )
-                    IconButton(onClick = {
-                        scope.launch {
-                            try {
-                                val input = cep.trim()
-                                var enderecoResult: String? = null
-
-                                if (input.matches(Regex("\\d{5}-?\\d{3}"))) {
-                                    val viaCepService = RetrofitFactory().getViaCepService()
-                                    val resposta = viaCepService.buscarCep(input)
-                                    enderecoResult = "${resposta.logradouro}, ${resposta.bairro}, ${resposta.localidade} - ${resposta.uf}"
-                                } else {
-                                    enderecoResult = input
-                                }
-
-                                if (!isPreview) {
-                                    val geo = Geocoder(context).getFromLocationName(enderecoResult, 1)
-                                    if (!geo.isNullOrEmpty()) {
-                                        val loc = geo[0]
-                                        val lat = loc.latitude
-                                        val lon = loc.longitude
-
-                                        mapView!!.controller.setCenter(GeoPoint(lat, lon))
-
-                                        val marker = Marker(mapView)
-                                        marker.position = GeoPoint(lat, lon)
-                                        marker.title = enderecoResult
-
-                                        mapView.overlays.clear()
-                                        mapView.overlays.add(marker)
-                                        mapView.invalidate()
-                                        endereco = enderecoResult
-                                        feedbackMessage = "Endereço encontrado com sucesso!" to Color(0xFF006400) // Verde escuro
-                                    } else {
-                                        throw Exception("Endereço não localizado no mapa.")
-                                    }
-                                } else { // Lógica para preview
-                                    endereco = enderecoResult
-                                    feedbackMessage = "Endereço encontrado com sucesso!" to Color(0xFF006400)
-                                }
-
-                            } catch (e: Exception) {
-                                endereco = null
-                                feedbackMessage = "Endereço não encontrado. Tente novamente." to Color.Red
-                            }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Laranja)
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .background(Color.White, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.logo),
+                                contentDescription = "Logo",
+                                modifier = Modifier.size(50.dp)
+                            )
                         }
-                    }) {
-                        Image(
-                            painter = painterResource(id = R.drawable.lupa_loc),
-                            contentDescription = "Buscar",
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
-                    Image(
-                        painter = painterResource(id = R.drawable.microfone_loc),
-                        contentDescription = "Microfone",
-                        modifier = Modifier.size(24.dp)
-                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (!isPreview) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.cardElevation(6.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.9f)
+                                .height(300.dp)
+                        ) {
+                            AndroidView(factory = { mapView!! }, modifier = Modifier.fillMaxSize())
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.9f)
+                                .height(300.dp)
+                                .background(Color.LightGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Mapa (Preview)")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(0.9f)
+                                .background(Color.White, RoundedCornerShape(16.dp))
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            TextField(
+                                value = cep,
+                                onValueChange = {
+                                    cep = it
+                                    feedbackMessage = null
+                                },
+                                placeholder = { Text("Digite um endereço ou CEP (ex: 01310-100...)") },
+                                singleLine = true,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = {
+                                scope.launch {
+                                    try {
+                                        val input = cep.trim()
+                                        var enderecoResult: String? = null
+
+                                        if (input.matches(Regex("\\d{5}-?\\d{3}"))) {
+                                            val viaCepService = RetrofitFactory().getViaCepService()
+                                            val resposta = viaCepService.buscarCep(input)
+                                            enderecoResult = "${resposta.logradouro}, ${resposta.bairro}, ${resposta.localidade} - ${resposta.uf}"
+                                        } else {
+                                            enderecoResult = input
+                                        }
+
+                                        if (!isPreview) {
+                                            val geo = Geocoder(context).getFromLocationName(enderecoResult, 1)
+                                            if (!geo.isNullOrEmpty()) {
+                                                val loc = geo[0]
+                                                val lat = loc.latitude
+                                                val lon = loc.longitude
+
+                                                mapView!!.controller.setCenter(GeoPoint(lat, lon))
+
+                                                val marker = Marker(mapView)
+                                                marker.position = GeoPoint(lat, lon)
+                                                marker.title = enderecoResult
+
+                                                mapView.overlays.clear()
+                                                mapView.overlays.add(marker)
+                                                mapView.invalidate()
+                                                endereco = enderecoResult
+                                                feedbackMessage = "Endereço encontrado com sucesso!" to Color(0xFF006400)
+                                            } else {
+                                                throw Exception("Endereço não localizado no mapa.")
+                                            }
+                                        } else {
+                                            endereco = enderecoResult
+                                            feedbackMessage = "Endereço encontrado com sucesso!" to Color(0xFF006400)
+                                        }
+
+                                    } catch (e: Exception) {
+                                        endereco = null
+                                        feedbackMessage = "Endereço não encontrado. Tente novamente." to Color.Red
+                                    }
+                                }
+                            }) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.lupa_loc),
+                                    contentDescription = "Buscar",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Image(
+                                painter = painterResource(id = R.drawable.microfone_loc),
+                                contentDescription = "Microfone",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        feedbackMessage?.let { (message, color) ->
+                            Text(
+                                text = message,
+                                modifier = Modifier.padding(top = 8.dp),
+                                fontSize = 14.sp,
+                                color = color
+                            )
+                        }
+                    }
                 }
+            }
 
-
-                feedbackMessage?.let { (message, color) ->
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(top = 8.dp),
-                        fontSize = 14.sp,
-                        color = color
-                    )
-                }
-
-
+            // Botão flutuante de chat no canto inferior direito
+            FloatingActionButton(
+                onClick = { navController.navigate(Routes.CHAT_PRECOS) },
+                containerColor = Laranja,
+                shape = CircleShape,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 80.dp)
+                    .size(64.dp)
+                    .shadow(8.dp, CircleShape)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.robo),
+                    contentDescription = "Chat de Preços",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
             }
         }
-
-        // Menu inferior fixo na base \BottomMenu(navController ?: rememberNavController())
-
     }
 }
-
-
-
 
 @Preview(showSystemUi = true)
 @Composable

@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.BottomMenuWithCart
 import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
@@ -85,7 +85,7 @@ fun TelaHome(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Laranja)
             )
         },
-        bottomBar = { BottomMenu(navController = navController) }
+        bottomBar = { BottomMenuWithCart(navController = navController) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
