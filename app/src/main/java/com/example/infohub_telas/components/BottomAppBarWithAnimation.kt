@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.LocationOn
@@ -60,6 +61,7 @@ private val navItems = listOf(
     NavItem("Início", Routes.HOME, Icons.Default.Home),
     NavItem("Promoções", Routes.LISTA_PRODUTOS, Icons.Default.LocalOffer),
     NavItem("Localização", Routes.LOCALIZACAO, Icons.Default.LocationOn),
+    NavItem("Comunidade", Routes.COMUNIDADE, Icons.Default.Forum),
     NavItem("InfoCash", Routes.CHAT_PRECOS, Icons.Filled.AttachMoney),
     NavItem("Meu Perfil", Routes.PERFIL, Icons.Default.Person)
 )
@@ -148,8 +150,9 @@ fun BottomAppBarWithAnimation(
                         label = {
                             Text(
                                 item.label,
-                                fontSize = 10.sp,
-                                color = if (isSelected) OrangeColor else TextGrayColor
+                                fontSize = 9.sp,
+                                color = if (isSelected) OrangeColor else TextGrayColor,
+                                maxLines = 1
                             )
                         },
                         colors = NavigationBarItemDefaults.colors(

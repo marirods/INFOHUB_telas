@@ -25,6 +25,7 @@ import com.example.infohub_telas.R
 import com.example.infohub_telas.navigation.Routes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.LocationOn
@@ -127,6 +128,12 @@ fun BottomMenuWithCart(navController: NavController) {
                 label = "Localização",
                 navController = navController,
                 route = Routes.LOCALIZACAO
+            )
+            MenuItem(
+                icon = Icons.Default.Forum,
+                label = "Comunidade",
+                navController = navController,
+                route = Routes.COMUNIDADE
             )
             MenuItem(
                 icon = Icons.Filled.AttachMoney,

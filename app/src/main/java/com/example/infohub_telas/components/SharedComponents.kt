@@ -67,7 +67,14 @@ fun MyTopAppBar(
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
-        title = { Text(title, color = Color.White) },
+        title = { 
+            Text(
+                title, 
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium
+            ) 
+        },
         navigationIcon = {
             if (navigationIcon != null && onNavigationIconClick != null) {
                 IconButton(onClick = onNavigationIconClick) {

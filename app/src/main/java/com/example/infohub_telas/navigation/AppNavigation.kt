@@ -68,6 +68,10 @@ fun AppNavigation(navController: NavHostController) {
             TelaChatDePrecos(navController)
         }
 
+        composable(Routes.COMUNIDADE) {
+            TelaComunidade(navController)
+        }
+
         // User Profile
         composable(Routes.PERFIL) {
             TelaPerfil(navController)

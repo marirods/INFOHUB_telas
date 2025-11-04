@@ -16,6 +16,7 @@ object Routes {
     const val HOME = "home"
     const val LOCALIZACAO = "localizacao"
     const val CHAT_PRECOS = "chat_precos"
+    const val COMUNIDADE = "comunidade"
 
     // User Profile Routes
     const val PERFIL = "perfil"

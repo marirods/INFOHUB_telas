@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,5 +60,13 @@ fun TelaTermoDeUso(navController: NavController) {
                 Text("Aceitar e Continuar")
             }
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Tela Termo de Uso")
+@Composable
+fun TelaTermoDeUsoPreview() {
+    MaterialTheme {
+        TelaTermoDeUso(navController = rememberNavController())
     }
 }
