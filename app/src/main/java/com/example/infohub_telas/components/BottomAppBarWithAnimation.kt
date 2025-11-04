@@ -44,6 +44,7 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.navigation.Routes
 
 private val OrangeColor = Color(0xFFF9A01B)
 private val DarkOrangeColor = Color(0xFFF9A01B)
@@ -56,11 +57,11 @@ private data class NavItem(
 )
 
 private val navItems = listOf(
-    NavItem("Início", "home", Icons.Default.Home),
-    NavItem("Promoções", "promotions", Icons.Default.LocalOffer),
-    NavItem("Localização", "location", Icons.Default.LocationOn),
-    NavItem("InfoCash", "infocash", Icons.Filled.AttachMoney),
-    NavItem("Meu Perfil", "profile", Icons.Default.Person)
+    NavItem("Início", Routes.HOME, Icons.Default.Home),
+    NavItem("Promoções", Routes.LISTA_PRODUTOS, Icons.Default.LocalOffer),
+    NavItem("Localização", Routes.LOCALIZACAO, Icons.Default.LocationOn),
+    NavItem("InfoCash", Routes.CHAT_PRECOS, Icons.Filled.AttachMoney),
+    NavItem("Meu Perfil", Routes.PERFIL, Icons.Default.Person)
 )
 
 @Composable
@@ -84,7 +85,7 @@ fun BottomAppBarWithAnimation(
             .background(Color.White)
     ) {
         Button(
-            onClick = { /* Handle cart click */ },
+            onClick = { navController.navigate(Routes.CARRINHO) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)

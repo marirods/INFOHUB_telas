@@ -37,7 +37,6 @@ fun TelaHomeJuridico(
         topBar = {
             AppTopBar(
                 title = "Portal Jurídico",
-                navigationIcon = null
             )
         }
     ) { padding ->

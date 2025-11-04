@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.PrimaryOrange
 
 data class EmpresaItem(
@@ -56,16 +55,15 @@ fun GerenciamentoEmpresasScreen(navController: NavController) {
                 title = "Gerenciamento de Empresas",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationIconClick = { navController.popBackStack() },
-                actions = {
-                    IconButton(onClick = { /* Implementar filtros */ }) {
-                        Icon(
-                            imageVector = Icons.Default.FilterList,
-                            contentDescription = "Filtrar",
-                            tint = Color.White
-                        )
-                    }
+            ) {
+                IconButton(onClick = { /* Implementar filtros */ }) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Filtrar",
+                        tint = Color.White
+                    )
                 }
-            )
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -223,10 +221,8 @@ private fun generateSampleEmpresas(): List<EmpresaItem> {
 
 @Preview(showBackground = true)
 @Composable
-fun GerenciamentoEmpresasScreenPreview() {
-    InfoHub_telasTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            GerenciamentoEmpresasScreen(rememberNavController())
-        }
+private fun GerenciamentoEmpresasScreenPreview() {
+    MaterialTheme {
+        GerenciamentoEmpresasScreen(rememberNavController())
     }
 }

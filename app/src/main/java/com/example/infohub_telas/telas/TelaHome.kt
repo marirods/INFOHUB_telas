@@ -23,6 +23,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 // Paleta de cores
@@ -36,6 +37,26 @@ val CinzaClaro = Color(0xFFE0E0E0)
 @Composable
 fun TelaHome(navController: NavController) {
     val scrollState = rememberScrollState()
+
+    fun navigateToProfile() {
+        navController.navigate(Routes.PERFIL)
+    }
+
+    fun navigateToCart() {
+        navController.navigate(Routes.CARRINHO)
+    }
+
+    fun navigateToChat() {
+        navController.navigate(Routes.CHAT_PRECOS)
+    }
+
+    fun navigateToLocation() {
+        navController.navigate(Routes.LOCALIZACAO)
+    }
+
+    fun navigateToProductList() {
+        navController.navigate(Routes.LISTA_PRODUTOS)
+    }
 
     Scaffold(
         containerColor = CinzaFundo,
@@ -267,7 +288,7 @@ fun TelaHome(navController: NavController) {
 
             // Botão flutuante de chat posicionado no canto inferior direito
             FloatingActionButton(
-                onClick = { navController.navigate("chat_precos") },
+                onClick = { navigateToChat() },
                 containerColor = Laranja,
                 shape = CircleShape,
                 modifier = Modifier

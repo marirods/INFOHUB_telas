@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 
 @Composable
 fun MensagemSucesso() {
@@ -53,7 +52,7 @@ fun MensagemSucesso() {
 }
 
 @Composable
-fun DetalhesDoPedido(navController: NavController) {
+fun DetalhesDoPedido(onVoltarClick: () -> Unit, onPedidosClick: () -> Unit) {
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         InfoCard(icon = Icons.Filled.Receipt, title = "Número do Pedido", subtitle = "#123456")
         InfoCard(icon = Icons.Filled.DateRange, title = "Data e Hora", subtitle = "28/05/2024 às 10:30")
@@ -65,7 +64,7 @@ fun DetalhesDoPedido(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { navController.navigate("inicio") },
+            onClick = onVoltarClick,
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B)),
             modifier = Modifier.fillMaxWidth().shadow(elevation = 4.dp, shape = RoundedCornerShape(8.dp))
         ) {
@@ -73,10 +72,10 @@ fun DetalhesDoPedido(navController: NavController) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         OutlinedButton(
-            onClick = { navController.navigate("inicio") },
+            onClick = onPedidosClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Continuar Comprando", color = Color(0xFFF9A01B))
+            Text(text = "Ver Meus Pedidos", color = Color(0xFFF9A01B))
         }
     }
 }

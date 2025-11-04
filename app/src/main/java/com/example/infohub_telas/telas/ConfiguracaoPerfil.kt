@@ -4,42 +4,15 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,7 +25,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.components.CustomTextField
-import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.model.Empresa
 import com.example.infohub_telas.ui.theme.BackgroundGray
 import com.example.infohub_telas.ui.theme.PrimaryOrange
@@ -95,14 +67,19 @@ fun ConfiguracaoPerfil(
         return !(nomeError || emailError || telefoneError || enderecoError)
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Header(title = "Configuração do Perfil")
-
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "Configuração do Perfil",
+                navigationIcon = Icons.Default.ArrowBack,
+                onNavigationIconClick = { navController.navigateUp() }
+            )
+        }
+    ) { contentPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(contentPadding)
                 .verticalScroll(scrollState)
                 .background(BackgroundGray)
         ) {
@@ -209,7 +186,7 @@ fun ConfiguracaoPerfil(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 OutlinedButton(
-                    onClick = { navController.popBackStack() },
+                    onClick = { navController.navigateUp() },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Cancelar")
@@ -227,7 +204,7 @@ fun ConfiguracaoPerfil(
                                 logoUrl = logoUri?.toString() ?: empresa.logoUrl
                             )
                             onSaveChanges(updatedEmpresa)
-                            navController.popBackStack()
+                            navController.navigateUp()
                         }
                     },
                     modifier = Modifier.weight(1f),
@@ -247,22 +224,23 @@ fun ConfiguracaoPerfil(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun ConfiguracaoPerfilPreview() {
-    val empresaSample = Empresa(
-        nome = "Tech Solutions Ltda",
-        cnpj = "12.345.678/0001-99",
-        email = "contato@techsolutions.com",
-        telefone = "(11) 99999-9999",
-        endereco = "Rua Exemplo, 123, São Paulo",
-        setor = "Tecnologia",
-        descricao = "Empresa de soluções tecnológicas.",
-        logoUrl = ""
-    )
-    Surface(modifier = Modifier.fillMaxSize()) {
-        ConfiguracaoPerfil(
-            navController = rememberNavController(),
-            empresa = empresaSample,
-            onSaveChanges = {}
-        )
+private fun ConfiguracaoPerfilPreview() {
+    MaterialTheme {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            ConfiguracaoPerfil(
+                navController = rememberNavController(),
+                empresa = Empresa(
+                    nome = "Tech Solutions Ltda",
+                    cnpj = "12.345.678/0001-99",
+                    email = "contato@techsolutions.com",
+                    telefone = "(11) 99999-9999",
+                    endereco = "Rua Exemplo, 123, São Paulo",
+                    setor = "Tecnologia",
+                    descricao = "Empresa de soluções tecnológicas.",
+                    logoUrl = ""
+                ),
+                onSaveChanges = {}
+            )
+        }
     }
 }

@@ -1,7 +1,6 @@
 package com.example.infohub_telas.telas
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,29 +16,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.infohub_telas.model.PromocaoProduto
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaListaProdutos(
-    navController: NavController,
-    produtos: List<PromocaoProduto>
-) {
+fun TelaListaProdutos(navController: NavController) {
+    val produtos = remember { mutableStateListOf<PromocaoProduto>() }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val searchQuery = remember { mutableStateOf("") }
@@ -138,7 +131,7 @@ fun TelaListaProdutos(
             ) {
                 items(
                     produtos.filter {
-                        val matchesSearch = it.nomeProduto.contains(searchQuery.value, ignoreCase = true)
+                        val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
                         val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
                         matchesSearch && matchesCategoria
                     }
@@ -177,7 +170,7 @@ fun ProdutoCard(produto: PromocaoProduto) {
                     .data(produto.imagemUrl)
                     .crossfade(true)
                     .build(),
-                contentDescription = produto.nomeProduto,
+                contentDescription = produto.nome,
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(8.dp)),
@@ -188,7 +181,7 @@ fun ProdutoCard(produto: PromocaoProduto) {
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = produto.nomeProduto,
+                    text = produto.nome,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -240,7 +233,7 @@ fun ProdutoCard(produto: PromocaoProduto) {
 fun TelaListaProdutosPreview() {
     val sampleProdutos = listOf(
         PromocaoProduto(
-            nomeProduto = "Hambúrguer de Picanha",
+            nome = "Hambúrguer de Picanha",
             categoria = "Alimentação",
             precoPromocional = "29.90",
             dataInicio = Date(),
@@ -252,8 +245,7 @@ fun TelaListaProdutosPreview() {
 
     Surface {
         TelaListaProdutos(
-            navController = rememberNavController(),
-            produtos = sampleProdutos
+            navController = rememberNavController()
         )
     }
 }

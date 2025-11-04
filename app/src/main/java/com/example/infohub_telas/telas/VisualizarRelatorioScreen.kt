@@ -52,15 +52,14 @@ fun VisualizarRelatorioScreen(
                 title = "Visualizar Relatório",
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationIconClick = { navController.popBackStack() },
-                actions = {
-                    IconButton(onClick = { showShareDialog = true }) {
-                        Icon(Icons.Default.Share, "Compartilhar", tint = Color.White)
-                    }
-                    IconButton(onClick = { showExportOptions = true }) {
-                        Icon(Icons.Default.Download, "Exportar", tint = Color.White)
-                    }
+            ) {
+                IconButton(onClick = { showShareDialog = true }) {
+                    Icon(Icons.Default.Share, "Compartilhar", tint = Color.White)
                 }
-            )
+                IconButton(onClick = { showExportOptions = true }) {
+                    Icon(Icons.Default.Download, "Exportar", tint = Color.White)
+                }
+            }
         }
     ) { padding ->
         Column(

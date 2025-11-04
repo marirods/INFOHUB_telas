@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.navigation.Routes
 
 @Composable
 fun CarrinhoVazio(navController: NavController) {
@@ -42,7 +43,7 @@ fun CarrinhoVazio(navController: NavController) {
         Text(text = "Seu carrinho está vazio", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("inicio") },
+            onClick = { navController.navigate(Routes.HOME) },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B)),
             modifier = Modifier.shadow(elevation = 4.dp, shape = RoundedCornerShape(8.dp))
         ) {
