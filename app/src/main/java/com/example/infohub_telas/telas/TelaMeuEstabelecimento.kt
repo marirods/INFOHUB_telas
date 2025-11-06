@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.InfoRow
 import com.example.infohub_telas.components.MyTopAppBar
 import com.example.infohub_telas.model.Estabelecimento
@@ -60,7 +61,8 @@ fun TelaMeuEstabelecimento(navController: NavController) {
                     navigationIcon = Icons.Default.Menu,
                     onNavigationIconClick = { scope.launch { drawerState.open() } }
                 )
-            }
+            },
+            bottomBar = { BottomMenu(navController = navController) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier

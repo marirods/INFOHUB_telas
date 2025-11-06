@@ -1,25 +1,31 @@
 package com.example.infohub_telas.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.R
 import com.example.infohub_telas.navigation.Routes
+import com.example.infohub_telas.telas.Laranja
 
 // Item do menu com navegação
 @Composable
 fun MenuItem(
-    iconRes: Int,
+    icon: ImageVector,
     label: String,
     navController: NavController,
     route: String
@@ -40,10 +46,11 @@ fun MenuItem(
             }
         }
     ) {
-        Image(
-            painter = painterResource(id = iconRes),
+        Icon(
+            imageVector = icon,
             contentDescription = label,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(24.dp),
+            tint = Laranja
         )
         Text(
             text = label,
@@ -63,31 +70,31 @@ fun BottomMenu(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         MenuItem(
-            iconRes = R.drawable.loja_menu,
+            icon = Icons.Default.Home,
             label = "Início",
             navController = navController,
             route = Routes.HOME
         )
         MenuItem(
-            iconRes = R.drawable.etiqueta_menu,
-            label = "Produtos",
+            icon = Icons.Default.LocalOffer,
+            label = "Promoções",
             navController = navController,
             route = Routes.LISTA_PRODUTOS
         )
         MenuItem(
-            iconRes = R.drawable.local,
+            icon = Icons.Default.LocationOn,
             label = "Localização",
             navController = navController,
             route = Routes.LOCALIZACAO
         )
         MenuItem(
-            iconRes = R.drawable.cash_menu,
-            label = "Chat",
+            icon = Icons.Filled.AttachMoney,
+            label = "InfoCash",
             navController = navController,
             route = Routes.CHAT_PRECOS
         )
         MenuItem(
-            iconRes = R.drawable.perfil_icon,
+            icon = Icons.Default.Person,
             label = "Meu Perfil",
             navController = navController,
             route = Routes.PERFIL

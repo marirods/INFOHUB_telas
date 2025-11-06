@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.CarrinhoCheio
 import com.example.infohub_telas.components.CarrinhoVazio
 import com.example.infohub_telas.components.Header
@@ -41,7 +42,8 @@ fun TelaCarrinho(navController: NavController) {
     }
 
     Scaffold(
-        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) }
+        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) },
+        bottomBar = { BottomMenu(navController = navController) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

@@ -10,18 +10,28 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.primaryLight
 
@@ -43,10 +54,56 @@ import com.example.infohub_telas.ui.theme.primaryLight
 
 
 
-var ativo: Boolean = true
+data class ChatMessage(
+    val text: String,
+    val isUser: Boolean,
+    val time: String
+)
+
 @Composable
 fun TelaChatDePrecos(navController: NavController?) {
     var inputText by remember { mutableStateOf("") }
+    var showOptions by remember { mutableStateOf(false) }
+    var messages by remember { mutableStateOf(listOf(
+        ChatMessage(
+            text = "Olá! Sou sua assistente de compras inteligente. Posso ajudar você a encontrar os melhores preços de qualquer produto. Digite o nome do produto que você procura!",
+            isUser = false,
+            time = getCurrentTime()
+        )
+    )) }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    fun sendMessage(text: String) {
+        if (text.isNotBlank()) {
+            val newMessage = ChatMessage(text, true, getCurrentTime())
+            messages = messages + newMessage
+            inputText = ""
+            
+            // Simular resposta da IA após 1 segundo
+            coroutineScope.launch {
+                kotlinx.coroutines.delay(1000)
+                val response = ChatMessage(
+                    text = "Estou buscando os melhores preços de '$text' para você. Por favor, aguarde...",
+                    isUser = false,
+                    time = getCurrentTime()
+                )
+                messages = messages + response
+                coroutineScope.launch {
+                    listState.animateScrollToItem(messages.size - 1)
+                }
+            }
+            
+            coroutineScope.launch {
+                listState.animateScrollToItem(messages.size - 1)
+            }
+        }
+    }
+    
+    fun handleOptionClick(option: String) {
+        sendMessage(option)
+        showOptions = false
+    }
 
     Column(
         modifier = Modifier
@@ -84,296 +141,216 @@ fun TelaChatDePrecos(navController: NavController?) {
             }
         }
 
-        // Conteúdo principal com scroll e centralização
-        Column(
+        // Área de mensagens do chat
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)
-                .padding(top = 24.dp), // Adiciona espaço no topo para descer o conteúdo
-            verticalArrangement = Arrangement.Top
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp),
+            state = listState
         ) {
             // Subtítulo
-            Text(
-                text = "Compare preços instantaneamente com nossa inteligência artificial",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFF9A01B),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp) // Mais espaço após o subtítulo
-            )
-
-            // Mensagem do robô
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp), // Mais espaço após a mensagem
-                verticalAlignment = Alignment.Top
-            ) {
-                Box(
-                    modifier = Modifier
-                        .width(4.dp)
-                        .height(80.dp) // Aumentei a altura da linha
-                        .background(Color(0xFFF9A01B))
+            item {
+                Text(
+                    text = "Compare preços instantaneamente com nossa IA",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFF9A01B),
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                Icon(
-                    painter = painterResource(id = R.drawable.robo),
-                    contentDescription = "Robo",
-                    modifier = Modifier.size(40.dp),
-                    tint = Color.Unspecified
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp))
-                        .padding(16.dp) // Aumentei o padding interno
-                ) {
-                    Text(
-                        text = "16:12",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFF9A01B)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Olá! Sou sua assistente de compras inteligente. Posso ajudar você a encontrar os melhores preços de qualquer produto. Digite o nome do produto que você procura!",
-                        fontSize = 14.sp, // Aumentei o tamanho da fonte
-                        color = Color.Black,
-                        lineHeight = 20.sp
-                    )
-                }
             }
-
-            // Botão abrir opções
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 20.dp) // Espaço após o botão
-                    .background(Color(0xFFF9A01B), RoundedCornerShape(12.dp))
-                    .height(56.dp)
-                    .clickable { /* Ação do botão */ },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.menu),
-                        contentDescription = "Menu",
-                        tint = Color.Black,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Abrir opções",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-                }
+            
+            // Mensagens do chat
+            items(messages) { message ->
+                ChatMessageItem(message)
+                Spacer(modifier = Modifier.height(12.dp))
             }
-
-            // Lista de opções
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 24.dp) // Mais espaço após a lista
-                    .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp))
-                    .padding(16.dp) // Padding interno aumentado
-            ) {
+            
+            // Botão de opções
+            item {
                 Column {
-                    Text(
-                        text = "Selecione a opção que deseja escolher:",
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(text = "1. Comparar preços", color = Color.Black, fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
-                    Text(text = "2. Comparar lista de compras", color = Color.Black, fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
-                    Text(text = "3. Dúvidas", color = Color.Black, fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
-                    Text(text = "4. Como funciona?", color = Color.Black, fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
-                }
-            }
-
-            // Spacer flexível para empurrar o campo de input para baixo
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Campo de input
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
-                    .background(Color(0xFFF6F6F6), RoundedCornerShape(24.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BasicTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    modifier = Modifier.weight(1f),
-                    textStyle = TextStyle(color = Color.Black, fontSize = 14.sp),
-                    decorationBox = { innerTextField ->
-                        if (inputText.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .background(Color(0xFFF9A01B), RoundedCornerShape(12.dp))
+                            .clickable { showOptions = !showOptions }
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.menu),
+                                contentDescription = "Menu",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Digite o produto que você procura...",
-                                color = Color.DarkGray,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp
+                                text = if (showOptions) "Fechar opções" else "Abrir opções",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = if (showOptions) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                        innerTextField()
                     }
-                )
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Enviar",
-                    tint = Color(0xFF43A047),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { /* Ação de enviar */ }
-                )
-            }
-
-            // Barra "Ver carrinho"
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
-                    .background(Color(0xFFF9A01B), RoundedCornerShape(13.dp))
-                    .height(60.dp)
-                    .clickable { /* Navegar para carrinho */ },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.sacola),
-                            contentDescription = "Carrinho",
-                            tint = Color.Black,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Ver carrinho",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
+                    
+                    // Lista de opções (aparece quando showOptions é true)
+                    if (showOptions) {
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.CenterVertically))
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                                .background(Color(0xFFFFF8E7), RoundedCornerShape(12.dp))
+                                .padding(16.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Selecione uma opção:",
+                                    color = Color.Black,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                )
+                                OptionItem("Comparar preços") { handleOptionClick("Comparar preços") }
+                                OptionItem("Comparar lista de compras") { handleOptionClick("Comparar lista de compras") }
+                                OptionItem("Dúvidas") { handleOptionClick("Dúvidas") }
+                                OptionItem("Como funciona?") { handleOptionClick("Como funciona?") }
+                            }
+                        }
                     }
-
-                    Text(
-                        text = "R$0,00",
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
 
-        // MENU INFERIOR
+        // Campo de input
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 8.dp)
+                .background(Color(0xFFF6F6F6), RoundedCornerShape(24.dp))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Início
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+            BasicTextField(
+                value = inputText,
+                onValueChange = { inputText = it },
+                modifier = Modifier.weight(1f),
+                textStyle = TextStyle(color = Color.Black, fontSize = 15.sp),
+                decorationBox = { innerTextField ->
+                    if (inputText.isEmpty()) {
+                        Text(
+                            text = "Digite o produto que você procura...",
+                            color = Color.Gray,
+                            fontSize = 15.sp
+                        )
+                    }
+                    innerTextField()
+                }
+            )
+            IconButton(
+                onClick = { sendMessage(inputText) },
+                modifier = Modifier.size(32.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.loja_menu),
-                    contentDescription = "Início",
+                Icon(
+                    imageVector = Icons.Default.Send,
+                    contentDescription = "Enviar",
+                    tint = if (inputText.isNotBlank()) Color(0xFFF9A01B) else Color.Gray,
                     modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    "Início",
-                    fontSize = 12.sp
-                )
-            }
-
-            // Promoções
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.etiqueta_menu),
-                    contentDescription = "Promoções",
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    "Promoções",
-                    fontSize = 12.sp
-                )
-            }
-
-            // Localização
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.local),
-                    contentDescription = "Localização",
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    "Localização",
-                    fontSize = 12.sp
-                )
-            }
-
-            // InfoCash
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.cash_menu),
-                    contentDescription = "InfoCash",
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    "InfoCash",
-                    fontSize = 12.sp
-                )
-            }
-
-            // Meu Perfil
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.perfil_icon),
-                    contentDescription = "Perfil",
-                    modifier = Modifier.size(24.dp)
-                )
-                Text(
-                    "Meu Perfil",
-                    fontSize = 12.sp
                 )
             }
         }
-
+        // Menu inferior
+        BottomMenu(navController = navController ?: return)
     }
-
 }
 
-    @Preview(showSystemUi = true)
+@Composable
+fun ChatMessageItem(message: ChatMessage) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start
+    ) {
+        if (!message.isUser) {
+            Icon(
+                painter = painterResource(id = R.drawable.robo),
+                contentDescription = "Robô",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(end = 8.dp),
+                tint = Color.Unspecified
+            )
+        }
+        
+        Column(
+            modifier = Modifier
+                .widthIn(max = 280.dp)
+                .background(
+                    color = if (message.isUser) Color(0xFFF9A01B) else Color(0xFFFFF8E7),
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = if (message.isUser) 16.dp else 4.dp,
+                        bottomEnd = if (message.isUser) 4.dp else 16.dp
+                    )
+                )
+                .padding(12.dp)
+        ) {
+            Text(
+                text = message.time,
+                fontSize = 11.sp,
+                color = if (message.isUser) Color.White.copy(alpha = 0.8f) else Color.Gray,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Text(
+                text = message.text,
+                fontSize = 14.sp,
+                color = if (message.isUser) Color.White else Color.Black,
+                lineHeight = 20.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun OptionItem(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = Color.Black,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+fun getCurrentTime(): String {
+    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    return sdf.format(Date())
+}
+
+@Preview(showSystemUi = true)
 @Composable
 fun TelaChatDePrecosPreview() {
     InfoHub_telasTheme {

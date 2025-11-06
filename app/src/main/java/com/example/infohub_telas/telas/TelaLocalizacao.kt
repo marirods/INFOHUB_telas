@@ -215,8 +215,8 @@ fun TelaLocalizacao(navController: NavController) {
             }
         }
 
-        // Menu inferior fixo na base \BottomMenu(navController ?: rememberNavController())
-
+        // Menu inferior fixo na base
+        BottomMenu(navController = navController)
     }
 }
 
