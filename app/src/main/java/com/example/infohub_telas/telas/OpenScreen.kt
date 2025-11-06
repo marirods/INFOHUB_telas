@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.navigation.Routes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,7 +52,7 @@ fun OpenScreen(navController: NavController) {
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) {
-                navController.navigate("welcome")
+                navController.navigate(Routes.WELCOME)
             },
         contentAlignment = Alignment.Center
     ) {
@@ -218,7 +219,7 @@ fun WelcomeScreen(navController: NavController) {
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ){
-                navController.navigate("loginCadastro")
+                navController.navigate(Routes.LOGIN_CADASTRO)
             }
     ) {
         Box(

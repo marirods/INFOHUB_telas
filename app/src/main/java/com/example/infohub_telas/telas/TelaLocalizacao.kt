@@ -37,6 +37,8 @@ fun TelaLocalizacao(navController: NavController) {
 
     val isPreview = LocalInspectionMode.current
     val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
     val scope = rememberCoroutineScope()
 
     var cep by remember { mutableStateOf("") }
@@ -216,7 +218,7 @@ fun TelaLocalizacao(navController: NavController) {
         }
 
         // Menu inferior fixo na base
-        BottomMenu(navController = navController)
+        BottomMenu(navController = navController, isAdmin = isAdmin)
     }
 }
 

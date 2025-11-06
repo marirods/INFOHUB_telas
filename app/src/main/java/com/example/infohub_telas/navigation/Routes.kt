@@ -3,6 +3,7 @@ package com.example.infohub_telas.navigation
 object Routes {
     // Authentication & Onboarding Routes
     const val OPEN = "open"
+    const val WELCOME = "welcome"
     const val LOGIN = "login"
     const val LOGIN_CADASTRO = "login_cadastro"
     const val CADASTRO = "cadastro"
@@ -34,6 +35,7 @@ object Routes {
     const val MEU_ESTABELECIMENTO = "meu_estabelecimento"
     const val CADASTRO_ESTABELECIMENTO = "cadastro_estabelecimento"
     const val CADASTRO_PROMOCAO = "cadastro_promocao"
+    const val CADASTRO_PRODUTO = "cadastro_produto"
 
     // Management & Reports Routes
     const val DASHBOARD_EMPRESA = "dashboard_empresa"
