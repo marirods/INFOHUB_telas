@@ -7,6 +7,9 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,117 +29,233 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.model.PromocaoProduto
+import com.example.infohub_telas.navigation.Routes
 import kotlinx.coroutines.launch
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaListaProdutos(navController: NavController) {
-    val produtos = remember { mutableStateListOf<PromocaoProduto>() }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
+    // Produtos mockados
+    val produtos = remember { 
+        mutableStateListOf<PromocaoProduto>().apply {
+            addAll(listOf(
+                PromocaoProduto(
+                    nome = "Arroz Branco 5kg",
+                    categoria = "Grãos e Cereais",
+                    precoPromocional = "18.90",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
+                    descricao = "Arroz branco tipo 1, grãos longos e soltos",
+                    imagemUrl = "https://picsum.photos/seed/rice/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Feijão Preto 1kg",
+                    categoria = "Grãos e Cereais", 
+                    precoPromocional = "7.50",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 5),
+                    descricao = "Feijão preto selecionado, rico em proteínas",
+                    imagemUrl = "https://picsum.photos/seed/beans/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Leite Integral 1L",
+                    categoria = "Laticínios",
+                    precoPromocional = "4.25",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
+                    descricao = "Leite integral pasteurizado, fonte de cálcio",
+                    imagemUrl = "https://picsum.photos/seed/milk/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Banana Prata 1kg",
+                    categoria = "Frutas",
+                    precoPromocional = "5.90",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 2),
+                    descricao = "Banana prata fresca, rica em potássio",
+                    imagemUrl = "https://picsum.photos/seed/banana/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Carne Moída 500g",
+                    categoria = "Carnes",
+                    precoPromocional = "16.90",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 1),
+                    descricao = "Carne bovina moída primeira qualidade",
+                    imagemUrl = "https://picsum.photos/seed/meat/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Pão de Forma Integral",
+                    categoria = "Padaria",
+                    precoPromocional = "6.80",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 4),
+                    descricao = "Pão de forma integral com fibras, 500g",
+                    imagemUrl = "https://picsum.photos/seed/bread/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Ovos Brancos 12 unid",
+                    categoria = "Laticínios",
+                    precoPromocional = "8.90",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 6),
+                    descricao = "Ovos frescos de granja, cartela com 12 unidades",
+                    imagemUrl = "https://picsum.photos/seed/eggs/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Tomate 1kg",
+                    categoria = "Verduras e Legumes",
+                    precoPromocional = "7.20",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
+                    descricao = "Tomate maduro selecionado, ideal para saladas",
+                    imagemUrl = "https://picsum.photos/seed/tomato/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Refrigerante Cola 2L",
+                    categoria = "Bebidas",
+                    precoPromocional = "5.50",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 10),
+                    descricao = "Refrigerante sabor cola, garrafa 2 litros",
+                    imagemUrl = "https://picsum.photos/seed/soda/300/200"
+                ),
+                PromocaoProduto(
+                    nome = "Sabão em Pó 1kg",
+                    categoria = "Limpeza",
+                    precoPromocional = "12.90",
+                    dataInicio = Date(),
+                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 15),
+                    descricao = "Sabão em pó concentrado, remove manchas difíceis",
+                    imagemUrl = "https://picsum.photos/seed/soap/300/200"
+                )
+            ))
+        }
+    }
     val searchQuery = remember { mutableStateOf("") }
     val selectedCategoria = remember { mutableStateOf<String?>(null) }
     val categorias = produtos.map { it.categoria }.distinct()
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text(
-                    "Menu",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                NavigationDrawerItem(
-                    label = { Text("Home") },
-                    selected = false,
-                    onClick = { navController.navigate("home") }
-                )
-                NavigationDrawerItem(
-                    label = { Text("Chat de Preços") },
-                    selected = false,
-                    onClick = { navController.navigate("chat_precos") }
-                )
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                        Text(
-                            "Lista de Produtos",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        // Espaço vazio para manter o título centralizado
-                        Box(modifier = Modifier.size(48.dp))
+    Scaffold(
+        topBar = {
+            Column {
+                // Header principal
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
                     }
-
-                    OutlinedTextField(
-                        value = searchQuery.value,
-                        onValueChange = { searchQuery.value = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        placeholder = { Text("Buscar produtos...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+                    Text(
+                        "Promoções",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
                     )
+                    // Espaço vazio para manter o título centralizado
+                    Box(modifier = Modifier.size(48.dp))
+                }
 
+                // Barra de pesquisa
+                OutlinedTextField(
+                    value = searchQuery.value,
+                    onValueChange = { searchQuery.value = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    placeholder = { Text("Buscar produtos...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // Filtros de categoria
+                if (categorias.isNotEmpty()) {
                     LazyRow(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(categorias) { categoria ->
                             val isSelected = selectedCategoria.value == categoria
-                            SuggestionChip(
+                            FilterChip(
                                 onClick = {
                                     selectedCategoria.value = if (isSelected) null else categoria
                                 },
                                 label = { Text(categoria) },
-                                colors = SuggestionChipDefaults.suggestionChipColors(
-                                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surface
+                                selected = isSelected,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             )
                         }
                     }
                 }
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { navController.navigate("criarPromocao") },
-                    containerColor = MaterialTheme.colorScheme.primary
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Adicionar Produto")
-                }
             }
-        ) { paddingValues ->
-            LazyColumn(
+        },
+        bottomBar = { BottomMenu(navController = navController) }
+    ) { paddingValues ->
+        val produtosFiltrados = produtos.filter {
+            val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
+            val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
+            matchesSearch && matchesCategoria
+        }
+
+        if (produtosFiltrados.isEmpty()) {
+            // Estado vazio
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Default.ShoppingBag,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
+                        "Nenhum produto encontrado"
+                    } else {
+                        "Nenhuma promoção disponível"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
+                        "Tente ajustar os filtros de busca"
+                    } else {
+                        "Adicione produtos para começar"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                items(
-                    produtos.filter {
-                        val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
-                        val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
-                        matchesSearch && matchesCategoria
-                    }
-                ) { produto ->
-                    ProdutoCard(produto = produto)
+                items(produtosFiltrados) { produto ->
+                    ProdutoCard(produto = produto, navController = navController)
                 }
             }
         }
@@ -144,10 +263,10 @@ fun TelaListaProdutos(navController: NavController) {
 }
 
 @Composable
-fun ProdutoCard(produto: PromocaoProduto) {
+fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val elevation by animateDpAsState(if (isPressed) 2.dp else 4.dp)
+    val elevation by animateDpAsState(if (isPressed) 2.dp else 6.dp)
 
     Card(
         modifier = Modifier
@@ -155,16 +274,20 @@ fun ProdutoCard(produto: PromocaoProduto) {
             .clickable(
                 interactionSource = interactionSource,
                 indication = null
-            ) { /* TODO: Navegação para detalhes */ },
+            ) { 
+                // Navegar para TelaProduto passando o ID do produto
+                navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.id.toString()))
+            },
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
+            // Imagem do produto
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(produto.imagemUrl)
@@ -172,56 +295,86 @@ fun ProdutoCard(produto: PromocaoProduto) {
                     .build(),
                 contentDescription = produto.nome,
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                 contentScale = ContentScale.Crop
             )
 
+            // Conteúdo do card
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Nome do produto
                 Text(
                     text = produto.nome,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
+                // Descrição
+                Text(
+                    text = produto.descricao,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Preço
                 Text(
                     text = "R$ ${produto.precoPromocional}",
-                    style = MaterialTheme.typography.bodyLarge.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                
+                // Chip da categoria
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
                         text = produto.categoria,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
+                }
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Editar",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                // Botão de comprar
+                Button(
+                    onClick = { 
+                        // Adicionar ao carrinho
+                        navController.navigate(Routes.CARRINHO)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Laranja
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(
+                        Icons.Default.ShoppingCart,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Comprar",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold
                         )
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Excluir",
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -231,21 +384,11 @@ fun ProdutoCard(produto: PromocaoProduto) {
 @Preview(showBackground = true)
 @Composable
 fun TelaListaProdutosPreview() {
-    val sampleProdutos = listOf(
-        PromocaoProduto(
-            nome = "Hambúrguer de Picanha",
-            categoria = "Alimentação",
-            precoPromocional = "29.90",
-            dataInicio = Date(),
-            dataTermino = Date(System.currentTimeMillis() + 86400000),
-            descricao = "",
-            imagemUrl = "https://picsum.photos/seed/1/200"
-        )
-    )
-
-    Surface {
-        TelaListaProdutos(
-            navController = rememberNavController()
-        )
+    MaterialTheme {
+        Surface {
+            TelaListaProdutos(
+                navController = rememberNavController()
+            )
+        }
     }
 }

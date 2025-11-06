@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
 
@@ -40,7 +41,7 @@ import com.example.infohub_telas.R
 fun TelaProduto(navController: NavController, id: String) {
     Scaffold(
         topBar = { TopBarPromocao() },
-        bottomBar = { BottomBarPromocao() }
+        bottomBar = { BottomMenu(navController = navController) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
