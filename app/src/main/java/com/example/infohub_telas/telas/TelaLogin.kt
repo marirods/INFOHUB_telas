@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,172 +76,150 @@ fun TelaLogin(navController: NavController) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        AppTopBar(
-            title = "Login",
-            navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-            onNavigationIconClick = { navController.popBackStack() }
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Image(
+            painter = painterResource(id = R.drawable.login_comprass),
+            contentDescription = "LOGIN",
+            modifier = Modifier.size(320.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "BEM VINDO DE VOLTA!",
+            fontWeight = FontWeight.Bold,
+            fontSize = 28.sp,
+            color = Color.Black
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Informações de teste (ocultas da tela)
+        // Para teste use: teste@infohub.com / 123456 ou admin@infohub.com / admin123
+        
+        OutlinedTextField(
+            value = email,
+            onValueChange = { email = it },
+            placeholder = { Text("E-mail", color = Color.Gray) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(15.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PrimaryOrange,
+                unfocusedBorderColor = Color.LightGray,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = senha,
+            onValueChange = { senha = it },
+            placeholder = { Text("Senha", color = Color.Gray) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { mostrarSenha = !mostrarSenha }) {
+                    Icon(
+                        painter = painterResource(
+                            id = if (mostrarSenha) R.drawable.olho_aberto else R.drawable.olho_fechado
+                        ),
+                        contentDescription = "Mostrar/Ocultar senha"
+                    )
+                }
+            },
+            shape = RoundedCornerShape(15.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PrimaryOrange,
+                unfocusedBorderColor = Color.LightGray,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            )
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.4f),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.login_comprass),
-                    contentDescription = "LOGIN",
-                    modifier = Modifier.size(240.dp)
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .background(PrimaryOrange)
-                    .fillMaxWidth()
-                    .weight(0.6f)
-                    .padding(horizontal = 32.dp, vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            TextButton(
+                onClick = { navigateToForgotPassword() }
             ) {
                 Text(
-                    text = "BEM VINDO DE VOLTA!",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 25.sp,
-                    modifier = Modifier.padding(top = 20.dp)
+                    text = "Recuperar senha",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryOrange
                 )
-                
-                // Informações de teste
-                Text(
-                    text = "Para teste use:\nteste@infohub.com / 123456\nou\nadmin@infohub.com / admin123",
-                    fontSize = 12.sp,
-                    color = Color.Black.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = { Text("E-mail", color = Color.Black) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 30.dp),
-                    shape = RoundedCornerShape(15.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Black,
-                        unfocusedBorderColor = Color.Black,
-                        focusedContainerColor = Color.White
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = senha,
-                    onValueChange = { senha = it },
-                    placeholder = { Text("Senha", color = Color.DarkGray) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        IconButton(onClick = { mostrarSenha = !mostrarSenha }) {
-                            Icon(
-                                painter = painterResource(
-                                    id = if (mostrarSenha) R.drawable.olho_aberto else R.drawable.olho_fechado
-                                ),
-                                contentDescription = "Mostrar/Ocultar senha"
-                            )
-                        }
-                    },
-                    shape = RoundedCornerShape(15.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Black,
-                        unfocusedBorderColor = Color.Black,
-                        focusedContainerColor = Color.White
-                    )
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { navigateToForgotPassword() }
-                    ) {
-                        Text(
-                            text = "Recuperar senha",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.Black
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Button(
-                    onClick = {
-                        if (validar()) {
-                            isLoading = true
-                            
-                            // Verificar se é usuário de teste
-                            if (isTestUser()) {
-                                // Login de teste - navegar diretamente
-                                isLoading = false
-                                val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                                prefs.edit().putString("token", "test_token_123").apply()
-                                navigateToHome()
-                            } else {
-                                // Login real via API
-                                val loginReq = LoginUsuario(email, senha)
-
-                                userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
-                                    override fun onResponse(
-                                        call: Call<LoginResponse>,
-                                        response: Response<LoginResponse>
-                                    ) {
-                                        isLoading = false
-                                        if (response.isSuccessful) {
-                                            val body = response.body()
-                                            if (body != null && body.status) {
-                                                val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                                                prefs.edit().putString("token", body.token).apply()
-                                                navigateToHome()
-                                            }
-                                        }
-                                    }
-
-                                    override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                                        isLoading = false
-                                    }
-                                })
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E))
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White)
-                    } else {
-                        Text("ENTRAR", fontSize = 18.sp)
-                    }
-                }
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = {
+                if (validar()) {
+                    isLoading = true
+                    
+                    // Verificar se é usuário de teste
+                    if (isTestUser()) {
+                        // Login de teste - navegar diretamente
+                        isLoading = false
+                        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                        prefs.edit().putString("token", "test_token_123").apply()
+                        navigateToHome()
+                    } else {
+                        // Login real via API
+                        val loginReq = LoginUsuario(email, senha)
+
+                        userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
+                            override fun onResponse(
+                                call: Call<LoginResponse>,
+                                response: Response<LoginResponse>
+                            ) {
+                                isLoading = false
+                                if (response.isSuccessful) {
+                                    val body = response.body()
+                                    if (body != null && body.status) {
+                                        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                                        prefs.edit().putString("token", body.token).apply()
+                                        navigateToHome()
+                                    }
+                                }
+                            }
+
+                            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                                isLoading = false
+                            }
+                        })
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+            } else {
+                Text("ENTRAR", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 

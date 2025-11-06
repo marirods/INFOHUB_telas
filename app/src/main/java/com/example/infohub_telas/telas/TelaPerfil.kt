@@ -122,94 +122,127 @@ fun ProfileHeader() {
     ) {
         Column(
             modifier = Modifier
-                .padding(vertical = 24.dp),
-            horizontalAlignment = Alignment
-                .CenterHorizontally,
-            verticalArrangement = Arrangement
-                .spacedBy(8.dp)
+                .padding(24.dp)
         ) {
-            Box(contentAlignment = Alignment.TopEnd) {
-                Box(
-                    modifier = Modifier
-                        .size(110.dp)
-                        .clip(CircleShape)
-                        .background(OrangeColor),
-                    contentAlignment = Alignment.Center
+            // Avatar e informações lado a lado
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Avatar com botão de editar
+                Box(contentAlignment = Alignment.TopEnd) {
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .background(OrangeColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "iJ",
+                            color = Color.White,
+                            fontSize = 42.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                    ) {
+                        IconButton(
+                            onClick = {},
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Editar Perfil",
+                                modifier = Modifier.size(18.dp),
+                                tint = OrangeColor
+                            )
+                        }
+                    }
+                }
+                
+                // Informações do usuário
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "iJ",
-                        color = Color.White,
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Bold
+                        "ISRAEL JUNIOR",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
                     )
-                }
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons
-                            .Default.Edit,
-                        contentDescription = "Editar Perfil"
+                    Text(
+                        "raraeldev@gmail.com",
+                        color = TextGrayColor,
+                        fontSize = 14.sp
                     )
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(OrangeColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.LocationOn,
+                            contentDescription = "Localização",
+                            tint = OrangeColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            "São Paulo, SP",
+                            color = OrangeColor,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
-            Text(
-                "ISRAEL JUNIOR",
-                fontWeight = FontWeight
-                    .Bold, fontSize = 20.sp
-            )
-            Text(
-                "raraeldev@gmail.com",
-                color = TextGrayColor,
-                fontSize = 14.sp
-            )
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(OrangeColor.copy(alpha = 0.8f))
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = "Localização",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(16.dp)
-                )
-                Spacer(
-                    Modifier.width(4.dp)
-                )
-                Text(
-                    "São Paulo, SP",
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
-            }
-            Spacer(
-                Modifier.height(16.dp)
-            )
+            
+            Spacer(Modifier.height(20.dp))
+            
+            // Primeira linha de estatísticas
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 0.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "R$ 1250.80",
                     label = "Total economizado",
-                    valueColor = GreenColor)
+                    valueColor = GreenColor
+                )
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "45",
                     label = "Promoções usadas",
                     valueColor = OrangeColor
-                    )
+                )
+            }
+            
+            Spacer(Modifier.height(8.dp))
+            
+            // Segunda linha de estatísticas
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "12",
                     label = "Avaliações feitas",
                     valueColor = RedColor
-                    )
+                )
                 StatItem(
                     modifier = Modifier.weight(1f),
                     value = "#12",
@@ -265,56 +298,69 @@ fun HubCoinCard() {
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults
-            .cardColors(containerColor = Color.White),
+            .cardColors(containerColor = Color(0xFFFFF8E7)),
         elevation = CardDefaults
             .cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(20.dp)
         ) {
             Row(
                 verticalAlignment = Alignment
                     .CenterVertically
             ) {
-                Icon(
-                    Icons
-                        .Default.MonetizationOn,
-                    contentDescription = "HubCoin",
-                    tint = DarkOrangeColor
-                )
-                Spacer(
-                    Modifier
-                        .width(8.dp)
-                )
-                Text(
-                    "HubCoin",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(OrangeColor.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.MonetizationOn,
+                        contentDescription = "HubCoin",
+                        tint = OrangeColor,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        "HubCoin",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        "Seu saldo de pontos",
+                        fontSize = 11.sp,
+                        color = TextGrayColor
+                    )
+                }
             }
-            Spacer(
-                Modifier
-                    .height(8.dp)
-            )
+            Spacer(Modifier.height(16.dp))
             Text(
-                "1.285HC",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = DarkOrangeColor
+                "1.285 HC",
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 28.sp,
+                color = OrangeColor
             )
-            Spacer(
-                Modifier
-                    .height(8.dp)
-            )
+            Spacer(Modifier.height(12.dp))
             LinearProgressIndicator(
                 progress = { 0.8f },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = GreenColor,
-                trackColor = OrangeColor.copy(alpha = 0.3f)
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp)),
+                color = OrangeColor,
+                trackColor = Color(0xFFFFE4B5)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Faltam 215 HC para o próximo nível",
+                fontSize = 12.sp,
+                color = TextGrayColor
             )
         }
     }
@@ -398,18 +444,16 @@ fun MarketItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(LightGrayColor),
-                contentAlignment = Alignment
-                    .Center
+                    .background(OrangeColor.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     "JP",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight
-                        .Bold,
-                    color = TextGrayColor
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OrangeColor
                 )
             }
             Spacer(
@@ -436,17 +480,15 @@ fun MarketItem(
         )
         {
             Text(
-                visits
-                    .split(" ")[0],
-                fontWeight = FontWeight
-                    .Bold,
-                fontSize = 16.sp
+                visits.split(" ")[0],
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = OrangeColor
             )
-
             Text(
                 "visitas",
                 color = TextGrayColor,
-                fontSize = 10.sp
+                fontSize = 11.sp
             )
         }
     }
@@ -475,21 +517,26 @@ fun SettingsCard() {
                 .padding(16.dp)
         ) {
             Row(
-                verticalAlignment = Alignment
-                    .CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons
-                        .Default.Settings,
-                    contentDescription = "Configurações"
-                )
-                Spacer(
-                    Modifier.width(8.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF5F5F5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Settings,
+                        contentDescription = "Configurações",
+                        tint = Color(0xFF666666),
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
                 Text(
                     "Configurações",
-                    fontWeight = FontWeight
-                        .Bold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
             }
@@ -513,13 +560,13 @@ fun SettingsCard() {
             Spacer(Modifier.height(16.dp))
             Button(
                 onClick = { /* Sair da conta */ },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = RedColor),
-                shape = RoundedCornerShape(8.dp)
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B)),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
                 Spacer(Modifier.width(8.dp))
-                Text("Sair da Conta")
+                Text("Sair da Conta", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
             }
         }
     }
