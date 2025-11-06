@@ -66,9 +66,9 @@ class RetrofitFactory {
 
     }
 
-    fun getBrasilApiService(): BrasilApi {
-        return brasilApiRetrofit().create(BrasilApi::class.java)
-    }
+//    fun getBrasilApiService(): BrasilApi {
+//        return brasilApiRetrofit().create(BrasilApi::class.java)
+//    }
 
 
     }
