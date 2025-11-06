@@ -177,7 +177,11 @@ fun TelaLogin(navController: NavController) {
                         // Login de teste - navegar diretamente
                         isLoading = false
                         val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                        prefs.edit().putString("token", "test_token_123").apply()
+                        prefs.edit().apply {
+                            putString("token", "test_token_123")
+                            putBoolean("isAdmin", email == "admin@infohub.com")
+                            apply()
+                        }
                         navigateToHome()
                     } else {
                         // Login real via API
@@ -193,7 +197,20 @@ fun TelaLogin(navController: NavController) {
                                     val body = response.body()
                                     if (body != null && body.status) {
                                         val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                                        prefs.edit().putString("token", body.token).apply()
+                                        
+                                        // Verificar se esse email foi cadastrado como pessoa jurídica
+                                        val savedEmail = prefs.getString("userEmail", "")
+                                        val isAdminUser = if (savedEmail == email) {
+                                            prefs.getBoolean("isAdmin", false)
+                                        } else {
+                                            false
+                                        }
+                                        
+                                        prefs.edit().apply {
+                                            putString("token", body.token)
+                                            putBoolean("isAdmin", isAdminUser)
+                                            apply()
+                                        }
                                         navigateToHome()
                                     }
                                 }

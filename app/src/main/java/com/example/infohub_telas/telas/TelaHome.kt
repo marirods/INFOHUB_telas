@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.navigation.Routes
@@ -36,6 +38,9 @@ val CinzaClaro = Color(0xFFE0E0E0)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaHome(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
     val scrollState = rememberScrollState()
 
     fun navigateToProfile() {
@@ -85,7 +90,7 @@ fun TelaHome(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Laranja)
             )
         },
-        bottomBar = { BottomMenu(navController = navController) }
+        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
     ) { paddingValues ->
         Box(
             modifier = Modifier

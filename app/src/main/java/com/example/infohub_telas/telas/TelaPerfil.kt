@@ -27,7 +27,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomAppBarWithAnimation
+import com.example.infohub_telas.components.BottomMenu
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
 
 // Define the main colors from the image for easy reuse
 private val OrangeColor = Color(0xFFF9A01B)
@@ -43,17 +45,16 @@ private val RedColor = Color(0xFFDA312A)
  */
 @Composable
 fun TelaPerfil(navController: NavController?) {
-    var currentRoute by remember {
-        mutableStateOf("profile")
-    }
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
 
     Scaffold(
         topBar = { TopBar() },
         bottomBar = {
-            BottomAppBarWithAnimation(
-                navController = navController ?: return@Scaffold, // evita null
-                currentRoute = currentRoute,
-                onTabSelected = { newRoute -> currentRoute = newRoute }
+            BottomMenu(
+                navController = navController ?: return@Scaffold,
+                isAdmin = isAdmin
             )
         },
         containerColor = LightGrayColor
@@ -669,10 +670,5 @@ fun SettingsCardPreview() {
 fun BottomAppBarWithAnimationPreview() {
     MaterialTheme {
         val navController = rememberNavController()
-        BottomAppBarWithAnimation(
-            navController = navController,
-            currentRoute = "profile",
-            onTabSelected = {}
-        )
     }
 }

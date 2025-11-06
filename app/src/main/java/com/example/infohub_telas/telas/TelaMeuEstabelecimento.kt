@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaMeuEstabelecimento(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -62,7 +66,7 @@ fun TelaMeuEstabelecimento(navController: NavController) {
                     onNavigationIconClick = { scope.launch { drawerState.open() } }
                 )
             },
-            bottomBar = { BottomMenu(navController = navController) }
+            bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
         ) { paddingValues ->
             Column(
                 modifier = Modifier

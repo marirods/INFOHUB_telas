@@ -35,6 +35,7 @@ import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -62,6 +63,9 @@ data class ChatMessage(
 
 @Composable
 fun TelaChatDePrecos(navController: NavController?) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
     var inputText by remember { mutableStateOf("") }
     var showOptions by remember { mutableStateOf(false) }
     var messages by remember { mutableStateOf(listOf(
@@ -275,7 +279,7 @@ fun TelaChatDePrecos(navController: NavController?) {
             }
         }
         // Menu inferior
-        BottomMenu(navController = navController ?: return)
+        BottomMenu(navController = navController ?: return, isAdmin = isAdmin)
     }
 }
 

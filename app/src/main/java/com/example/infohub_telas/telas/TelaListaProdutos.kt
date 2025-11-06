@@ -38,6 +38,10 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaListaProdutos(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
+    
     // Produtos mockados
     val produtos = remember { 
         mutableStateListOf<PromocaoProduto>().apply {
@@ -199,7 +203,17 @@ fun TelaListaProdutos(navController: NavController) {
                 }
             }
         },
-        bottomBar = { BottomMenu(navController = navController) }
+        floatingActionButton = {
+            if (isAdmin) {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Routes.CADASTRO_PRODUTO) },
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Default.Add, "Adicionar Produto")
+                }
+            }
+        },
+        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
     ) { paddingValues ->
         val produtosFiltrados = produtos.filter {
             val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
