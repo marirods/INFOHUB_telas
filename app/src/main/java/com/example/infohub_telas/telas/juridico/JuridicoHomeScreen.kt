@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.navigation.JuridicoRoutes
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.PrimaryOrange
 
@@ -47,7 +48,7 @@ fun JuridicoHomeScreen(
         JuridicoMenuItem(
             icon = Icons.Default.Assessment,
             title = "Relatórios",
-            route = JuridicoRoutes.RELATORIOS,
+            route = "${Routes.DETALHES_RELATORIO.replace("{relatorioId}", "1")}", // ID padrão
             color = Color(0xFF4CAF50)
         ),
         JuridicoMenuItem(
@@ -59,7 +60,7 @@ fun JuridicoHomeScreen(
         JuridicoMenuItem(
             icon = Icons.Default.AccountBox,
             title = "Perfil",
-            route = JuridicoRoutes.PERFIL_EMPRESA,
+            route = Routes.PERFIL,
             color = Color(0xFF9C27B0)
         ),
         JuridicoMenuItem(

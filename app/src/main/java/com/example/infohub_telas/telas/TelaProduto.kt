@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -32,15 +33,20 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaProduto(navController: NavController, id: String) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
+    
     Scaffold(
         topBar = { TopBarPromocao() },
-        bottomBar = { BottomBarPromocao() }
+        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

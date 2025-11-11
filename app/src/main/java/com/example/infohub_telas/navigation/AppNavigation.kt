@@ -10,17 +10,25 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.infohub_telas.model.DashboardData
 import com.example.infohub_telas.model.Empresa
+import com.example.infohub_telas.navigation.JuridicoRoutes
 import com.example.infohub_telas.telas.*
+import com.example.infohub_telas.telas.juridico.JuridicoHomeScreen
+import com.example.infohub_telas.telas.juridico.JuridicoGerenciamentoEmpresasScreen
+import com.example.infohub_telas.telas.juridico.JuridicoCadastroEmpresaScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Routes.LOGIN
+        startDestination = Routes.OPEN
     ) {
         // Authentication & Onboarding
         composable(Routes.OPEN) {
             OpenScreen(navController)
+        }
+
+        composable(Routes.WELCOME) {
+            WelcomeScreen(navController)
         }
 
         composable(Routes.LOGIN) {
@@ -58,6 +66,43 @@ fun AppNavigation(navController: NavHostController) {
         // Main App Screens
         composable(Routes.HOME) {
             TelaHome(navController)
+        }
+
+        composable(JuridicoRoutes.HOME) {
+            JuridicoHomeScreen(navController)
+        }
+
+        composable(JuridicoRoutes.GERENCIAMENTO_EMPRESAS) {
+            JuridicoGerenciamentoEmpresasScreen(navController)
+        }
+
+        composable(
+            route = "${JuridicoRoutes.CADASTRO_EMPRESA}/{empresaId}",
+            arguments = listOf(navArgument("empresaId") { 
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) { backStackEntry ->
+            JuridicoCadastroEmpresaScreen(
+                navController = navController,
+                empresaId = backStackEntry.arguments?.getString("empresaId")
+            )
+        }
+
+        composable(JuridicoRoutes.CADASTRO_EMPRESA) {
+            JuridicoCadastroEmpresaScreen(navController)
+        }
+
+        composable(
+            route = "${JuridicoRoutes.RELATORIOS}/{empresaId}",
+            arguments = listOf(navArgument("empresaId") { 
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            // TODO: Implementar tela de relatórios jurídicos
+            // Por enquanto volta para a tela anterior
+            navController.popBackStack()
         }
 
         composable(Routes.LOCALIZACAO) {
@@ -139,6 +184,10 @@ fun AppNavigation(navController: NavHostController) {
 
         composable(Routes.CADASTRO_PROMOCAO) {
             TelaCadastroPromocao(navController)
+        }
+
+        composable(Routes.CADASTRO_PRODUTO) {
+            TelaCadastroProduto(navController)
         }
 
         // Business Management & Reports

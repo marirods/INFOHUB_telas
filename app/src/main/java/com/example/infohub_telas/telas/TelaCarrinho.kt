@@ -11,9 +11,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.CarrinhoCheio
 import com.example.infohub_telas.components.CarrinhoVazio
 import com.example.infohub_telas.components.Header
@@ -23,6 +25,10 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCarrinho(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
+    
     // Estado para simular se o carrinho está vazio ou não
     var carrinhoVazio by remember { mutableStateOf(false) }
 
@@ -41,7 +47,8 @@ fun TelaCarrinho(navController: NavController) {
     }
 
     Scaffold(
-        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) }
+        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) },
+        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
     ) { paddingValues ->
         Column(
             modifier = Modifier

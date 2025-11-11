@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -108,6 +109,8 @@ import retrofit2.Response
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCadastroEndereco(navController: NavController?) {
+    val context = LocalContext.current
+    
     var cep by remember { mutableStateOf("") }
     var nome by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
@@ -421,6 +424,15 @@ fun TelaCadastroEndereco(navController: NavController?) {
                             ) {
                                 if (response.isSuccessful) {
                                     Log.d("API", "Usuário cadastrado: ${response.body()}")
+                                    
+                                    // Salvar tipo de usuário no SharedPreferences
+                                    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+                                    prefs.edit().apply {
+                                        putString("userEmail", email)
+                                        putBoolean("isAdmin", !isPessoaFisicaSelected) // true se pessoa jurídica
+                                        apply()
+                                    }
+                                    
                                     showSuccessDialog = true
                                 } else {
                                     Log.e("API", "Erro: ${response.code()} - ${response.message()}")
