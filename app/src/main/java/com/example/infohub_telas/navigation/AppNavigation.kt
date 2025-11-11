@@ -113,6 +113,10 @@ fun AppNavigation(navController: NavHostController) {
             TelaChatDePrecos(navController)
         }
 
+        composable(Routes.INFOCASH) {
+            TelaInfoCash(navController)
+        }
+
         // User Profile
         composable(Routes.PERFIL) {
             TelaPerfil(navController)
