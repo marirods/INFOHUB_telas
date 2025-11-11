@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.model.ValidarCodigoRequest
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.Dispatchers
@@ -245,7 +246,8 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                                     prefs.edit().putString("codigo", codigoDigits).apply()
                                     Toast.makeText(context, "✅ Código válido!", Toast.LENGTH_SHORT).show()
                                     println("✅ Código válido")
-                                    navController?.navigate("criar_senha")
+
+                                    navController?.navigate(Routes.CRIAR_NOVA_SENHA)
                                 } else {
                                     val msg = body?.message ?: "Código inválido"
                                     Toast.makeText(context, "❌ $msg", Toast.LENGTH_SHORT).show()
