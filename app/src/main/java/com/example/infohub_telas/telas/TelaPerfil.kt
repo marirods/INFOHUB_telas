@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.model.HubCoinData
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 
@@ -293,6 +294,7 @@ fun StatItem(
 
 @Composable
 fun HubCoinCard() {
+    val hubCoinData = HubCoinData.getDefault()
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -342,14 +344,14 @@ fun HubCoinCard() {
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                "1.285 HC",
+                hubCoinData.getSaldoComVirgula(),
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 28.sp,
                 color = OrangeColor
             )
             Spacer(Modifier.height(12.dp))
             LinearProgressIndicator(
-                progress = { 0.8f },
+                progress = { hubCoinData.progressoAtual },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(10.dp)
@@ -359,7 +361,7 @@ fun HubCoinCard() {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "Faltam 215 HC para o próximo nível",
+                hubCoinData.getMensagemProximoNivel(),
                 fontSize = 12.sp,
                 color = TextGrayColor
             )
