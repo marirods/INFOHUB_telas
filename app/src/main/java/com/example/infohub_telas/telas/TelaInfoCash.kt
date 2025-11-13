@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,10 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-<<<<<<< HEAD
-import com.example.infohub_telas.components.BottomMenu
-import com.example.infohub_telas.model.HubCoinData
-=======
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
@@ -34,15 +31,10 @@ import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.model.SaldoInfoCash
 import com.example.infohub_telas.viewmodel.InfoCashViewModel
 import com.example.infohub_telas.viewmodel.InfoCashUiState
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 import com.example.infohub_telas.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-<<<<<<< HEAD
-fun TelaInfoCash(navController: NavController) {
-    val hubCoinData = HubCoinData.getDefault()
-=======
 fun TelaInfoCash(navController: NavController?) {
     // ViewModel e estado
     val viewModel: InfoCashViewModel = viewModel()
@@ -52,12 +44,12 @@ fun TelaInfoCash(navController: NavController?) {
     // Pega o ID do usuário das preferências
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val userId = prefs.getInt("user_id", 1)
+    val isAdmin = prefs.getBoolean("isAdmin", false)
 
     // Carrega os dados quando a tela é exibida
     LaunchedEffect(userId) {
         viewModel.carregarSaldoInfoCash(userId)
     }
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 
     Box(
         modifier = Modifier
@@ -106,8 +98,6 @@ fun TelaInfoCash(navController: NavController?) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
-<<<<<<< HEAD
-=======
                         ) {
                             Text(
                                 text = "💰",
@@ -150,14 +140,11 @@ fun TelaInfoCash(navController: NavController?) {
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                         ) {
                             Text(
-                                text = "💰",
-                                fontSize = 24.sp
+                                text = "❌",
+                                fontSize = 48.sp
                             )
-<<<<<<< HEAD
-=======
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = (uiState as InfoCashUiState.Error).message,
@@ -167,58 +154,15 @@ fun TelaInfoCash(navController: NavController?) {
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
-                                onClick = { viewModel.recarregarDados(userId) },
+                                onClick = { viewModel.carregarSaldoInfoCash(userId) },
                                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
                             ) {
                                 Text("Tentar novamente")
                             }
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = "InfoCash",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-
-<<<<<<< HEAD
-            // Content
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    // Card InfoCash Status com dados mock
-                    InfoCashStatusCard(hubCoinData)
                 }
 
-                item {
-                    // Card Conquistas
-                    ConquistasCard()
-                }
-
-                item {
-                    // Card Como Ganhar HubCoins
-                    ComoGanharHubCoinsCard()
-                }
-
-                item {
-                    // Card Comunidade
-                    ComunidadeCard()
-                }
-
-                // Espaçamento para o menu inferior
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-=======
                 is InfoCashUiState.Success -> {
                     LazyColumn(
                         modifier = Modifier
@@ -251,7 +195,6 @@ fun TelaInfoCash(navController: NavController?) {
                             Spacer(modifier = Modifier.height(80.dp))
                         }
                     }
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                 }
             }
         }
@@ -262,12 +205,12 @@ fun TelaInfoCash(navController: NavController?) {
                 .align(Alignment.BottomCenter)
                 .background(Color.White)
         ) {
-            BottomMenu(navController = navController)
+            BottomMenu(navController = navController, isAdmin = isAdmin)
         }
 
         // Botão de chat flutuante
         FloatingActionButton(
-            onClick = { /* TODO: Implementar chat */ },
+            onClick = { navController?.navigate("chat_precos") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 100.dp),
@@ -283,11 +226,7 @@ fun TelaInfoCash(navController: NavController?) {
 }
 
 @Composable
-<<<<<<< HEAD
-fun InfoCashStatusCard(hubCoinData: HubCoinData) {
-=======
 fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -342,25 +281,15 @@ fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-<<<<<<< HEAD
-                        text = hubCoinData.getNivelAtual(),
-=======
                         text = saldoInfoCash.getNivelTexto(),
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                         fontSize = 12.sp,
                         color = OnSurfaceGray
                     )
                 }
 
-<<<<<<< HEAD
-                // Saldo do HubCoin
-                Text(
-                    text = hubCoinData.getSaldoComVirgula(),
-=======
                 // Saldo do HubCoin vindo da API
                 Text(
                     text = saldoInfoCash.getSaldoComVirgula(),
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = PrimaryOrange
@@ -371,11 +300,7 @@ fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
 
             // Barra de progresso
             LinearProgressIndicator(
-<<<<<<< HEAD
-                progress = { hubCoinData.progressoAtual },
-=======
                 progress = { saldoInfoCash.getProgressoAtual() },
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -388,12 +313,6 @@ fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
 
             // Mensagem do próximo nível
             Text(
-<<<<<<< HEAD
-                text = hubCoinData.getMensagemProximoNivel(),
-                fontSize = 12.sp,
-                color = OnSurfaceGray
-            )
-=======
                 text = saldoInfoCash.getMensagemProximoNivel(),
                 fontSize = 12.sp,
                 color = OnSurfaceGray
@@ -418,7 +337,6 @@ fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
                     color = OnSurfaceGray
                 )
             }
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
         }
     }
 }

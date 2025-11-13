@@ -42,6 +42,7 @@ fun TelaInfoCashApi(navController: NavController) {
     // Pega o ID do usuário das preferências (ou use um ID padrão)
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val userId = prefs.getInt("user_id", 1) // ID padrão = 1 se não encontrar
+    val isAdmin = prefs.getBoolean("isAdmin", false)
 
     // Carrega os dados quando a tela é exibida
     LaunchedEffect(userId) {
@@ -91,7 +92,7 @@ fun TelaInfoCashApi(navController: NavController) {
                 .align(Alignment.BottomCenter)
                 .background(Color.White)
         ) {
-            BottomMenu(navController = navController)
+            BottomMenu(navController = navController, isAdmin = isAdmin)
         }
 
         // Botão de chat flutuante
@@ -254,7 +255,7 @@ private fun ColumnScope.SuccessContent(
     ) {
         item {
             // Card InfoCash Status com dados da API
-            InfoCashStatusCardApi(saldoInfoCash)
+            InfoCashStatusCard(saldoInfoCash)
         }
 
         item {
@@ -264,7 +265,7 @@ private fun ColumnScope.SuccessContent(
 
         item {
             // Card Como Ganhar HubCoins
-            ComoGanharHubCoinsCard()
+            ComoGanharHubCoinsApiCard()
         }
 
         // Espaçamento para o menu inferior
@@ -275,7 +276,7 @@ private fun ColumnScope.SuccessContent(
 }
 
 @Composable
-private fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
+private fun InfoCashStatusCard(saldoInfoCash: SaldoInfoCash) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -507,5 +508,124 @@ private fun formatDataTransacao(dataTransacao: String): String {
         "${partes[2]}/${partes[1]}/${partes[0]}"
     } catch (_: Exception) {
         "Data inválida"
+    }
+}
+
+@Composable
+private fun ComoGanharHubCoinsApiCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Text(
+                text = "Como ganhar HubCoins",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Ícones ilustrativos
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = PrimaryOrange.copy(alpha = 0.1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "🛍️", fontSize = 24.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Fazer\ncompras",
+                        fontSize = 10.sp,
+                        textAlign = TextAlign.Center,
+                        color = OnSurfaceGray
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = PrimaryOrange.copy(alpha = 0.1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "💬", fontSize = 24.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Participar\ndiscussões",
+                        fontSize = 10.sp,
+                        textAlign = TextAlign.Center,
+                        color = OnSurfaceGray
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        color = PrimaryOrange.copy(alpha = 0.1f)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "⭐", fontSize = 24.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Avaliar\nprodutos",
+                        fontSize = 10.sp,
+                        textAlign = TextAlign.Center,
+                        color = OnSurfaceGray
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { /* TODO: Implementar ação */ },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PrimaryOrange
+                ),
+                shape = RoundedCornerShape(24.dp)
+            ) {
+                Text(
+                    text = "Começar a ganhar",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
