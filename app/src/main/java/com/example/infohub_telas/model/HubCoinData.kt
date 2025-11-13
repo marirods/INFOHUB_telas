@@ -9,7 +9,8 @@ data class HubCoinData(
     val pontosParaProximoNivel: Int = 215,
     val proximoNivel: Int = 4
 ) {
-    fun getSaldoComVirgula(): String = String.format(Locale.getDefault(), "%,.0f HC", saldo).replace(",", ".")
+    fun getSaldoComVirgula(): String =
+        String.format(Locale.getDefault(), "%,.0f HC", saldo).replace(",", ".")
 
     fun getMensagemProximoNivel(): String =
         "Faltam $pontosParaProximoNivel HC para o próximo nível"
@@ -31,4 +32,3 @@ data class HubCoinData(
         }
     }
 }
-

@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.compose.foundation.layout)
     debugImplementation("androidx.compose.ui:ui-tooling")
 
 

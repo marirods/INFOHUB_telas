@@ -1,73 +1,74 @@
 package com.example.infohub_telas.telas
 
-import android.R.attr.onClick
+import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.model.ChatRequest
+import com.example.infohub_telas.model.ChatResponse
+import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.primaryLight
-
-
-
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import retrofit2.Response
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 data class ChatMessage(
     val text: String,
     val isUser: Boolean,
-    val time: String
+    val time: String,
+    val isLoading: Boolean = false,
+    val isError: Boolean = false,
+    val errorMessage: String? = null
 )
 
 @Composable
 fun TelaChatDePrecos(navController: NavController?) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
+    val token = prefs.getString("token", "") ?: ""
+
     var inputText by remember { mutableStateOf("") }
     var showOptions by remember { mutableStateOf(false) }
+    var isLoadingResponse by remember { mutableStateOf(false) }
     var messages by remember { mutableStateOf(listOf(
         ChatMessage(
             text = "Olá! Sou sua assistente de compras inteligente. Posso ajudar você a encontrar os melhores preços de qualquer produto. Digite o nome do produto que você procura!",
@@ -78,29 +79,218 @@ fun TelaChatDePrecos(navController: NavController?) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
+    // Instância do serviço da API
+    val retrofitFactory = remember { RetrofitFactory() }
+    val chatApiService = remember { retrofitFactory.getInfoHub_UserService() }
+
+    // ID único de sessão do chat
+    val sessionId = remember { UUID.randomUUID().toString() }
+
+    fun showLoadingMessage() {
+        val loadingMessage = ChatMessage(
+            text = "Digitando...",
+            isUser = false,
+            time = getCurrentTime(),
+            isLoading = true
+        )
+        messages = messages + loadingMessage
+    }
+
+    fun removeLoadingMessage() {
+        messages = messages.filterNot { it.isLoading }
+    }
+
+    suspend fun sendMessageToAPI(messageText: String): ChatResponse? {
+        return try {
+            // Validar token antes de enviar
+            if (token.isBlank()) {
+                Log.e("TelaChatDePrecos", "❌ Token de autenticação não encontrado")
+                return null
+            }
+
+            Log.d("TelaChatDePrecos", "🚀 Enviando mensagem para API: $messageText")
+            Log.d("TelaChatDePrecos", "📝 Token: ${token.take(10)}...")
+            Log.d("TelaChatDePrecos", "🆔 SessionId: $sessionId")
+
+            val request = ChatRequest(
+                chatId = sessionId,
+                message = messageText
+            )
+
+            val response: Response<ChatResponse> = withContext(Dispatchers.IO) {
+                chatApiService.enviarMensagemChat("Bearer $token", request).execute()
+            }
+
+            Log.d("TelaChatDePrecos", "📈 HTTP Status Code: ${response.code()}")
+            Log.d("TelaChatDePrecos", "✅ Response Success: ${response.isSuccessful}")
+
+            when (response.code()) {
+                200 -> {
+                    val body = response.body()
+                    Log.d("TelaChatDePrecos", "📦 Response Body: $body")
+
+                    if (body?.sucesso == true) {
+                        Log.d("TelaChatDePrecos", "🎉 Resposta da IA recebida: ${body.resposta}")
+                        body
+                    } else {
+                        Log.e("TelaChatDePrecos", "❌ API retornou sucesso=false: $body")
+                        null
+                    }
+                }
+                401 -> {
+                    Log.e("TelaChatDePrecos", "🔒 Erro de autenticação: Token inválido ou expirado")
+                    null
+                }
+                403 -> {
+                    Log.e("TelaChatDePrecos", "🚫 Acesso negado: Usuário sem permissão")
+                    null
+                }
+                404 -> {
+                    Log.e("TelaChatDePrecos", "🔍 Endpoint não encontrado: Verifique a URL da API")
+                    null
+                }
+                500 -> {
+                    Log.e("TelaChatDePrecos", "🔧 Erro interno do servidor")
+                    null
+                }
+                else -> {
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("TelaChatDePrecos", "🚨 Erro HTTP ${response.code()}: $errorBody")
+                    Log.e("TelaChatDePrecos", "🚨 Error Headers: ${response.headers()}")
+                    null
+                }
+            }
+        } catch (e: java.net.SocketTimeoutException) {
+            Log.e("TelaChatDePrecos", "⏱️ Timeout na requisição: ${e.message}")
+            null
+        } catch (_: java.net.UnknownHostException) {
+            Log.e("TelaChatDePrecos", "🌐 Erro de conectividade: Verifique sua conexão com a internet")
+            null
+        } catch (e: java.net.ConnectException) {
+            Log.e("TelaChatDePrecos", "🔌 Falha ao conectar com o servidor: ${e.message}")
+            null
+        } catch (e: Exception) {
+            Log.e("TelaChatDePrecos", "💥 Exceção geral ao chamar API: ${e.message}", e)
+            Log.e("TelaChatDePrecos", "💥 Exception Stack Trace: ${e.stackTraceToString()}")
+            null
+        }
+    }
+
     fun sendMessage(text: String) {
-        if (text.isNotBlank()) {
+        if (text.isNotBlank() && !isLoadingResponse) {
+            Log.d("TelaChatDePrecos", "💬 Usuário enviou: $text")
+
+            // Adiciona mensagem do usuário
             val newMessage = ChatMessage(text, true, getCurrentTime())
             messages = messages + newMessage
             inputText = ""
             
-            // Simular resposta da IA após 1 segundo
+            isLoadingResponse = true
+            showLoadingMessage()
+
             coroutineScope.launch {
-                kotlinx.coroutines.delay(1000)
-                val response = ChatMessage(
-                    text = "Estou buscando os melhores preços de '$text' para você. Por favor, aguarde...",
-                    isUser = false,
-                    time = getCurrentTime()
-                )
-                messages = messages + response
-                coroutineScope.launch {
+                try {
+                    // Scroll para mostrar mensagem do usuário
                     listState.animateScrollToItem(messages.size - 1)
+
+                    val apiResponse = sendMessageToAPI(text)
+
+                    removeLoadingMessage()
+
+                    if (apiResponse != null) {
+                        // Resposta bem-sucedida da API
+                        val responseMessage = ChatMessage(
+                            text = apiResponse.resposta,
+                            isUser = false,
+                            time = getCurrentTime()
+                        )
+                        messages = messages + responseMessage
+
+                        Log.d("TelaChatDePrecos", "✅ Mensagem da IA adicionada: ${apiResponse.resposta}")
+
+                        // Mostrar toast de sucesso (opcional)
+                        Toast.makeText(context, "Resposta recebida!", Toast.LENGTH_SHORT).show()
+
+                    } else {
+                        // Erro na API - mostrar mensagem de erro específica
+                        val errorMessage = when {
+                            token.isBlank() -> ChatMessage(
+                                text = "Para usar o chat, você precisa estar logado. Por favor, faça login novamente.",
+                                isUser = false,
+                                time = getCurrentTime(),
+                                isError = true,
+                                errorMessage = "Token de autenticação ausente"
+                            )
+                            else -> ChatMessage(
+                                text = "Desculpe, não consegui processar sua mensagem no momento. Tente novamente em alguns instantes.",
+                                isUser = false,
+                                time = getCurrentTime(),
+                                isError = true,
+                                errorMessage = "Erro na comunicação com a API"
+                            )
+                        }
+                        messages = messages + errorMessage
+
+                        Log.e("TelaChatDePrecos", "❌ Erro ao obter resposta da API")
+
+                        val toastMessage = when {
+                            token.isBlank() -> "Faça login para usar o chat"
+                            else -> "Erro ao conectar com a IA"
+                        }
+                        Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show()
+                    }
+
+                } catch (e: Exception) {
+                    Log.e("TelaChatDePrecos", "💥 Erro geral no envio da mensagem: ${e.message}", e)
+
+                    removeLoadingMessage()
+
+                    val errorMessage = when (e) {
+                        is java.net.SocketTimeoutException -> ChatMessage(
+                            text = "A resposta está demorando mais que o esperado. Verifique sua conexão e tente novamente.",
+                            isUser = false,
+                            time = getCurrentTime(),
+                            isError = true,
+                            errorMessage = "Timeout na requisição"
+                        )
+                        is java.net.UnknownHostException -> ChatMessage(
+                            text = "Não foi possível conectar com o servidor. Verifique sua conexão com a internet.",
+                            isUser = false,
+                            time = getCurrentTime(),
+                            isError = true,
+                            errorMessage = "Erro de conectividade"
+                        )
+                        is java.net.ConnectException -> ChatMessage(
+                            text = "Falha ao conectar com o servidor. Tente novamente mais tarde.",
+                            isUser = false,
+                            time = getCurrentTime(),
+                            isError = true,
+                            errorMessage = "Falha de conexão"
+                        )
+                        else -> ChatMessage(
+                            text = "Ops! Ocorreu um erro inesperado. Por favor, tente novamente.",
+                            isUser = false,
+                            time = getCurrentTime(),
+                            isError = true,
+                            errorMessage = e.message
+                        )
+                    }
+                    messages = messages + errorMessage
+
+                    Toast.makeText(context, "Erro inesperado: ${e.message}", Toast.LENGTH_LONG).show()
+
+                } finally {
+                    isLoadingResponse = false
+
+                    // Scroll para a última mensagem
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(messages.size - 1)
+                    }
                 }
             }
-            
-            coroutineScope.launch {
-                listState.animateScrollToItem(messages.size - 1)
-            }
+        } else if (isLoadingResponse) {
+            Log.d("TelaChatDePrecos", "⏳ Aguardando resposta anterior...")
+            Toast.makeText(context, "Aguarde a resposta anterior...", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -271,7 +461,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                 modifier = Modifier.size(32.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Send,
+                    imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Enviar",
                     tint = if (inputText.isNotBlank()) Color(0xFFF9A01B) else Color.Gray,
                     modifier = Modifier.size(24.dp)
@@ -304,7 +494,12 @@ fun ChatMessageItem(message: ChatMessage) {
             modifier = Modifier
                 .widthIn(max = 280.dp)
                 .background(
-                    color = if (message.isUser) Color(0xFFF9A01B) else Color(0xFFFFF8E7),
+                    color = when {
+                        message.isUser -> Color(0xFFF9A01B)
+                        message.isError -> Color(0xFFFFE5E5)
+                        message.isLoading -> Color(0xFFF0F0F0)
+                        else -> Color(0xFFFFF8E7)
+                    },
                     shape = RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
@@ -317,15 +512,60 @@ fun ChatMessageItem(message: ChatMessage) {
             Text(
                 text = message.time,
                 fontSize = 11.sp,
-                color = if (message.isUser) Color.White.copy(alpha = 0.8f) else Color.Gray,
+                color = when {
+                    message.isUser -> Color.White.copy(alpha = 0.8f)
+                    message.isError -> Color.Red.copy(alpha = 0.7f)
+                    else -> Color.Gray
+                },
                 modifier = Modifier.padding(bottom = 4.dp)
             )
-            Text(
-                text = message.text,
-                fontSize = 14.sp,
-                color = if (message.isUser) Color.White else Color.Black,
-                lineHeight = 20.sp
-            )
+
+            // Texto da mensagem com indicador de loading
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = message.text,
+                    fontSize = 14.sp,
+                    color = when {
+                        message.isUser -> Color.White
+                        message.isError -> Color.Red
+                        else -> Color.Black
+                    },
+                    lineHeight = 20.sp,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                // Indicador de loading
+                if (message.isLoading) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Simulação de pontos pulsantes para loading
+                    val alpha by animateFloatAsState(
+                        targetValue = 0.3f,
+                        animationSpec = tween(
+                            durationMillis = 1000,
+                            easing = FastOutSlowInEasing
+                        ),
+                        label = "loading_alpha"
+                    )
+                    Text(
+                        text = "●●●",
+                        fontSize = 12.sp,
+                        color = Color.Gray.copy(alpha = alpha),
+                    )
+                }
+            }
+
+            // Mostrar erro detalhado se houver
+            if (message.isError && !message.errorMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Erro: ${message.errorMessage}",
+                    fontSize = 10.sp,
+                    color = Color.Red.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Light
+                )
+            }
         }
     }
 }

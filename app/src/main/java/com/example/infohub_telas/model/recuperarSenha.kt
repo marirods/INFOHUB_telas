@@ -1,8 +1,8 @@
 package com.example.infohub_telas.model
 
-data class recuperarSenha(
-    val email: String,
+@Deprecated("Use RecuperarSenhaRequest")
+typealias recuperarSenha = RecuperarSenhaRequest
 
+data class RecuperarSenhaRequest(
+    val email: String
 )
-
-
