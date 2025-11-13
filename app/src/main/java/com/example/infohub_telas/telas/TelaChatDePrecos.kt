@@ -1,14 +1,11 @@
 package com.example.infohub_telas.telas
 
-<<<<<<< HEAD
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-=======
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,10 +16,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-<<<<<<< HEAD
 import androidx.compose.material.icons.automirrored.filled.Send
-=======
->>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon
@@ -84,7 +78,7 @@ fun TelaChatDePrecos(navController: NavController?) {
     )) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    
+
     // Instância do serviço da API
     val retrofitFactory = remember { RetrofitFactory() }
     val chatApiService = remember { retrofitFactory.getInfoHub_UserService() }
@@ -190,7 +184,7 @@ fun TelaChatDePrecos(navController: NavController?) {
             val newMessage = ChatMessage(text, true, getCurrentTime())
             messages = messages + newMessage
             inputText = ""
-            
+
             isLoadingResponse = true
             showLoadingMessage()
 
@@ -299,7 +293,7 @@ fun TelaChatDePrecos(navController: NavController?) {
             Toast.makeText(context, "Aguarde a resposta anterior...", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
     fun handleOptionClick(option: String) {
         sendMessage(option)
         showOptions = false
@@ -314,9 +308,9 @@ fun TelaChatDePrecos(navController: NavController?) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp) // Aumentei a altura do header
+                .height(80.dp)
                 .background(primaryLight),
-            contentAlignment = Alignment.CenterStart // Alinhamento centralizado verticalmente
+            contentAlignment = Alignment.CenterStart
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -360,13 +354,13 @@ fun TelaChatDePrecos(navController: NavController?) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
-            
+
             // Mensagens do chat
             items(messages) { message ->
                 ChatMessageItem(message)
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            
+
             // Botão de opções
             item {
                 Column {
@@ -405,7 +399,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                             )
                         }
                     }
-                    
+
                     // Lista de opções (aparece quando showOptions é true)
                     if (showOptions) {
                         Box(
@@ -430,7 +424,7 @@ fun TelaChatDePrecos(navController: NavController?) {
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
@@ -495,7 +489,7 @@ fun ChatMessageItem(message: ChatMessage) {
                 tint = Color.Unspecified
             )
         }
-        
+
         Column(
             modifier = Modifier
                 .widthIn(max = 280.dp)
