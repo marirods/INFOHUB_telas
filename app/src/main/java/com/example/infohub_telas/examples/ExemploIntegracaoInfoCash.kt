@@ -16,13 +16,14 @@ import com.example.infohub_telas.model.TransacaoInfoCash
 import com.example.infohub_telas.utils.ApiUtils
 import com.example.infohub_telas.viewmodel.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 /**
  * Exemplo prático de como integrar as APIs do InfoCash
  * Esta tela demonstra o uso completo do InfoCashViewModel com dados reais da API
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExemploIntegracaoInfoCash(
+    token: String,
     userId: Int,
     viewModel: InfoCashViewModel = viewModel()
 ) {
@@ -32,8 +33,8 @@ fun ExemploIntegracaoInfoCash(
     val resumoState by viewModel.resumoState.collectAsState()
 
     // Carregar dados quando a tela for criada
-    LaunchedEffect(userId) {
-        viewModel.recarregarTodosDados(userId)
+    LaunchedEffect(userId, token) {
+        viewModel.recarregarTodosDados(token, userId)
     }
 
     Column(
@@ -54,7 +55,7 @@ fun ExemploIntegracaoInfoCash(
             )
 
             IconButton(
-                onClick = { viewModel.recarregarTodosDados(userId) }
+                onClick = { viewModel.recarregarTodosDados(token, userId) }
             ) {
                 Icon(Icons.Default.Refresh, contentDescription = "Atualizar")
             }

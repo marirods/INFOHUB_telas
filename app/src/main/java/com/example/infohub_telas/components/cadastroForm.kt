@@ -5,12 +5,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text  // Adicionado para mensagens de erro (opcional)
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.VisualTransformation
 
 // Data class para encapsular os dados do formulário
 data class FormPessoaFisicaData(
@@ -41,18 +41,27 @@ fun FormPessoaFisica(
 
         CustomTextFieldCadastro(
             value = data.cpf,
-            onValueChange = { onDataChange(data.copy(cpf = it)) },
+            onValueChange = { input ->
+                // Keep only digits in state; mask visually
+                val digits = input.filter { it.isDigit() }.take(11)
+                onDataChange(data.copy(cpf = digits))
+            },
             placeholder = "CPF*",
-            keyboardType = KeyboardType.Number
+            keyboardType = KeyboardType.Number,
+            visualTransformation = CpfVisualTransformation()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         CustomTextFieldCadastro(
             value = data.telefone,
-            onValueChange = { onDataChange(data.copy(telefone = it)) },
+            onValueChange = { input ->
+                val digits = input.filter { it.isDigit() }.take(11)
+                onDataChange(data.copy(telefone = digits))
+            },
             placeholder = "Telefone*",
-            keyboardType = KeyboardType.Phone
+            keyboardType = KeyboardType.Phone,
+            visualTransformation = PhoneVisualTransformation()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -104,5 +113,3 @@ fun PreviewFormPessoaFisica() {
         onDataChange = {}
     )
 }
-
-

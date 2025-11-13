@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
@@ -35,17 +36,63 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
+import com.example.infohub_telas.navigation.Routes
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.infohub_telas.viewmodel.CarrinhoViewModel
+import com.example.infohub_telas.viewmodel.OperationUiState
+import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaProduto(navController: NavController, id: String) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
-    val isAdmin = prefs.getBoolean("isAdmin", false)
-    
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val token = prefs.getString("token", "") ?: ""
+    val userId = prefs.getInt("user_id", 0)
+
+    val carrinhoViewModel: CarrinhoViewModel = viewModel()
+    val operationState by carrinhoViewModel.operationState.collectAsState()
+
+    LaunchedEffect(operationState) {
+        when (val op = operationState) {
+            is OperationUiState.Success -> {
+                Toast.makeText(context, op.message, Toast.LENGTH_SHORT).show()
+                carrinhoViewModel.resetOperationState()
+            }
+            is OperationUiState.Error -> {
+                Toast.makeText(context, "Erro: ${op.message}", Toast.LENGTH_LONG).show()
+                carrinhoViewModel.resetOperationState()
+            }
+            else -> {}
+        }
+    }
+
+    // ID do produto vindo do parâmetro 'id' (converter para Int se possível)
+    val idProduto = id.toIntOrNull() ?: -1
+    // TODO: recuperar idEstabelecimento real associado ao produto
+    val idEstabelecimento = 1 // placeholder
+
+    fun adicionarAoCarrinho(quantidade: Int = 1) {
+        if (token.isBlank() || userId == 0) {
+            Toast.makeText(context, "Faça login para adicionar ao carrinho", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (idProduto == -1) {
+            Toast.makeText(context, "Produto inválido", Toast.LENGTH_LONG).show()
+            return
+        }
+        carrinhoViewModel.adicionarItem(
+            token = token,
+            idUsuario = userId,
+            idProduto = idProduto,
+            idEstabelecimento = idEstabelecimento,
+            quantidade = quantidade
+        )
+    }
+
     Scaffold(
         topBar = { TopBarPromocao() },
-        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
+        bottomBar = { BottomMenu(navController = navController, isAdmin = false) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -60,7 +107,16 @@ fun TelaProduto(navController: NavController, id: String) {
             Spacer(modifier = Modifier.height(12.dp))
             FilterChipsPromocao()
             Spacer(modifier = Modifier.height(12.dp))
-            ProductCardPromocao()
+            ProductCardPromocao(
+                adicionarAoCarrinho = { adicionarAoCarrinho() },
+                navController = navController,
+                context = context,
+                token = token,
+                userId = userId,
+                idProduto = idProduto,
+                idEstabelecimento = idEstabelecimento,
+                carrinhoViewModel = carrinhoViewModel
+            )
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
@@ -155,7 +211,16 @@ fun FilterChipsPromocao() {
 }
 
 @Composable
-fun ProductCardPromocao() {
+fun ProductCardPromocao(
+    adicionarAoCarrinho: () -> Unit,
+    navController: NavController,
+    context: android.content.Context,
+    token: String,
+    userId: Int,
+    idProduto: Int,
+    idEstabelecimento: Int,
+    carrinhoViewModel: CarrinhoViewModel
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -276,41 +341,49 @@ fun ProductCardPromocao() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+                // Botão Lista de Compras
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        // TODO: Implementar funcionalidade de Lista de Compras
+                        Toast.makeText(context, "Lista de Compras - Em breve!", Toast.LENGTH_SHORT).show()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA726)),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.size(70.dp, 48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.lista),
-                        contentDescription = null,
+                        contentDescription = "Adicionar à lista",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
+                // Botão Chat IA
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        navController.navigate(Routes.CHAT_PRECOS)
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA726)),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.size(70.dp, 48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.iabranca),
-                        contentDescription = null,
+                        contentDescription = "Consultar IA",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
+                // Botão Adicionar ao Carrinho
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = { adicionarAoCarrinho() },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA726)),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.size(70.dp, 48.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.sacola),
-                        contentDescription = null,
+                        contentDescription = "Adicionar ao carrinho",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
@@ -319,8 +392,28 @@ fun ProductCardPromocao() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Botão Comprar Agora - Adiciona ao carrinho e navega
             Button(
-                onClick = { /* TODO: Ação de comprar */ },
+                onClick = {
+                    if (token.isBlank() || userId == 0) {
+                        Toast.makeText(context, "Faça login para comprar", Toast.LENGTH_LONG).show()
+                        return@Button
+                    }
+                    if (idProduto == -1) {
+                        Toast.makeText(context, "Produto inválido", Toast.LENGTH_LONG).show()
+                        return@Button
+                    }
+                    // Adiciona ao carrinho e navega para o carrinho
+                    carrinhoViewModel.adicionarItem(
+                        token = token,
+                        idUsuario = userId,
+                        idProduto = idProduto,
+                        idEstabelecimento = idEstabelecimento,
+                        quantidade = 1
+                    )
+                    // Navega para o carrinho após adicionar
+                    navController.navigate(Routes.CARRINHO)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

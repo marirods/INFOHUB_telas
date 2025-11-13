@@ -16,7 +16,7 @@ data class TransacaoInfoCash(
 data class SaldoInfoCash(
     @SerializedName("id_usuario") val idUsuario: Int,
     @SerializedName("saldo_total") val saldoTotal: Int,
-    @SerializedName("ultima_atualizacao") val ultimaAtualizacao: String
+    @SerializedName("ultima_atualizacao") val ultimaAtualizacao: String? // ✅ Agora pode ser null
 )
 
 data class ResumoAcaoInfoCash(

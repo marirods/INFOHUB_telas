@@ -14,7 +14,7 @@ data class SaldoInfoCashResponse(
     val saldoTotal: Int,
 
     @SerializedName("ultima_atualizacao")
-    val ultimaAtualizacao: String
+    val ultimaAtualizacao: String? // ✅ Agora pode ser null
 )
 
 /**
@@ -23,7 +23,7 @@ data class SaldoInfoCashResponse(
 data class SaldoInfoCash(
     val idUsuario: Int,
     val saldoTotal: Int,
-    val ultimaAtualizacao: String
+    val ultimaAtualizacao: String? // ✅ Agora pode ser null
 ) {
     fun getSaldoFormatado(): String = "$saldoTotal HC"
 
@@ -62,15 +62,6 @@ data class SaldoInfoCash(
                 idUsuario = response.idUsuario,
                 saldoTotal = response.saldoTotal,
                 ultimaAtualizacao = response.ultimaAtualizacao
-            )
-        }
-
-        // Dados mock para desenvolvimento/teste
-        fun getMockData(): SaldoInfoCash {
-            return SaldoInfoCash(
-                idUsuario = 1,
-                saldoTotal = 1285,
-                ultimaAtualizacao = "2023-11-11T10:30:00.000Z"
             )
         }
     }

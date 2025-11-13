@@ -14,7 +14,10 @@ interface InfoCashApiService {
      * GET /infocash/saldo/{id}
      */
     @GET("infocash/saldo/{id}")
-    suspend fun getSaldoInfoCash(@Path("id") idUsuario: Int): Response<SaldoInfoCashResponse>
+    suspend fun getSaldoInfoCash(
+        @Header("Authorization") token: String,
+        @Path("id") idUsuario: Int
+    ): Response<SaldoInfoCashResponse>
 
     /**
      * Consultar histórico de transações
@@ -22,6 +25,7 @@ interface InfoCashApiService {
      */
     @GET("infocash/historico/{id}")
     suspend fun getHistoricoInfoCash(
+        @Header("Authorization") token: String,
         @Path("id") idUsuario: Int,
         @Query("limite") limite: Int? = null
     ): Response<HistoricoInfoCashResponse>
@@ -31,28 +35,39 @@ interface InfoCashApiService {
      * GET /infocash/resumo/{id}
      */
     @GET("infocash/resumo/{id}")
-    suspend fun getResumoInfoCash(@Path("id") idUsuario: Int): Response<ResumoInfoCashResponse>
+    suspend fun getResumoInfoCash(
+        @Header("Authorization") token: String,
+        @Path("id") idUsuario: Int
+    ): Response<ResumoInfoCashResponse>
 
     /**
      * Consultar perfil completo (saldo + resumo)
      * GET /infocash/perfil/{id}
      */
     @GET("infocash/perfil/{id}")
-    suspend fun getPerfilInfoCash(@Path("id") idUsuario: Int): Response<PerfilInfoCashResponse>
+    suspend fun getPerfilInfoCash(
+        @Header("Authorization") token: String,
+        @Path("id") idUsuario: Int
+    ): Response<PerfilInfoCashResponse>
 
     /**
      * Consultar ranking de usuários
      * GET /infocash/ranking
      */
     @GET("infocash/ranking")
-    suspend fun getRankingInfoCash(@Query("limite") limite: Int? = null): Response<RankingInfoCashResponse>
+    suspend fun getRankingInfoCash(
+        @Header("Authorization") token: String,
+        @Query("limite") limite: Int? = null
+    ): Response<RankingInfoCashResponse>
 
     /**
      * Consultar estatísticas gerais (Admin)
      * GET /infocash/estatisticas
      */
     @GET("infocash/estatisticas")
-    suspend fun getEstatisticasInfoCash(): Response<EstatisticasInfoCashResponse>
+    suspend fun getEstatisticasInfoCash(
+        @Header("Authorization") token: String
+    ): Response<EstatisticasInfoCashResponse>
 
     /**
      * Consultar transações por período
@@ -60,6 +75,7 @@ interface InfoCashApiService {
      */
     @GET("infocash/periodo/{id}")
     suspend fun getTransacoesPorPeriodo(
+        @Header("Authorization") token: String,
         @Path("id") idUsuario: Int,
         @Query("dataInicio") dataInicio: String,
         @Query("dataFim") dataFim: String
@@ -70,5 +86,8 @@ interface InfoCashApiService {
      * POST /infocash/conceder
      */
     @POST("infocash/conceder")
-    suspend fun concederPontos(@Body request: ConcederPontosRequest): Response<ConcederPontosResponse>
+    suspend fun concederPontos(
+        @Header("Authorization") token: String,
+        @Body request: ConcederPontosRequest
+    ): Response<ConcederPontosResponse>
 }

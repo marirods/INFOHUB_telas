@@ -40,6 +40,14 @@ fun TelaCadastroProduto(navController: NavController) {
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val token = prefs.getString("token", "") ?: ""
 
+    // Log para verificar se o token está disponível
+    LaunchedEffect(Unit) {
+        Log.d("TelaCadastroProduto", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO - USUÁRIO NÃO LOGADO"}")
+        if (token.isEmpty()) {
+            Log.e("TelaCadastroProduto", "❌ ATENÇÃO: Token vazio! Usuário precisa fazer login.")
+        }
+    }
+
     var nome by remember { mutableStateOf("") }
     var descricao by remember { mutableStateOf("") }
     var idCategoria by remember { mutableStateOf("") }

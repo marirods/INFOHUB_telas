@@ -17,9 +17,29 @@ class RetrofitFactory {
         level = HttpLoggingInterceptor.Level.BODY // Loga headers e body completo
     }
 
-    // Cliente OkHttp com interceptor de logging
+    // Interceptor para adicionar Content-Type: application/json
+    private val jsonHeaderInterceptor = okhttp3.Interceptor { chain ->
+        val originalRequest = chain.request()
+
+        val request = originalRequest.newBuilder()
+            .removeHeader("Content-Type") // Remove header existente se houver
+            .addHeader("Content-Type", "application/json; charset=utf-8") // Adiciona com charset
+            .addHeader("Accept", "application/json")
+            .build()
+
+        Log.d("API_HEADERS", "🔧 Request URL: ${request.url}")
+        Log.d("API_HEADERS", "🔧 Method: ${request.method}")
+        Log.d("API_HEADERS", "🔧 Content-Type: ${request.header("Content-Type")}")
+        Log.d("API_HEADERS", "🔧 Accept: ${request.header("Accept")}")
+        Log.d("API_HEADERS", "🔧 Authorization: ${request.header("Authorization")?.take(30)}...")
+
+        chain.proceed(request)
+    }
+
+    // Cliente OkHttp com interceptors
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
+        .addInterceptor(jsonHeaderInterceptor) // Adiciona headers JSON
+        .addInterceptor(loggingInterceptor)    // Loga requisições
         .build()
 
     private val retrofitFactory =

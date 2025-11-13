@@ -1,5 +1,6 @@
 package com.example.infohub_telas.repository
 
+import android.util.Log
 import com.example.infohub_telas.model.*
 import com.example.infohub_telas.service.InfoCashApiService
 import kotlinx.coroutines.Dispatchers
@@ -35,16 +36,29 @@ class InfoCashRepository {
     /**
      * Buscar saldo do usuário
      */
-    suspend fun getSaldoInfoCash(userId: Int): Result<SaldoInfoCashResponse> {
+    suspend fun getSaldoInfoCash(token: String, userId: Int): Result<SaldoInfoCashResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getSaldoInfoCash(userId)
+                Log.d("InfoCashRepository", "🔑 Chamando getSaldoInfoCash com token: ${token.take(20)}...")
+                Log.d("InfoCashRepository", "👤 User ID: $userId")
+
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.getSaldoInfoCash(authToken, userId)
+
+                Log.d("InfoCashRepository", "📈 HTTP Status: ${response.code()}")
+                Log.d("InfoCashRepository", "✅ Success: ${response.isSuccessful}")
+
                 if (response.isSuccessful && response.body() != null) {
+                    Log.d("InfoCashRepository", "📦 Response body: ${response.body()}")
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao buscar saldo: ${response.message()}"))
+                    val errorBody = response.errorBody()?.string()
+                    Log.e("InfoCashRepository", "❌ Erro HTTP ${response.code()}: ${response.message()}")
+                    Log.e("InfoCashRepository", "❌ Error body: $errorBody")
+                    Result.failure(Exception("Erro ao buscar saldo: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
+                Log.e("InfoCashRepository", "💥 Exceção ao buscar saldo: ${e.message}", e)
                 Result.failure(e)
             }
         }
@@ -53,16 +67,20 @@ class InfoCashRepository {
     /**
      * Buscar histórico de transações
      */
-    suspend fun getHistoricoInfoCash(userId: Int, limite: Int? = null): Result<HistoricoInfoCashResponse> {
+    suspend fun getHistoricoInfoCash(token: String, userId: Int, limite: Int? = null): Result<HistoricoInfoCashResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getHistoricoInfoCash(userId, limite)
+                Log.d("InfoCashRepository", "🔑 Chamando getHistoricoInfoCash com token: ${token.take(20)}...")
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.getHistoricoInfoCash(authToken, userId, limite)
+
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao buscar histórico: ${response.message()}"))
+                    Result.failure(Exception("Erro ao buscar histórico: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
+                Log.e("InfoCashRepository", "💥 Exceção ao buscar histórico: ${e.message}", e)
                 Result.failure(e)
             }
         }
@@ -71,14 +89,15 @@ class InfoCashRepository {
     /**
      * Buscar resumo por tipo de ação
      */
-    suspend fun getResumoInfoCash(userId: Int): Result<ResumoInfoCashResponse> {
+    suspend fun getResumoInfoCash(token: String, userId: Int): Result<ResumoInfoCashResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getResumoInfoCash(userId)
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.getResumoInfoCash(authToken, userId)
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao buscar resumo: ${response.message()}"))
+                    Result.failure(Exception("Erro ao buscar resumo: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -89,14 +108,15 @@ class InfoCashRepository {
     /**
      * Buscar perfil completo (saldo + resumo)
      */
-    suspend fun getPerfilInfoCash(userId: Int): Result<PerfilInfoCashResponse> {
+    suspend fun getPerfilInfoCash(token: String, userId: Int): Result<PerfilInfoCashResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getPerfilInfoCash(userId)
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.getPerfilInfoCash(authToken, userId)
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao buscar perfil: ${response.message()}"))
+                    Result.failure(Exception("Erro ao buscar perfil: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -107,32 +127,15 @@ class InfoCashRepository {
     /**
      * Buscar ranking de usuários
      */
-    suspend fun getRankingInfoCash(limite: Int? = null): Result<RankingInfoCashResponse> {
+    suspend fun getRankingInfoCash(token: String, limite: Int? = null): Result<RankingInfoCashResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getRankingInfoCash(limite)
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.getRankingInfoCash(authToken, limite)
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao buscar ranking: ${response.message()}"))
-                }
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
-        }
-    }
-
-    /**
-     * Buscar estatísticas gerais (Admin)
-     */
-    suspend fun getEstatisticasInfoCash(): Result<EstatisticasInfoCashResponse> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val response = apiService.getEstatisticasInfoCash()
-                if (response.isSuccessful && response.body() != null) {
-                    Result.success(response.body()!!)
-                } else {
-                    Result.failure(Exception("Erro ao buscar estatísticas: ${response.message()}"))
+                    Result.failure(Exception("Erro ao buscar ranking: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -143,18 +146,15 @@ class InfoCashRepository {
     /**
      * Buscar transações por período
      */
-    suspend fun getTransacoesPorPeriodo(
-        userId: Int,
-        dataInicio: String,
-        dataFim: String
-    ): Result<HistoricoInfoCashResponse> {
+    suspend fun getTransacoesPorPeriodo(token: String, userId: Int, dataInicio: String, dataFim: String): Result<HistoricoInfoCashResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getTransacoesPorPeriodo(userId, dataInicio, dataFim)
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.getTransacoesPorPeriodo(authToken, userId, dataInicio, dataFim)
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao buscar transações por período: ${response.message()}"))
+                    Result.failure(Exception("Erro ao buscar transações por período: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -163,16 +163,17 @@ class InfoCashRepository {
     }
 
     /**
-     * Conceder pontos manualmente (Admin)
+     * Conceder pontos manualmente (função admin)
      */
-    suspend fun concederPontos(request: ConcederPontosRequest): Result<ConcederPontosResponse> {
+    suspend fun concederPontos(token: String, request: ConcederPontosRequest): Result<ConcederPontosResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.concederPontos(request)
+                val authToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+                val response = apiService.concederPontos(authToken, request)
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
                 } else {
-                    Result.failure(Exception("Erro ao conceder pontos: ${response.message()}"))
+                    Result.failure(Exception("Erro ao conceder pontos: HTTP ${response.code()} - ${response.message()}"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)
@@ -180,4 +181,3 @@ class InfoCashRepository {
         }
     }
 }
-

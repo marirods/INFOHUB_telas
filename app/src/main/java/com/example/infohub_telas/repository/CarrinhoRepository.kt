@@ -32,7 +32,12 @@ class CarrinhoRepository {
     ): Result<CarrinhoOperationResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "🛒 Adicionando item ao carrinho - Produto: $idProduto, Qtd: $quantidade")
+                Log.d(TAG, "🛒 Adicionando item ao carrinho")
+                Log.d(TAG, "   - Token: ${token.take(20)}...")
+                Log.d(TAG, "   - User ID: $idUsuario")
+                Log.d(TAG, "   - Produto ID: $idProduto")
+                Log.d(TAG, "   - Estabelecimento ID: $idEstabelecimento")
+                Log.d(TAG, "   - Quantidade: $quantidade")
 
                 val request = AdicionarCarrinhoRequest(
                     idUsuario = idUsuario,
@@ -41,18 +46,23 @@ class CarrinhoRepository {
                     quantidade = quantidade
                 )
 
+                Log.d(TAG, "📤 Request body: $request")
+
                 val response = apiService.adicionarItem("Bearer $token", request)
 
                 Log.d(TAG, "📈 HTTP Status: ${response.code()}")
+                Log.d(TAG, "📨 Response headers: ${response.headers()}")
 
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
                     Log.d(TAG, "✅ Item adicionado com sucesso: ${body.message}")
                     Result.success(body)
                 } else {
-                    val errorMsg = "Erro ao adicionar item: ${response.message()}"
-                    Log.e(TAG, "❌ $errorMsg - Code: ${response.code()}")
-                    Result.failure(Exception(errorMsg))
+                    val errorBody = response.errorBody()?.string()
+                    val errorMsg = "Erro ao adicionar item: ${response.message()} - Code: ${response.code()}"
+                    Log.e(TAG, "❌ $errorMsg")
+                    Log.e(TAG, "❌ Error body: $errorBody")
+                    Result.failure(Exception("$errorMsg${if (errorBody != null) " - $errorBody" else ""}"))
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "💥 Exceção ao adicionar item: ${e.message}", e)
