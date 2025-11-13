@@ -58,6 +58,15 @@ dependencies {
 
 
 
+
+    //Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
+    //Credential Manager (recomendado pela Google)
+    implementation("androidx.credentials:credentials:1.2.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.5")
     implementation("androidx.navigation:navigation-runtime-ktx:2.7.5")

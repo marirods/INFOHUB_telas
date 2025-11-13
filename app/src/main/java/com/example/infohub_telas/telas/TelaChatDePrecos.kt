@@ -1,11 +1,14 @@
 package com.example.infohub_telas.telas
 
+<<<<<<< HEAD
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+=======
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,7 +19,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+<<<<<<< HEAD
 import androidx.compose.material.icons.automirrored.filled.Send
+=======
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Icon

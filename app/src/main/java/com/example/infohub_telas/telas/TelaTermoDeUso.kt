@@ -10,20 +10,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.components.AppTopBar
+import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaTermoDeUso(navController: NavController) {
+fun TelaTermoDeUso(navController: NavController?) {
     Scaffold(
         topBar = {
             AppTopBar(
                 title = "Termos de Uso",
                 navigationIcon = Icons.Default.ArrowBack,
-                onNavigationIconClick = { navController.navigateUp() }
+                onNavigationIconClick = { navController?.navigateUp() }
             )
         }
     ) { paddingValues ->
@@ -52,11 +54,20 @@ fun TelaTermoDeUso(navController: NavController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { navController.navigateUp() },
+                onClick = { navController?.navigateUp() },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Aceitar e Continuar")
             }
         }
+    }
+}
+
+
+@Preview(showSystemUi = true)
+@Composable
+fun TelaTermoDeUso() {
+    InfoHub_telasTheme {
+        TelaTermoDeUso(null)
     }
 }

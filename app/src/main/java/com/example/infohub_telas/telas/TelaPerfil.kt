@@ -33,7 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 
 // Define the main colors from the image for easy reuse
-private val OrangeColor = Color(0xFFF9A01B)
+val OrangeColor = Color(0xFFF9A01B)
 private val DarkOrangeColor = Color(0xFFF9A01B)
 private val LightGrayColor = Color(0xFFF7F7F7)
 private val TextGrayColor = Color(0xFF888888)

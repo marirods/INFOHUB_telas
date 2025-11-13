@@ -57,6 +57,8 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.content.Context
+import com.example.infohub_telas.components.MenuComponent
+
 
 // Função para criar alfinete vermelho
 fun criarIconeAlfinete(context: Context): BitmapDrawable {
@@ -352,19 +354,10 @@ fun TelaLocalizacao(navController: NavController) {
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .background(Color.White, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo),
-                        contentDescription = "Logo",
-                        modifier = Modifier.size(50.dp)
-                    )
-                }
+                MenuComponent(navController = navController)
             }
+
+
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -867,6 +860,11 @@ fun TelaLocalizacao(navController: NavController) {
             }
         }
     }
+}
+
+@Composable
+fun MenuComponent(navController: NavController) {
+    TODO("Not yet implemented")
 }
 
 @Preview(showSystemUi = true)
