@@ -66,6 +66,15 @@ fun TelaChatDePrecos(navController: NavController?) {
     val isAdmin = prefs.getBoolean("isAdmin", false)
     val token = prefs.getString("token", "") ?: ""
 
+    // Log para verificar se o token está disponível
+    LaunchedEffect(Unit) {
+        Log.d("TelaChatDePrecos", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO - USUÁRIO NÃO LOGADO"}")
+        if (token.isEmpty()) {
+            Log.e("TelaChatDePrecos", "❌ ATENÇÃO: Token vazio! Usuário precisa fazer login.")
+            Log.e("TelaChatDePrecos", "⚠️ Chat IA pode não funcionar sem token de autenticação")
+        }
+    }
+
     var inputText by remember { mutableStateOf("") }
     var showOptions by remember { mutableStateOf(false) }
     var isLoadingResponse by remember { mutableStateOf(false) }

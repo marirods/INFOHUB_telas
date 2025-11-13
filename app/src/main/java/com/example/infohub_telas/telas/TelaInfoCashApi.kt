@@ -39,15 +39,18 @@ fun TelaInfoCashApi(navController: NavController) {
     val historicoState by viewModel.historicoState.collectAsState()
     val context = LocalContext.current
 
-    // Pega o ID do usuário das preferências (ou use um ID padrão)
+    // Pega o ID do usuário e token das preferências
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val userId = prefs.getInt("user_id", 1) // ID padrão = 1 se não encontrar
+    val userId = prefs.getInt("user_id", 0)
+    val token = prefs.getString("token", "") ?: ""
     val isAdmin = prefs.getBoolean("isAdmin", false)
 
     // Carrega os dados quando a tela é exibida
-    LaunchedEffect(userId) {
-        viewModel.carregarPerfilCompleto(userId)
-        viewModel.carregarHistoricoInfoCash(userId, 5) // Últimas 5 transações
+    LaunchedEffect(userId, token) {
+        if (userId > 0 && token.isNotEmpty()) {
+            viewModel.carregarPerfilCompleto(token, userId)
+            viewModel.carregarHistoricoInfoCash(token, userId, 5) // Últimas 5 transações
+        }
     }
 
     Box(
@@ -55,59 +58,85 @@ fun TelaInfoCashApi(navController: NavController) {
             .fillMaxSize()
             .background(BackgroundGray)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Top Bar com gradiente
-            TopBarInfoCash(
-                onBackClick = { navController.popBackStack() },
-                onRefreshClick = { viewModel.recarregarTodosDados(userId) }
-            )
-
-            // Content baseado no estado da UI
-            when (val state = uiState) {
-                is InfoCashUiState.Loading -> {
-                    LoadingContent()
-                }
-
-                is InfoCashUiState.Error -> {
-                    ErrorContent(
-                        message = state.message,
-                        onRetry = { viewModel.recarregarTodosDados(userId) }
-                    )
-                }
-
-                is InfoCashUiState.Success -> {
-                    SuccessContent(
-                        saldoInfoCash = state.saldoInfoCash,
-                        historicoState = historicoState
-                    )
+        if (userId == 0 || token.isEmpty()) {
+            // Usuário não logado: exibe mensagem e botão para login
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Faça login para ver seu InfoCash",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceGray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { navController.popBackStack() },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                ) {
+                    Text("Voltar")
                 }
             }
-        }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Top Bar com gradiente
+                TopBarInfoCash(
+                    onBackClick = { navController.popBackStack() },
+                    onRefreshClick = { viewModel.recarregarTodosDados(token, userId) }
+                )
 
-        // Menu inferior
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .background(Color.White)
-        ) {
-            BottomMenu(navController = navController, isAdmin = isAdmin)
-        }
+                // Content baseado no estado da UI
+                when (val state = uiState) {
+                    is InfoCashUiState.Loading -> {
+                        LoadingContent()
+                    }
 
-        // Botão de chat flutuante
-        FloatingActionButton(
-            onClick = { /* TODO: Implementar chat */ },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 100.dp),
-            containerColor = PrimaryOrange
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Chat,
-                contentDescription = "Chat",
-                tint = Color.White
-            )
+                    is InfoCashUiState.Error -> {
+                        ErrorContent(
+                            message = state.message,
+                            onRetry = { viewModel.recarregarTodosDados(token, userId) }
+                        )
+                    }
+
+                    is InfoCashUiState.Success -> {
+                        SuccessContent(
+                            saldoInfoCash = state.saldoInfoCash,
+                            historicoState = historicoState
+                        )
+                    }
+                }
+            }
+
+            // Menu inferior
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .background(Color.White)
+            ) {
+                BottomMenu(navController = navController, isAdmin = isAdmin)
+            }
+
+            // Botão de chat flutuante
+            FloatingActionButton(
+                onClick = { /* TODO: Implementar chat */ },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 100.dp),
+                containerColor = PrimaryOrange
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Chat,
+                    contentDescription = "Chat",
+                    tint = Color.White
+                )
+            }
         }
     }
 }

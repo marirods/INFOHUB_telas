@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,16 @@ import retrofit2.Response
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaCadastroEstabelecimento(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val token = prefs.getString("token", "") ?: ""
+
+    // Log para verificar se o token está disponível (caso seja necessário no futuro)
+    LaunchedEffect(Unit) {
+        Log.d("TelaCadastroEstabelecimento", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO"}")
+        Log.d("TelaCadastroEstabelecimento", "ℹ️ Nota: Este endpoint atualmente não requer autenticação")
+    }
+
     var nomeEstabelecimento by remember { mutableStateOf("") }
     var cnpj by remember { mutableStateOf("") }
     var endereco by remember { mutableStateOf("") }

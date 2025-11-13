@@ -1,5 +1,6 @@
 package com.example.infohub_telas.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.infohub_telas.model.*
@@ -62,12 +63,19 @@ class InfoCashViewModel : ViewModel() {
     /**
      * Carrega o saldo do InfoCash para um usuário específico
      */
-    fun carregarSaldoInfoCash(idUsuario: Int) {
+    fun carregarSaldoInfoCash(token: String, idUsuario: Int) {
         viewModelScope.launch {
+            Log.d("InfoCashViewModel", "🚀 Iniciando carregamento do saldo")
+            Log.d("InfoCashViewModel", "🔑 Token: ${token.take(20)}...")
+            Log.d("InfoCashViewModel", "👤 User ID: $idUsuario")
+
             _uiState.value = InfoCashUiState.Loading
 
-            repository.getSaldoInfoCash(idUsuario)
+            repository.getSaldoInfoCash(token, idUsuario)
                 .onSuccess { response ->
+                    Log.d("InfoCashViewModel", "✅ Saldo carregado com sucesso")
+                    Log.d("InfoCashViewModel", "💰 Saldo: ${response.saldoTotal}")
+
                     val saldoInfoCash = SaldoInfoCash(
                         idUsuario = response.idUsuario,
                         saldoTotal = response.saldoTotal,
@@ -76,11 +84,10 @@ class InfoCashViewModel : ViewModel() {
                     _uiState.value = InfoCashUiState.Success(saldoInfoCash)
                 }
                 .onFailure { exception ->
-                    // Em caso de erro, usar dados mock para desenvolvimento
-                    _uiState.value = InfoCashUiState.Success(SaldoInfoCash.getMockData())
-
-                    // Para produção, descomente a linha abaixo:
-                    // _uiState.value = InfoCashUiState.Error(exception.message ?: "Erro desconhecido")
+                    Log.e("InfoCashViewModel", "❌ Erro ao carregar saldo: ${exception.message}", exception)
+                    _uiState.value = InfoCashUiState.Error(
+                        exception.message ?: "Erro ao carregar saldo"
+                    )
                 }
         }
     }
@@ -88,11 +95,11 @@ class InfoCashViewModel : ViewModel() {
     /**
      * Carrega o histórico de transações
      */
-    fun carregarHistoricoInfoCash(idUsuario: Int, limite: Int? = null) {
+    fun carregarHistoricoInfoCash(token: String, idUsuario: Int, limite: Int? = null) {
         viewModelScope.launch {
             _historicoState.value = HistoricoUiState.Loading
 
-            repository.getHistoricoInfoCash(idUsuario, limite)
+            repository.getHistoricoInfoCash(token, idUsuario, limite)
                 .onSuccess { response ->
                     _historicoState.value = HistoricoUiState.Success(response.data)
                 }
@@ -107,11 +114,11 @@ class InfoCashViewModel : ViewModel() {
     /**
      * Carrega o perfil completo (saldo + resumo)
      */
-    fun carregarPerfilCompleto(idUsuario: Int) {
+    fun carregarPerfilCompleto(token: String, idUsuario: Int) {
         viewModelScope.launch {
             _uiState.value = InfoCashUiState.Loading
 
-            repository.getPerfilInfoCash(idUsuario)
+            repository.getPerfilInfoCash(token, idUsuario)
                 .onSuccess { response ->
                     val perfilData = response.data
 
@@ -137,11 +144,11 @@ class InfoCashViewModel : ViewModel() {
     /**
      * Carrega o ranking de usuários
      */
-    fun carregarRankingInfoCash(limite: Int? = null) {
+    fun carregarRankingInfoCash(token: String, limite: Int? = null) {
         viewModelScope.launch {
             _rankingState.value = RankingUiState.Loading
 
-            repository.getRankingInfoCash(limite)
+            repository.getRankingInfoCash(token, limite)
                 .onSuccess { response ->
                     _rankingState.value = RankingUiState.Success(response.data)
                 }
@@ -157,6 +164,7 @@ class InfoCashViewModel : ViewModel() {
      * Carrega transações por período
      */
     fun carregarTransacoesPorPeriodo(
+        token: String,
         idUsuario: Int,
         dataInicio: String,
         dataFim: String
@@ -164,7 +172,7 @@ class InfoCashViewModel : ViewModel() {
         viewModelScope.launch {
             _historicoState.value = HistoricoUiState.Loading
 
-            repository.getTransacoesPorPeriodo(idUsuario, dataInicio, dataFim)
+            repository.getTransacoesPorPeriodo(token, idUsuario, dataInicio, dataFim)
                 .onSuccess { response ->
                     _historicoState.value = HistoricoUiState.Success(response.data)
                 }
@@ -180,6 +188,7 @@ class InfoCashViewModel : ViewModel() {
      * Concede pontos manualmente (função admin)
      */
     fun concederPontos(
+        token: String,
         idUsuario: Int,
         tipoAcao: String,
         pontos: Int,
@@ -197,11 +206,11 @@ class InfoCashViewModel : ViewModel() {
                 referenciaId = referenciaId
             )
 
-            repository.concederPontos(request)
+            repository.concederPontos(token, request)
                 .onSuccess { response ->
                     onSuccess(response.data.idTransacao)
                     // Recarrega o saldo após conceder pontos
-                    carregarSaldoInfoCash(idUsuario)
+                    carregarSaldoInfoCash(token, idUsuario)
                 }
                 .onFailure { exception ->
                     onError(exception.message ?: "Erro ao conceder pontos")
@@ -212,17 +221,9 @@ class InfoCashViewModel : ViewModel() {
     /**
      * Recarrega todos os dados
      */
-    fun recarregarTodosDados(idUsuario: Int) {
-        carregarPerfilCompleto(idUsuario)
-        carregarHistoricoInfoCash(idUsuario, 10)
-        carregarRankingInfoCash(10)
-    }
-
-    /**
-     * Carrega dados mock para desenvolvimento
-     */
-    fun carregarDadosMock() {
-        _uiState.value = InfoCashUiState.Success(SaldoInfoCash.getMockData())
+    fun recarregarTodosDados(token: String, idUsuario: Int) {
+        carregarPerfilCompleto(token, idUsuario)
+        carregarHistoricoInfoCash(token, idUsuario, 10)
+        carregarRankingInfoCash(token, 10)
     }
 }
-

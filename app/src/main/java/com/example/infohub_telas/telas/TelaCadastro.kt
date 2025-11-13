@@ -1,7 +1,5 @@
 package com.example.infohub_telas.telas
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -25,9 +22,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.*
-import com.example.infohub_telas.model.Usuario
+import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
+import androidx.compose.ui.platform.LocalContext
+import android.util.Log
+import android.content.Context
+import com.example.infohub_telas.model.Usuario
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -146,7 +147,7 @@ fun validarConfirmacaoSenha(senha: String, confirmar: String): Pair<Boolean, Str
 @Composable
 fun TelaCadastro(navController: NavController?) {
     val context = LocalContext.current
-    val userApi = RetrofitFactory().getInfoHub_UserService()
+    val userApi = remember { RetrofitFactory().getInfoHub_UserService() }
 
     var isPessoaFisicaSelected by remember { mutableStateOf(true) }
     var nome by remember { mutableStateOf("") }
@@ -159,6 +160,48 @@ fun TelaCadastro(navController: NavController?) {
     var mostrarSenha by remember { mutableStateOf(false) }
     var mostrarConfirmarSenha by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+
+    fun validarCampos(): Boolean {
+        if (nome.isBlank()) {
+            errorMessage = "Informe seu nome completo"
+            return false
+        }
+        val (emailOk, emailMsg) = validarEmail(email)
+        if (!emailOk) {
+            errorMessage = emailMsg
+            return false
+        }
+        val (telOk, telMsg) = validarTelefone(telefoneState.text)
+        if (!telOk) {
+            errorMessage = telMsg
+            return false
+        }
+        if (isPessoaFisicaSelected) {
+            val (cpfOk, cpfMsg) = validarCPF(cpfState.text)
+            if (!cpfOk) {
+                errorMessage = cpfMsg
+                return false
+            }
+        } else {
+            if (cnpjState.text.length != 14) {
+                errorMessage = "CNPJ deve ter 14 dígitos"
+                return false
+            }
+        }
+        if (senha.isBlank() || confirmarSenha.isBlank()) {
+            errorMessage = "Informe e confirme a senha"
+            return false
+        }
+        if (senha != confirmarSenha) {
+            errorMessage = "As senhas não coincidem"
+            return false
+        }
+        return true
+    }
 
     Box(
         modifier = Modifier
@@ -206,20 +249,15 @@ fun TelaCadastro(navController: NavController?) {
                     onDataChange = { updated ->
                         nome = updated.nome
 
-                        val formattedCpf = formatarCPF(updated.cpf)
-                        if (formattedCpf != cpfState.text) {
-                            cpfState =  cpfState.copy(
-                                text = formattedCpf,
-                                selection = TextRange(formattedCpf.length)
-                            )
+                        // Keep only digits; visual transformation handles mask
+                        val cpfDigits = updated.cpf.filter { it.isDigit() }.take(11)
+                        if (cpfDigits != cpfState.text) {
+                            cpfState = cpfState.copy(text = cpfDigits, selection = TextRange(cpfDigits.length))
                         }
 
-                        val formattedTel = formatarTelefone(updated.telefone)
-                        if (formattedTel != telefoneState.text) {
-                            telefoneState = telefoneState.copy(
-                                text = formattedTel,
-                                selection = TextRange(formattedTel.length)
-                            )
+                        val telDigits = updated.telefone.filter { it.isDigit() }.take(11)
+                        if (telDigits != telefoneState.text) {
+                            telefoneState = telefoneState.copy(text = telDigits, selection = TextRange(telDigits.length))
                         }
 
                         email = updated.email
@@ -235,21 +273,14 @@ fun TelaCadastro(navController: NavController?) {
                     nome = nome,
                     onNomeChange = { nome = it },
                     cnpj = cnpjState.text,
-                    onCnpjChange = {
-                        val formatted = formatarCNPJ(it)
-                            cnpjState = cnpjState.copy(
-                                text = formatted,
-                                selection = TextRange(formatted.length)
-                            )
+                    onCnpjChange = { input ->
+                        val digits = input.filter { it.isDigit() }.take(14)
+                        cnpjState = cnpjState.copy(text = digits, selection = TextRange(digits.length))
                     },
                     telefone = telefoneState.text,
-                    onTelefoneChange = {
-                        val formatted = formatarTelefone(it)
-                            telefoneState = telefoneState.copy(
-                                text = formatted,
-                                selection = TextRange(formatted.length)
-                            )
-
+                    onTelefoneChange = { input ->
+                        val digits = input.filter { it.isDigit() }.take(11)
+                        telefoneState = telefoneState.copy(text = digits, selection = TextRange(digits.length))
                     },
                     email = email,
                     onEmailChange = { email = it },
@@ -268,7 +299,51 @@ fun TelaCadastro(navController: NavController?) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* validação e cadastro */ },
+                onClick = {
+                    if (isLoading) return@Button
+                    if (!validarCampos()) {
+                        showErrorDialog = true
+                        return@Button
+                    }
+
+                    val usuario = Usuario(
+                        nome = nome,
+                        email = email,
+                        senha_hash = senha,
+                        perfil = if (isPessoaFisicaSelected) "consumidor" else "estabelecimento",
+                        cpf = if (isPessoaFisicaSelected) cpfState.text else null,
+                        cnpj = if (!isPessoaFisicaSelected) cnpjState.text else null,
+                        data_nascimento = "1900-01-01"
+                    )
+
+                    isLoading = true
+                    userApi.cadastrarUsuario(usuario).enqueue(object : Callback<Usuario> {
+                        override fun onResponse(call: Call<Usuario>, response: Response<Usuario>) {
+                            isLoading = false
+                            if (response.isSuccessful) {
+                                Log.d("Cadastro", "Usuário cadastrado: ${response.body()}")
+                                // Persistir informações básicas
+                                val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                                prefs.edit().apply {
+                                    putString("userEmail", email)
+                                    putBoolean("isAdmin", !isPessoaFisicaSelected)
+                                    apply()
+                                }
+                                showSuccessDialog = true
+                            } else {
+                                errorMessage = "Erro ao cadastrar: ${response.code()} ${response.message()}"
+                                showErrorDialog = true
+                            }
+                        }
+
+                        override fun onFailure(call: Call<Usuario>, t: Throwable) {
+                            isLoading = false
+                            errorMessage = "Falha na conexão. Verifique sua internet."
+                            Log.e("Cadastro", "Falha: ${t.message}")
+                            showErrorDialog = true
+                        }
+                    })
+                },
                 enabled = !isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -281,6 +356,35 @@ fun TelaCadastro(navController: NavController?) {
                 } else {
                     Text("Cadastrar", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
+            }
+
+            // Diálogo de erro
+            if (showErrorDialog) {
+                AlertDialog(
+                    onDismissRequest = { showErrorDialog = false },
+                    confirmButton = {
+                        TextButton(onClick = { showErrorDialog = false }) { Text("OK") }
+                    },
+                    title = { Text("Não foi possível cadastrar") },
+                    text = { Text(errorMessage) }
+                )
+            }
+
+            // Diálogo de sucesso
+            if (showSuccessDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSuccessDialog = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showSuccessDialog = false
+                            navController?.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.CADASTRO) { inclusive = true }
+                            }
+                        }) { Text("Ir para login") }
+                    },
+                    title = { Text("Cadastro realizado") },
+                    text = { Text("Seu cadastro foi criado com sucesso.") }
+                )
             }
         }
     }

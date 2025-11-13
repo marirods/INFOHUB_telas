@@ -32,6 +32,8 @@ import com.example.infohub_telas.model.SaldoInfoCash
 import com.example.infohub_telas.viewmodel.InfoCashViewModel
 import com.example.infohub_telas.viewmodel.InfoCashUiState
 import com.example.infohub_telas.ui.theme.*
+import com.example.infohub_telas.navigation.Routes
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,14 +43,33 @@ fun TelaInfoCash(navController: NavController?) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Pega o ID do usuário das preferências
+    // Pega o ID do usuário e token das preferências
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val userId = prefs.getInt("user_id", 1)
+    val userId = prefs.getInt("user_id", 0)
+    val token = prefs.getString("token", "") ?: ""
     val isAdmin = prefs.getBoolean("isAdmin", false)
 
+    // Log para debug
+    LaunchedEffect(Unit) {
+        Log.d("TelaInfoCash", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO - USUÁRIO NÃO LOGADO"}")
+        Log.d("TelaInfoCash", "👤 User ID: $userId")
+
+        if (token.isEmpty()) {
+            Log.e("TelaInfoCash", "❌ ATENÇÃO: Token vazio! Usuário precisa fazer login.")
+        }
+        if (userId == 0) {
+            Log.e("TelaInfoCash", "❌ ATENÇÃO: User ID inválido! Usuário precisa fazer login.")
+        }
+    }
+
     // Carrega os dados quando a tela é exibida
-    LaunchedEffect(userId) {
-        viewModel.carregarSaldoInfoCash(userId)
+    LaunchedEffect(userId, token) {
+        if (userId > 0 && token.isNotEmpty()) {
+            Log.d("TelaInfoCash", "✅ Carregando saldo InfoCash para usuário $userId")
+            viewModel.carregarSaldoInfoCash(token, userId)
+        } else {
+            Log.w("TelaInfoCash", "⚠️ Não é possível carregar dados: userId=$userId, token=${if (token.isEmpty()) "vazio" else "presente"}")
+        }
     }
 
     Box(
@@ -56,171 +77,175 @@ fun TelaInfoCash(navController: NavController?) {
             .fillMaxSize()
             .background(BackgroundGray)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Top Bar com gradiente
-            Box(
+        if (userId == 0 || token.isEmpty()) {
+            // Usuário não logado: exibe mensagem e botão para login
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(PrimaryOrange, SecondaryOrange)
-                        )
-                    )
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Row(
+                Text(
+                    text = if (userId == 0) "Faça login para ver seu InfoCash"
+                           else "Sessão expirada. Faça login novamente.",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceGray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = { navController?.navigate(Routes.LOGIN) }) {
+                    Text("Ir para Login")
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Top Bar com gradiente
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(PrimaryOrange, SecondaryOrange)
+                            )
+                        )
                 ) {
-                    IconButton(
-                        onClick = { navController?.popBackStack() }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
+                        IconButton(
+                            onClick = { navController?.popBackStack() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Voltar",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Logo do InfoCash
+                        Surface(
+                            modifier = Modifier.size(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            color = Color.White
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "💰",
+                                    fontSize = 24.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = "InfoCash",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    // Logo do InfoCash
-                    Surface(
-                        modifier = Modifier.size(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        color = Color.White
-                    ) {
+                // Content baseado no estado da UI
+                when (uiState) {
+                    is InfoCashUiState.Loading -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "💰",
-                                fontSize = 24.sp
-                            )
+                            CircularProgressIndicator(color = PrimaryOrange)
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = "InfoCash",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            // Content baseado no estado da UI
-            when (uiState) {
-                is InfoCashUiState.Loading -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = PrimaryOrange)
-                    }
-                }
-
-                is InfoCashUiState.Error -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    is InfoCashUiState.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "❌",
-                                fontSize = 48.sp
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = (uiState as InfoCashUiState.Error).message,
-                                fontSize = 14.sp,
-                                color = OnSurfaceGray,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.carregarSaldoInfoCash(userId) },
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Tentar novamente")
+                                Text(
+                                    text = (uiState as InfoCashUiState.Error).message,
+                                    fontSize = 14.sp,
+                                    color = OnSurfaceGray,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { viewModel.carregarSaldoInfoCash(token, userId) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                                ) {
+                                    Text("Tentar novamente")
+                                }
+                            }
+                        }
+                    }
+
+                    is InfoCashUiState.Success -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            item {
+                                // Card InfoCash Status com dados da API
+                                InfoCashStatusCardApi((uiState as InfoCashUiState.Success).saldoInfoCash)
+                            }
+
+                            item {
+                                // Card Conquistas
+                                ConquistasCard()
+                            }
+
+                            item {
+                                // Card Como Ganhar HubCoins
+                                ComoGanharHubCoinsCard()
+                            }
+
+                            item {
+                                // Card Comunidade
+                                ComunidadeCard()
+                            }
+
+                            // Espaçamento para o menu inferior
+                            item {
+                                Spacer(modifier = Modifier.height(80.dp))
                             }
                         }
                     }
                 }
-
-                is InfoCashUiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item {
-                            // Card InfoCash Status com dados da API
-                            InfoCashStatusCardApi((uiState as InfoCashUiState.Success).saldoInfoCash)
-                        }
-
-                        item {
-                            // Card Conquistas
-                            ConquistasCard()
-                        }
-
-                        item {
-                            // Card Como Ganhar HubCoins
-                            ComoGanharHubCoinsCard()
-                        }
-
-                        item {
-                            // Card Comunidade
-                            ComunidadeCard()
-                        }
-
-                        // Espaçamento para o menu inferior
-                        item {
-                            Spacer(modifier = Modifier.height(80.dp))
-                        }
-                    }
-                }
             }
-        }
 
-        // Menu inferior
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .background(Color.White)
-        ) {
-            BottomMenu(navController = navController, isAdmin = isAdmin)
-        }
-
-        // Botão de chat flutuante
-        FloatingActionButton(
-            onClick = { navController?.navigate("chat_precos") },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 100.dp),
-            containerColor = PrimaryOrange
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Chat,
-                contentDescription = "Chat",
-                tint = Color.White
-            )
+            // Menu inferior
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .background(Color.White)
+            ) {
+                BottomMenu(navController = navController!!, isAdmin = isAdmin)
+            }
         }
     }
 }

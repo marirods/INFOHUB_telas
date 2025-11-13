@@ -17,6 +17,10 @@ interface CarrinhoApiService {
      * Adicionar item ao carrinho
      * POST /carrinho
      */
+    @Headers(
+        "Content-Type: application/json",
+        "Accept: application/json"
+    )
     @POST("carrinho")
     suspend fun adicionarItem(
         @Header("Authorization") token: String,
@@ -27,6 +31,10 @@ interface CarrinhoApiService {
      * Listar itens do carrinho
      * GET /carrinho?id_usuario={id}
      */
+    @Headers(
+        "Content-Type: application/json",
+        "Accept: application/json"
+    )
     @GET("carrinho")
     suspend fun listarCarrinho(
         @Header("Authorization") token: String,
@@ -37,6 +45,10 @@ interface CarrinhoApiService {
      * Atualizar quantidade de um item
      * PUT /carrinho/{id}
      */
+    @Headers(
+        "Content-Type: application/json",
+        "Accept: application/json"
+    )
     @PUT("carrinho/{id}")
     suspend fun atualizarQuantidade(
         @Header("Authorization") token: String,
@@ -48,6 +60,10 @@ interface CarrinhoApiService {
      * Remover item do carrinho
      * DELETE /carrinho/{id}
      */
+    @Headers(
+        "Content-Type: application/json",
+        "Accept: application/json"
+    )
     @DELETE("carrinho/{id}")
     suspend fun removerItem(
         @Header("Authorization") token: String,
@@ -58,6 +74,10 @@ interface CarrinhoApiService {
      * Limpar carrinho
      * DELETE /carrinho/limpar/{id_usuario}
      */
+    @Headers(
+        "Content-Type: application/json",
+        "Accept: application/json"
+    )
     @DELETE("carrinho/limpar/{id_usuario}")
     suspend fun limparCarrinho(
         @Header("Authorization") token: String,

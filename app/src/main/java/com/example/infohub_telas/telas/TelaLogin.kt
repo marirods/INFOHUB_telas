@@ -1,6 +1,7 @@
 package com.example.infohub_telas.telas
 
 import android.content.Context
+import android.util.Log
 import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,6 +46,7 @@ fun TelaLogin(navController: NavController) {
     var senha by remember { mutableStateOf("") }
     var mostrarSenha by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val userApi = RetrofitFactory().getInfoHub_UserService()
@@ -171,21 +173,26 @@ fun TelaLogin(navController: NavController) {
             onClick = {
                 if (validar()) {
                     isLoading = true
-                    
+                    errorMessage = null
+
                     // Verificar se é usuário de teste
                     if (isTestUser()) {
                         // Login de teste - navegar diretamente
                         isLoading = false
+                        Log.d("TelaLogin", "🧪 Login de teste detectado")
                         val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
                         prefs.edit().apply {
                             putString("token", "test_token_123")
                             putBoolean("isAdmin", email == "admin@infohub.com")
+                            putInt("user_id", 1) // ID de teste
                             apply()
                         }
+                        Log.d("TelaLogin", "✅ Token de teste salvo")
                         navigateToHome()
                     } else {
                         // Login real via API
                         val loginReq = LoginUsuario(email, senha)
+                        Log.d("TelaLogin", "🚀 Enviando requisição de login para: $email")
 
                         userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
                             override fun onResponse(
@@ -193,31 +200,55 @@ fun TelaLogin(navController: NavController) {
                                 response: Response<LoginResponse>
                             ) {
                                 isLoading = false
+                                Log.d("TelaLogin", "📥 Resposta recebida - Code: ${response.code()}")
+
                                 if (response.isSuccessful) {
                                     val body = response.body()
+                                    Log.d("TelaLogin", "📦 Body: $body")
+
                                     if (body != null && body.status) {
+                                        Log.d("TelaLogin", "✅ Login bem-sucedido!")
+                                        Log.d("TelaLogin", "🔑 Token recebido: ${body.token}")
+                                        Log.d("TelaLogin", "👤 User ID: ${body.usuario.id}")
+                                        Log.d("TelaLogin", "📧 Email: ${body.usuario.email}")
+                                        Log.d("TelaLogin", "👔 Perfil: ${body.usuario.perfil}")
+
                                         val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
                                         
-                                        // Verificar se esse email foi cadastrado como pessoa jurídica
-                                        val savedEmail = prefs.getString("userEmail", "")
-                                        val isAdminUser = if (savedEmail == email) {
-                                            prefs.getBoolean("isAdmin", false)
-                                        } else {
-                                            false
-                                        }
-                                        
+                                        // Determinar se é admin baseado no perfil retornado pela API
+                                        val isAdminUser = body.usuario.perfil == "estabelecimento"
+
                                         prefs.edit().apply {
                                             putString("token", body.token)
                                             putBoolean("isAdmin", isAdminUser)
+                                            putInt("user_id", body.usuario.id)
+                                            putString("userEmail", body.usuario.email)
+                                            putString("userName", body.usuario.nome)
                                             apply()
                                         }
+
+                                        Log.d("TelaLogin", "💾 Dados salvos no SharedPreferences:")
+                                        Log.d("TelaLogin", "   - Token: ${prefs.getString("token", "ERRO")}")
+                                        Log.d("TelaLogin", "   - User ID: ${prefs.getInt("user_id", -1)}")
+                                        Log.d("TelaLogin", "   - IsAdmin: ${prefs.getBoolean("isAdmin", false)}")
+
                                         navigateToHome()
+                                    } else {
+                                        errorMessage = "Login falhou: status inválido"
+                                        Log.e("TelaLogin", "❌ Status false ou body null")
                                     }
+                                } else {
+                                    val errorBody = response.errorBody()?.string()
+                                    errorMessage = "Erro ${response.code()}: ${response.message()}"
+                                    Log.e("TelaLogin", "❌ Erro HTTP ${response.code()}")
+                                    Log.e("TelaLogin", "❌ Error body: $errorBody")
                                 }
                             }
 
                             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
                                 isLoading = false
+                                errorMessage = "Falha na conexão: ${t.message}"
+                                Log.e("TelaLogin", "💥 Falha na requisição: ${t.message}", t)
                             }
                         })
                     }
@@ -236,6 +267,18 @@ fun TelaLogin(navController: NavController) {
             }
         }
         
+        // Mostrar mensagem de erro se houver
+        errorMessage?.let { msg ->
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = msg,
+                color = Color.Red,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

@@ -1,6 +1,5 @@
 package com.example.infohub_telas.components
 
-import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +46,7 @@ fun FormPessoaJuridica(
     onMostrarConfirmarSenhaChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column {
+    Column(modifier = modifier) {
         // Campo para nome da empresa
         CustomTextFieldCadastro(
             value = nome,
@@ -58,22 +56,24 @@ fun FormPessoaJuridica(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo para CNPJ - Usando Text para permitir formatação (ex.: máscara)
+        // Campo para CNPJ - máscara visual
         CustomTextFieldCadastro(
             value = cnpj,
-            onValueChange = onCnpjChange,
+            onValueChange = { input -> onCnpjChange(input.filter { it.isDigit() }.take(14)) },
             placeholder = "CNPJ*",
-            keyboardType = KeyboardType.Text
+            keyboardType = KeyboardType.Number,
+            visualTransformation = CnpjVisualTransformation()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo para telefone
+        // Campo para telefone - máscara visual
         CustomTextFieldCadastro(
             value = telefone,
-            onValueChange = onTelefoneChange,
+            onValueChange = { input -> onTelefoneChange(input.filter { it.isDigit() }.take(11)) },
             placeholder = "Telefone*",
-            keyboardType = KeyboardType.Phone
+            keyboardType = KeyboardType.Phone,
+            visualTransformation = PhoneVisualTransformation()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -116,7 +116,8 @@ fun CustomTextFieldCadastro(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     val shape = RoundedCornerShape(12.dp)
 
@@ -126,6 +127,7 @@ fun CustomTextFieldCadastro(
         placeholder = { Text(placeholder, color = androidx.compose.ui.graphics.Color.Gray) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = true,
+        visualTransformation = visualTransformation,
         modifier = Modifier
             .fillMaxWidth()
             .shadow(elevation = 4.dp, shape = shape)

@@ -45,6 +45,7 @@ fun TelaListaProdutos(navController: NavController) {
         mutableStateListOf<PromocaoProduto>().apply {
             addAll(listOf(
                 PromocaoProduto(
+                    id = "1",
                     nome = "Arroz Branco 5kg",
                     categoria = "Grãos e Cereais",
                     precoPromocional = "18.90",
@@ -54,6 +55,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/rice/300/200"
                 ),
                 PromocaoProduto(
+                    id = "2",
                     nome = "Feijão Preto 1kg",
                     categoria = "Grãos e Cereais", 
                     precoPromocional = "7.50",
@@ -63,6 +65,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/beans/300/200"
                 ),
                 PromocaoProduto(
+                    id = "3",
                     nome = "Leite Integral 1L",
                     categoria = "Laticínios",
                     precoPromocional = "4.25",
@@ -72,6 +75,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/milk/300/200"
                 ),
                 PromocaoProduto(
+                    id = "4",
                     nome = "Banana Prata 1kg",
                     categoria = "Frutas",
                     precoPromocional = "5.90",
@@ -81,6 +85,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/banana/300/200"
                 ),
                 PromocaoProduto(
+                    id = "5",
                     nome = "Carne Moída 500g",
                     categoria = "Carnes",
                     precoPromocional = "16.90",
@@ -90,6 +95,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/meat/300/200"
                 ),
                 PromocaoProduto(
+                    id = "6",
                     nome = "Pão de Forma Integral",
                     categoria = "Padaria",
                     precoPromocional = "6.80",
@@ -99,6 +105,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/bread/300/200"
                 ),
                 PromocaoProduto(
+                    id = "7",
                     nome = "Ovos Brancos 12 unid",
                     categoria = "Laticínios",
                     precoPromocional = "8.90",
@@ -108,6 +115,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/eggs/300/200"
                 ),
                 PromocaoProduto(
+                    id = "8",
                     nome = "Tomate 1kg",
                     categoria = "Verduras e Legumes",
                     precoPromocional = "7.20",
@@ -117,6 +125,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/tomato/300/200"
                 ),
                 PromocaoProduto(
+                    id = "9",
                     nome = "Refrigerante Cola 2L",
                     categoria = "Bebidas",
                     precoPromocional = "5.50",
@@ -126,6 +135,7 @@ fun TelaListaProdutos(navController: NavController) {
                     imagemUrl = "https://picsum.photos/seed/soda/300/200"
                 ),
                 PromocaoProduto(
+                    id = "10",
                     nome = "Sabão em Pó 1kg",
                     categoria = "Limpeza",
                     precoPromocional = "12.90",
@@ -363,9 +373,9 @@ fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
 
                 // Botão de comprar
                 Button(
-                    onClick = { 
-                        // Adicionar ao carrinho
-                        navController.navigate(Routes.CARRINHO)
+                    onClick = {
+                        // Ir para página do produto
+                        navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.id))
                     },
                     modifier = Modifier
                         .fillMaxWidth()

@@ -31,6 +31,9 @@ import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.model.HubCoinData
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.infohub_telas.viewmodel.InfoCashViewModel
+import com.example.infohub_telas.viewmodel.InfoCashUiState
 
 // Define the main colors from the image for easy reuse
 val OrangeColor = Color(0xFFF9A01B)
@@ -293,26 +296,29 @@ fun StatItem(
 }
 
 @Composable
-fun HubCoinCard() {
-    val hubCoinData = HubCoinData.getDefault()
+fun HubCoinCard(viewModel: InfoCashViewModel = viewModel()) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val userId = prefs.getInt("user_id", 0)
+    val token = prefs.getString("token", "") ?: ""
+
+    LaunchedEffect(userId, token) {
+        if (userId > 0 && token.isNotEmpty()) {
+            viewModel.carregarSaldoInfoCash(token, userId)
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults
-            .cardColors(containerColor = Color(0xFFFFF8E7)),
-        elevation = CardDefaults
-            .cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF8E7)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .padding(20.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment
-                    .CenterVertically
-            ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -343,28 +349,54 @@ fun HubCoinCard() {
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Text(
-                hubCoinData.getSaldoComVirgula(),
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 28.sp,
-                color = OrangeColor
-            )
-            Spacer(Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { hubCoinData.progressoAtual },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp)),
-                color = OrangeColor,
-                trackColor = Color(0xFFFFE4B5)
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                hubCoinData.getMensagemProximoNivel(),
-                fontSize = 12.sp,
-                color = TextGrayColor
-            )
+
+            when (val state = uiState) {
+                is InfoCashUiState.Loading -> {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = OrangeColor)
+                    }
+                }
+                is InfoCashUiState.Error -> {
+                    Text(
+                        text = "Erro: ${state.message}",
+                        color = Color.Red,
+                        fontSize = 12.sp
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = {
+                        if (userId > 0 && token.isNotEmpty()) {
+                            viewModel.carregarSaldoInfoCash(token, userId)
+                        }
+                    }) {
+                        Text("Tentar novamente", color = OrangeColor)
+                    }
+                }
+                is InfoCashUiState.Success -> {
+                    val saldoInfoCash = state.saldoInfoCash
+                    Text(
+                        saldoInfoCash.getSaldoComVirgula(),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 28.sp,
+                        color = OrangeColor
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    LinearProgressIndicator(
+                        progress = { saldoInfoCash.getProgressoAtual() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(5.dp)),
+                        color = OrangeColor,
+                        trackColor = Color(0xFFFFE4B5)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        saldoInfoCash.getMensagemProximoNivel(),
+                        fontSize = 12.sp,
+                        color = TextGrayColor
+                    )
+                }
+            }
         }
     }
 }

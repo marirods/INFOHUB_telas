@@ -41,6 +41,18 @@ fun TelaCarrinho(navController: NavController) {
     val token = prefs.getString("token", "") ?: ""
     val userId = prefs.getInt("user_id", 0)
 
+    // Log para verificar se o token está disponível
+    LaunchedEffect(Unit) {
+        Log.d("TelaCarrinho", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO - USUÁRIO NÃO LOGADO"}")
+        Log.d("TelaCarrinho", "👤 User ID: $userId")
+        if (token.isEmpty()) {
+            Log.e("TelaCarrinho", "❌ ATENÇÃO: Token vazio! Usuário precisa fazer login.")
+        }
+        if (userId == 0) {
+            Log.e("TelaCarrinho", "❌ ATENÇÃO: User ID inválido! Usuário precisa fazer login.")
+        }
+    }
+
     // ViewModel para gerenciar o carrinho
     val viewModel: CarrinhoViewModel = viewModel()
     val carrinhoState by viewModel.carrinhoState.collectAsState()
