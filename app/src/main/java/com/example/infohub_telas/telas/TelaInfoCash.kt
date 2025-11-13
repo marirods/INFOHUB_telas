@@ -7,7 +7,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,33 +20,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import android.content.Context
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.model.HubCoinData
-    val viewModel: InfoCashViewModel = viewModel()
-    val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current
-
-    // Pega o ID do usuário das preferências (ou use um ID padrão)
-    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val userId = prefs.getInt("user_id", 1) // ID padrão = 1 se não encontrar
-
-    // Carrega os dados quando a tela é exibida
-    LaunchedEffect(userId) {
-        viewModel.carregarSaldoInfoCash(userId)
-    }
-import com.example.infohub_telas.viewmodel.InfoCashViewModel
-import com.example.infohub_telas.viewmodel.InfoCashUiState
 import com.example.infohub_telas.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TelaInfoCash(navController: NavController) {
     val hubCoinData = HubCoinData.getDefault()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -95,86 +76,36 @@ fun TelaInfoCash(navController: NavController) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
-            // Content baseado no estado da UI
-            when (uiState) {
-                is InfoCashUiState.Loading -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = PrimaryOrange)
-                    }
-                }
-
-                is InfoCashUiState.Error -> {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Ops! Algo deu errado",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = OnSurfaceGray
+                                text = "💰",
+                                fontSize = 24.sp
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = uiState.message,
-                                fontSize = 14.sp,
-                                color = OnSurfaceGray,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.recarregarDados(userId) },
-                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
-                            ) {
-                                Text("Tentar novamente")
-                            }
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = "InfoCash",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
+            }
 
-                is InfoCashUiState.Success -> {
-                    LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        item {
-                            // Card InfoCash Status com dados da API
-                            InfoCashStatusCardApi(uiState.saldoInfoCash)
-                        }
-
-                        item {
-                            // Card Conquistas
-                            ConquistasCard()
-                        }
-
-                        item {
-                            // Card Como Ganhar HubCoins
-                            ComoGanharHubCoinsCard()
-                        }
-
-                        item {
-                            // Card Comunidade
-                            ComunidadeCard()
-                        }
-
-                        // Espaçamento para o menu inferior
-                        item {
-                            Spacer(modifier = Modifier.height(80.dp))
-                        }
-                    }
+            // Content
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    // Card InfoCash Status com dados mock
+                    InfoCashStatusCard(hubCoinData)
+                }
 
                 item {
                     // Card Conquistas
@@ -224,123 +155,6 @@ fun TelaInfoCash(navController: NavController) {
     }
 }
 
-@Composable
-fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp)
-        ) {
-            Text(
-                text = "InfoCash",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = PrimaryOrange
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // HubCoin Status
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = BackgroundGray,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(40.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    color = PrimaryOrange
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "💰",
-                            fontSize = 20.sp
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "HubCoin",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = saldoInfoCash.getNivelTexto(),
-                        fontSize = 12.sp,
-                        color = OnSurfaceGray
-                    )
-                }
-
-                // Saldo do HubCoin vindo da API
-                Text(
-                    text = saldoInfoCash.getSaldoComVirgula(),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = PrimaryOrange
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Barra de progresso
-            LinearProgressIndicator(
-                progress = { saldoInfoCash.getProgressoAtual() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = PrimaryOrange,
-                trackColor = BackgroundGray
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Mensagem do próximo nível
-            Text(
-                text = saldoInfoCash.getMensagemProximoNivel(),
-                fontSize = 12.sp,
-                color = OnSurfaceGray
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Informação da última atualização
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Schedule,
-                    contentDescription = "Última atualização",
-                    tint = OnSurfaceGray,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Atualizado recentemente",
-                    fontSize = 10.sp,
-                    color = OnSurfaceGray
-                )
-            }
-        }
-    }
-}
-
-// Mantendo o card original para compatibilidade
 @Composable
 fun InfoCashStatusCard(hubCoinData: HubCoinData) {
     Card(

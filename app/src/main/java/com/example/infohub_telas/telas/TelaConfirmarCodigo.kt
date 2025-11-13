@@ -5,7 +5,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,7 +62,6 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
     var codigo4 by remember { mutableStateOf("") }
 
     val codigo by remember { derivedStateOf { codigo1 + codigo2 + codigo3 + codigo4 } }
-    var isLoading by remember { mutableStateOf(false) }
 
     val retrofitFactory = remember { RetrofitFactory() }
     val userApi = remember { retrofitFactory.getInfoHub_UserService() }
@@ -223,7 +220,6 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                         return@TextButton
                     }
 
-                    isLoading = true
                     scope.launch {
                         try {
 
@@ -231,8 +227,8 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                             println("Código = $codigoDigits")
 
                             val resposta = withContext(Dispatchers.IO) {
-                                userApi.validarCodigo(ValidarCodigoRequest(codigoDigits)).execute()
-                            }
+                                    userApi.validarCodigo(ValidarCodigoRequest(email = emailSalvo, codigo = codigoDigits)).execute()
+                                }
 
                             println("⬅️ Resposta da API:")
                             println("HTTP code = ${resposta.code()}")
@@ -261,8 +257,6 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
 
                         } catch (e: Exception) {
                             println("Falha na chamada: ${e.message}")
-                        } finally {
-                            isLoading = false
                         }
                     }
                 },
@@ -288,8 +282,7 @@ fun TelaConfirmarCodigo(navController: NavHostController?) {
                 Text("Não recebeu código? ", color = Color.Gray, fontSize = 14.sp)
                 Text(
                     "Enviar novamente",
-                    // mantém exatamente seu uso original de cor
-                    color = Color(0xFFF25992E),
+                    color = Color(0xFFF25992),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
