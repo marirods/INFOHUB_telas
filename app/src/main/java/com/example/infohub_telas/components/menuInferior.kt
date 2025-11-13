@@ -36,14 +36,14 @@ import com.example.infohub_telas.ui.theme.PrimaryOrange
 fun MenuItem(
     icon: ImageVector,
     label: String,
-    navController: NavController,
+    navController: NavController?,
     route: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable { 
             try {
-                navController.navigate(route) {
+                navController?.navigate(route) {
                     // Evita múltiplas instâncias da mesma tela
                     launchSingleTop = true
                     // Restaura o estado se a tela já existir na pilha
@@ -70,7 +70,7 @@ fun MenuItem(
 
 // Menu inferior completo
 @Composable
-fun BottomMenu(navController: NavController, isAdmin: Boolean = false) {
+fun BottomMenu(navController: NavController?, isAdmin: Boolean = false) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
@@ -81,7 +81,7 @@ fun BottomMenu(navController: NavController, isAdmin: Boolean = false) {
         ) {
             // Botão de carrinho
             Button(
-                onClick = { navController.navigate(Routes.CARRINHO) },
+                onClick = { navController?.navigate(Routes.CARRINHO) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp)

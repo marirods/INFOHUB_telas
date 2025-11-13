@@ -20,14 +20,44 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+<<<<<<< HEAD
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.model.HubCoinData
+=======
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import android.content.Context
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.model.SaldoInfoCash
+import com.example.infohub_telas.viewmodel.InfoCashViewModel
+import com.example.infohub_telas.viewmodel.InfoCashUiState
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 import com.example.infohub_telas.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+<<<<<<< HEAD
 fun TelaInfoCash(navController: NavController) {
     val hubCoinData = HubCoinData.getDefault()
+=======
+fun TelaInfoCash(navController: NavController?) {
+    // ViewModel e estado
+    val viewModel: InfoCashViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Pega o ID do usuário das preferências
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val userId = prefs.getInt("user_id", 1)
+
+    // Carrega os dados quando a tela é exibida
+    LaunchedEffect(userId) {
+        viewModel.carregarSaldoInfoCash(userId)
+    }
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
 
     Box(
         modifier = Modifier
@@ -55,7 +85,7 @@ fun TelaInfoCash(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { navController.popBackStack() }
+                        onClick = { navController?.popBackStack() }
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -76,11 +106,73 @@ fun TelaInfoCash(navController: NavController) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
+<<<<<<< HEAD
+=======
                         ) {
                             Text(
                                 text = "💰",
                                 fontSize = 24.sp
                             )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = "InfoCash",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Content baseado no estado da UI
+            when (uiState) {
+                is InfoCashUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = PrimaryOrange)
+                    }
+                }
+
+                is InfoCashUiState.Error -> {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
+                        ) {
+                            Text(
+                                text = "💰",
+                                fontSize = 24.sp
+                            )
+<<<<<<< HEAD
+=======
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = (uiState as InfoCashUiState.Error).message,
+                                fontSize = 14.sp,
+                                color = OnSurfaceGray,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { viewModel.recarregarDados(userId) },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                            ) {
+                                Text("Tentar novamente")
+                            }
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                         }
                     }
 
@@ -95,6 +187,7 @@ fun TelaInfoCash(navController: NavController) {
                 }
             }
 
+<<<<<<< HEAD
             // Content
             LazyColumn(
                 modifier = Modifier
@@ -125,6 +218,40 @@ fun TelaInfoCash(navController: NavController) {
                 // Espaçamento para o menu inferior
                 item {
                     Spacer(modifier = Modifier.height(80.dp))
+=======
+                is InfoCashUiState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            // Card InfoCash Status com dados da API
+                            InfoCashStatusCardApi((uiState as InfoCashUiState.Success).saldoInfoCash)
+                        }
+
+                        item {
+                            // Card Conquistas
+                            ConquistasCard()
+                        }
+
+                        item {
+                            // Card Como Ganhar HubCoins
+                            ComoGanharHubCoinsCard()
+                        }
+
+                        item {
+                            // Card Comunidade
+                            ComunidadeCard()
+                        }
+
+                        // Espaçamento para o menu inferior
+                        item {
+                            Spacer(modifier = Modifier.height(80.dp))
+                        }
+                    }
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                 }
             }
         }
@@ -156,7 +283,11 @@ fun TelaInfoCash(navController: NavController) {
 }
 
 @Composable
+<<<<<<< HEAD
 fun InfoCashStatusCard(hubCoinData: HubCoinData) {
+=======
+fun InfoCashStatusCardApi(saldoInfoCash: SaldoInfoCash) {
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -211,15 +342,25 @@ fun InfoCashStatusCard(hubCoinData: HubCoinData) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
+<<<<<<< HEAD
                         text = hubCoinData.getNivelAtual(),
+=======
+                        text = saldoInfoCash.getNivelTexto(),
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                         fontSize = 12.sp,
                         color = OnSurfaceGray
                     )
                 }
 
+<<<<<<< HEAD
                 // Saldo do HubCoin
                 Text(
                     text = hubCoinData.getSaldoComVirgula(),
+=======
+                // Saldo do HubCoin vindo da API
+                Text(
+                    text = saldoInfoCash.getSaldoComVirgula(),
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = PrimaryOrange
@@ -230,7 +371,11 @@ fun InfoCashStatusCard(hubCoinData: HubCoinData) {
 
             // Barra de progresso
             LinearProgressIndicator(
+<<<<<<< HEAD
                 progress = { hubCoinData.progressoAtual },
+=======
+                progress = { saldoInfoCash.getProgressoAtual() },
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -243,10 +388,37 @@ fun InfoCashStatusCard(hubCoinData: HubCoinData) {
 
             // Mensagem do próximo nível
             Text(
+<<<<<<< HEAD
                 text = hubCoinData.getMensagemProximoNivel(),
                 fontSize = 12.sp,
                 color = OnSurfaceGray
             )
+=======
+                text = saldoInfoCash.getMensagemProximoNivel(),
+                fontSize = 12.sp,
+                color = OnSurfaceGray
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Informação da última atualização
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = "Última atualização",
+                    tint = OnSurfaceGray,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Atualizado recentemente",
+                    fontSize = 10.sp,
+                    color = OnSurfaceGray
+                )
+            }
+>>>>>>> 209da33 (atualizacoes na tela localizacao e cadastro feitas)
         }
     }
 }
@@ -588,5 +760,13 @@ fun ComunidadeCard() {
                 }
             }
         }
+    }
+}
+
+@Preview(showSystemUi = true)
+@Composable
+fun TelaInfoCashPreview() {
+    InfoHub_telasTheme {
+        TelaInfoCash(null)
     }
 }

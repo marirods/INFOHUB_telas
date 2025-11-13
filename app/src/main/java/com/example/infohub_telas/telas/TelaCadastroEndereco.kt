@@ -35,73 +35,60 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-//@Composable
-//@OptIn(ExperimentalMaterial3Api::class)
-//fun validarCPF(cpf: String, cpfsCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
-//    val cpfComum = cpf.filter { it.isDigit() }
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun validarCPF(cpf: String, cpfsCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
+    val cpfComum = cpf.filter { it.isDigit() }
+
+    if (cpfComum.isEmpty())
+        return false to "CPF não pode ser vazio"
+
+    if (cpfComum.length != 11)
+        return false to "CPF deve ter 11 dígitos"
+
+    if (cpfComum.all { it == cpfComum.first() })
+        return false to "CPF não pode ter todos números iguais"
+
+    if (cpfsCadastrados.any { it.filter { c -> c.isDigit() } == cpfComum })
+        return false to "CPF já cadastrado"
+
+    return true to ""
+}
+//    // Remove máscara para verificar dígitos iguais
+//    val cpfComum = cpf.replace(".", "").replace("-", "")
 //
-//    if (cpfComum.isEmpty())
-//        return false to "CPF não pode ser vazio"
+//    // Dígitos iguais
+//    if (cpfComum.all { it == cpfComum.first() }) return false
 //
-//    if (cpfComum.length != 11)
-//        return false to "CPF deve ter 11 dígitos"
+//    // CPF já cadastrado
+//    if (cpfsCadastrados.any { it.replace(".", "").replace("-", "") == cpfComum }) return false
 //
-//    if (cpfComum.all { it == cpfComum.first() })
-//        return false to "CPF não pode ter todos números iguais"
-//
-//    if (cpfsCadastrados.any { it.filter { c -> c.isDigit() } == cpfComum })
-//        return false to "CPF já cadastrado"
-//
-//    return true to ""
-//}
-////    // Remove máscara para verificar dígitos iguais
-////    val cpfComum = cpf.replace(".", "").replace("-", "")
-////
-////    // Dígitos iguais
-////    if (cpfComum.all { it == cpfComum.first() }) return false
-////
-////    // CPF já cadastrado
-////    if (cpfsCadastrados.any { it.replace(".", "").replace("-", "") == cpfComum }) return false
-////
-////    return true
-////}
-//@Composable
-//@OptIn(ExperimentalMaterial3Api::class)
-//fun validarTelefone(telefone: String, telefonesCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
-//    val telefoneLimpo = telefone.filter { it.isDigit() }
-//
-//
-//    if (telefoneLimpo.isEmpty())
-//        return false to "Telefone não pode ser vazio"
-//
-//
-//    if (telefoneLimpo.length !in 10..11)
-//        return false to "Telefone deve ter 10 ou 11 dígitos"
-//
-//
-//    if (telefoneLimpo.all { it == telefoneLimpo.first() })
-//        return false to "Telefone não pode ter todos números iguais"
-//
-//    // Não pode estar cadastrado
-//    if (telefoneLimpo in telefonesCadastrados.map { it.filter { c -> c.isDigit() } })
-//        return false  to "Telefone já cadastrado"
-//
-//    return true to ""
-//}
-//
-//fun validarEmail(email: String, emailsCadastrados: List<String> = emptyList()): Boolean{
-//    if (email.isBlank())
-//        return false
-//
-//
-//    val regex = Regex("^[\\w.+-]+@(?:gmail\\.com|hotmail\\.com|yahoo\\.com)$")
-//    if (!email.matches(regex))
-//        return false
-//
-//    if (emailsCadastrados.any { it.equals(email, ignoreCase = true) })
-//        return false
 //    return true
 //}
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun validarTelefone(telefone: String, telefonesCadastrados: List<String> = emptyList()): Pair<Boolean, String> {
+    val telefoneLimpo = telefone.filter { it.isDigit() }
+
+
+    if (telefoneLimpo.isEmpty())
+        return false to "Telefone não pode ser vazio"
+
+
+    if (telefoneLimpo.length !in 10..11)
+        return false to "Telefone deve ter 10 ou 11 dígitos"
+
+
+    if (telefoneLimpo.all { it == telefoneLimpo.first() })
+        return false to "Telefone não pode ter todos números iguais"
+
+    // Não pode estar cadastrado
+    if (telefoneLimpo in telefonesCadastrados.map { it.filter { c -> c.isDigit() } })
+        return false  to "Telefone já cadastrado"
+
+    return true to ""
+}
+
 
 
 
@@ -388,14 +375,6 @@ fun TelaCadastroEndereco(navController: NavController?) {
                         val (telValido, telMsg) = validarTelefone(telefone)
                         if (!telValido) {
                             errorMessage = telMsg
-                            showErrorDialog = true
-                            return@Button
-                        }
-
-                        // Validar email
-                        if (!validarEmail(email)) {
-                            errorMessage =
-                                "E-mail inválido. Use apenas Gmail, Hotmail ou Yahoo e não deixe vazio."
                             showErrorDialog = true
                             return@Button
                         }

@@ -1,23 +1,26 @@
 package com.example.infohub_telas.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.infohub_telas.model.DashboardData
 import com.example.infohub_telas.model.Empresa
-import com.example.infohub_telas.navigation.JuridicoRoutes
 import com.example.infohub_telas.telas.*
 import com.example.infohub_telas.telas.juridico.JuridicoHomeScreen
 import com.example.infohub_telas.telas.juridico.JuridicoGerenciamentoEmpresasScreen
 import com.example.infohub_telas.telas.juridico.JuridicoCadastroEmpresaScreen
+import com.example.infohub_telas.telas.TelaLoginCadastro
+import kotlinx.coroutines.Job
 
 @Composable
-fun AppNavigation(navController: NavHostController) {
+fun AppNavigation(
+    navController: NavHostController,
+    onAppleSignIn: () -> Unit = {},
+    onGoogleSignIn: () -> Unit = {}
+) {
     NavHost(
         navController = navController,
         startDestination = Routes.OPEN

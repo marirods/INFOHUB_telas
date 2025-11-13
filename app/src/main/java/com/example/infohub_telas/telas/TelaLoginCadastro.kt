@@ -18,15 +18,17 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
+import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun TelaLoginCadastro(navController: NavController) {
+fun TelaLoginCadastro(navController: NavController?) {
     // Animações
     val logoAlpha = remember { Animatable(0f) }
     val logoScale = remember { Animatable(0.5f) }
@@ -230,17 +232,31 @@ fun TelaLoginCadastro(navController: NavController) {
                     .background(Color(0xFF2E7D32), shape = RoundedCornerShape(2.dp))
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Título
-            Text(
-                text = "FAZER COMPRAS PODE SER SIMPLES",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.graphicsLayer { alpha = titleAlpha.value }
-            )
+
+                // Título
+                Text(
+                    text = "FAZER COMPRAS",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .graphicsLayer { alpha = titleAlpha.value }
+
+                )
+                Text(
+                    text = "PODE SER SIMPLES",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .graphicsLayer { alpha = titleAlpha.value }
+
+
+                )
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -248,16 +264,19 @@ fun TelaLoginCadastro(navController: NavController) {
             Text(
                 text = "Lugar para fazer compras rapidamente",
                 fontSize = 14.sp,
-                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.graphicsLayer { alpha = subtitleAlpha.value }
+                modifier = Modifier
+                    .graphicsLayer { alpha = subtitleAlpha.value }
+                    .padding(10.dp)
             )
 
             Spacer(modifier = Modifier.height(50.dp))
 
             // Botão LOGIN
             Button(
-                onClick = { navController.navigate("login") },
+                onClick = { navController?.navigate("login") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -282,7 +301,7 @@ fun TelaLoginCadastro(navController: NavController) {
 
             // Botão CADASTRE-SE
             Button(
-                onClick = { navController.navigate("cadastro") },
+                onClick = { navController?.navigate("cadastro") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
@@ -309,7 +328,8 @@ fun TelaLoginCadastro(navController: NavController) {
             Text(
                 text = "ou entre com",
                 fontSize = 14.sp,
-                color = Color.Black,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.graphicsLayer { alpha = separatorAlpha.value }
             )
 
@@ -363,5 +383,14 @@ fun TelaLoginCadastro(navController: NavController) {
                     .background(Color(0xFF2E7D32), shape = RoundedCornerShape(2.dp))
             )
         }
+    }
+}
+
+
+@Preview(showSystemUi = true)
+@Composable
+fun TelaLoginCadastroPreview() {
+    InfoHub_telasTheme {
+        TelaLoginCadastro(null)
     }
 }
