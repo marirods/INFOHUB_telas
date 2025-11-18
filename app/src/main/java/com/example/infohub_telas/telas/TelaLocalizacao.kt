@@ -14,7 +14,6 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -40,7 +39,9 @@ import coil.request.ImageRequest
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
+import androidx.compose.foundation.rememberScrollState
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.MapView
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.config.Configuration
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -310,6 +314,10 @@ fun TelaLocalizacao(navController: NavController) {
     val isAdmin = prefs.getBoolean("isAdmin", false)
     val scope = rememberCoroutineScope()
 
+    // Estado para controlar rolagem e visibilidade do menu
+    val scrollState = rememberScrollState()
+    val isMenuVisible = scrollState.rememberMenuVisibility()
+
     var cep by remember { mutableStateOf("") }
     var endereco by remember { mutableStateOf<String?>(null) }
     var feedbackMessage by remember { mutableStateOf<Pair<String, Color>?>(null) }
@@ -336,15 +344,21 @@ fun TelaLocalizacao(navController: NavController) {
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        Column(
+    // Box externo para conter todos os composables da tela
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Box principal com conteúdo
+        Box(
             modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -665,12 +679,19 @@ fun TelaLocalizacao(navController: NavController) {
                     
                     Spacer(modifier = Modifier.height(16.dp))
                 }
+                }
             }
         }
-        BottomMenu(navController = navController, isAdmin = isAdmin)
-    }
+        } // Fecha o Box principal
 
-    estabelecimentoSelecionado?.let { estab ->
+        // Menu inferior animado - dentro do Box externo
+        AnimatedScrollableBottomMenu(
+            navController = navController,
+            isAdmin = isAdmin,
+            isVisible = isMenuVisible
+        )
+
+        estabelecimentoSelecionado?.let { estab ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -859,14 +880,17 @@ fun TelaLocalizacao(navController: NavController) {
                 }
             }
         }
-    }
-}
+        } // Fecha o estabelecimentoSelecionado?.let
+    } // Fecha o Box externo
+} // Fecha a função TelaLocalizacao
 
+// Função auxiliar para o menu (placeholder)
 @Composable
 fun MenuComponent(navController: NavController) {
     TODO("Not yet implemented")
 }
 
+// Preview da tela de localização
 @Preview(showSystemUi = true)
 @Composable
 fun TelaLocalizacaoPreview() {

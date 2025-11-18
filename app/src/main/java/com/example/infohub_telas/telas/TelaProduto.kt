@@ -14,11 +14,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.R
 import com.example.infohub_telas.navigation.Routes
@@ -52,6 +53,10 @@ fun TelaProduto(navController: NavController, id: String) {
 
     val carrinhoViewModel: CarrinhoViewModel = viewModel()
     val operationState by carrinhoViewModel.operationState.collectAsState()
+
+    // Estado para controlar rolagem e visibilidade do menu
+    val scrollState = rememberScrollState()
+    val isMenuVisible = scrollState.rememberMenuVisibility()
 
     LaunchedEffect(operationState) {
         when (val op = operationState) {
@@ -91,15 +96,15 @@ fun TelaProduto(navController: NavController, id: String) {
     }
 
     Scaffold(
-        topBar = { TopBarPromocao() },
-        bottomBar = { BottomMenu(navController = navController, isAdmin = false) }
+        topBar = { TopBarPromocao() }
     ) { paddingValues ->
-        Column(
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -118,9 +123,19 @@ fun TelaProduto(navController: NavController, id: String) {
                 carrinhoViewModel = carrinhoViewModel
             )
             Spacer(modifier = Modifier.height(80.dp))
+        } // Fecha a Column
+
+        // Menu inferior animado
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            AnimatedScrollableBottomMenu(
+                navController = navController,
+                isAdmin = false,
+                isVisible = isMenuVisible
+            )
         }
-    }
-}
+        } // Fecha o Box principal
+    } // Fecha o Scaffold
+} // Fecha a função TelaProduto
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -578,3 +593,4 @@ fun DefaultPreview() {
         )
     }
 }
+

@@ -19,6 +19,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+            // Optimize for faster startup in debug builds
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -39,96 +45,58 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain(11)
+}
+
 dependencies {
+    // Compose BOM - controla versões de todas as bibliotecas Compose
+    implementation(platform("androidx.compose:compose-bom:2024.10.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.animation:animation")
 
-
-        implementation(platform("androidx.compose:compose-bom:2024.10.00"))
-        implementation("androidx.compose.ui:ui")
-        implementation("androidx.compose.material3:material3")
-        implementation("androidx.compose.ui:ui-tooling-preview")
-        implementation("androidx.compose.material:material-icons-extended")
-    // Accompanist Permissions
-    implementation ("com.google.accompanist:accompanist-permissions:0.31.5-beta")
-    implementation(libs.androidx.compose.ui.text)
-    implementation(libs.androidx.compose.material)
-    implementation(libs.androidx.foundation)
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.compose.foundation.layout)
-    debugImplementation("androidx.compose.ui:ui-tooling")
-
-
-
-
-    //Google Sign-In
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
-
-    //Credential Manager (recomendado pela Google)
-    implementation("androidx.credentials:credentials:1.2.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
-
-    // Navigation
+    // Navigation Compose - usado em várias telas
     implementation("androidx.navigation:navigation-compose:2.7.5")
-    implementation("androidx.navigation:navigation-runtime-ktx:2.7.5")
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
-    // AndroidX Core & Lifecycle
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
-    implementation("androidx.activity:activity-compose:1.9.1")
+    // AndroidX Core & Lifecycle - essenciais para ViewModels e ciclo de vida
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.activity:activity-compose:1.9.2")
 
-    // Retrofit
+    // Retrofit - usado para chamadas de API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // Coroutines
+    // Coroutines - usado nos ViewModels e chamadas assíncronas
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // OpenStreetMap
-    implementation("org.osmdroid:osmdroid-android:6.1.16")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-
-
-    // Google Maps
-    implementation("com.google.android.gms:play-services-maps:18.1.0")
-    implementation("com.google.maps.android:maps-compose:2.11.5")
-
-    implementation("io.coil-kt:coil-compose:2.5.0")
-
-
-
-    // Test
+    // Testes básicos
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.10.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 
-    // Debug
+    // Google Credentials (usado no MainActivity)
+    implementation("androidx.credentials:credentials:1.2.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
+
+    // OpenStreetMap (usado em TelaLocalizacao)
+    implementation("org.osmdroid:osmdroid-android:6.1.18")
+
+    // Coil para carregamento de imagens (usado em várias telas)
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Debug - ferramentas de desenvolvimento
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-
-
-    dependencies {
-        implementation("androidx.core:core-ktx:1.13.1")
-        implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
-        implementation("androidx.activity:activity-compose:1.9.0")
-        implementation(platform("androidx.compose:compose-bom:2024.06.00"))
-        implementation("androidx.compose.ui:ui")
-        implementation("androidx.compose.ui:ui-graphics")
-        implementation("androidx.compose.ui:ui-tooling-preview")
-        implementation("androidx.compose.material3:material3")
-
-        // ADD THIS LINE TO GET LocalOffer AND OTHER EXTENDED ICONS
-        implementation("androidx.compose.material:material-icons-extended") // [1, 2]
-
-        // Other dependencies...
-    }
-
-
-
 
 }

@@ -13,6 +13,7 @@ import com.example.infohub_telas.navigation.AppNavigation
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 
@@ -58,11 +59,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configuração do OpenStreetMap
-        Configuration.getInstance().load(
-            applicationContext,
-            PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        )
+        // Initialize OSMdroid in background thread to avoid blocking main thread
+        Thread {
+            try {
+                Configuration.getInstance().load(
+                    applicationContext,
+                    PreferenceManager.getDefaultSharedPreferences(applicationContext)
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
 
         setContent {
             InfoHub_telasTheme {

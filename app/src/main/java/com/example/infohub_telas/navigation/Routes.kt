@@ -18,6 +18,7 @@ object Routes {
     const val LOCALIZACAO = "localizacao"
     const val CHAT_PRECOS = "chat_precos"
     const val INFOCASH = "infocash"
+    const val GANHAR_HUBCOINS = "ganhar_hubcoins"
 
     // User Profile Routes
     const val PERFIL = "perfil"

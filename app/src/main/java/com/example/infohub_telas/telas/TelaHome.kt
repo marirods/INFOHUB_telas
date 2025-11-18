@@ -25,6 +25,8 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
 import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
@@ -42,6 +44,7 @@ fun TelaHome(navController: NavController) {
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
     val scrollState = rememberScrollState()
+    val isMenuVisible = scrollState.rememberMenuVisibility()
 
     fun navigateToProfile() {
         navController.navigate(Routes.PERFIL)
@@ -90,7 +93,7 @@ fun TelaHome(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Laranja)
             )
         },
-        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
+
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -298,7 +301,7 @@ fun TelaHome(navController: NavController) {
                 shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 80.dp)
+                    .padding(end = 16.dp, bottom = 96.dp)
                     .size(64.dp)
                     .shadow(8.dp, CircleShape)
             ) {
@@ -307,6 +310,17 @@ fun TelaHome(navController: NavController) {
                     contentDescription = "Chat de Preços",
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
+                )
+            }
+
+            // Menu inferior animado
+            Box(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                AnimatedScrollableBottomMenu(
+                    navController = navController,
+                    isAdmin = isAdmin,
+                    isVisible = isMenuVisible
                 )
             }
         }

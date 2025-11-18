@@ -10,12 +10,23 @@ import retrofit2.http.*
 /**
  * Service da API de Carrinho de Compras
  * Base URL: /v1/infohub
+ *
+ * ⚠️ ATENÇÃO: Implementação conforme documentação oficial da API
+ * - POST /carrinho: Status 201 para criação
+ * - GET /carrinho: Status 200 com dados do carrinho
+ * - PUT /carrinho/{id}: Status 200 para atualização
+ * - DELETE /carrinho/{id}: Status 200 para remoção
+ * - DELETE /carrinho/limpar/{id_usuario}: Status 200 para limpeza
  */
 interface CarrinhoApiService {
 
     /**
      * Adicionar item ao carrinho
      * POST /carrinho
+     *
+     * @param token Bearer token para autenticação
+     * @param request Dados do item a ser adicionado
+     * @return Status 201 quando item for adicionado com sucesso
      */
     @Headers(
         "Content-Type: application/json",
@@ -30,6 +41,10 @@ interface CarrinhoApiService {
     /**
      * Listar itens do carrinho
      * GET /carrinho?id_usuario={id}
+     *
+     * @param token Bearer token para autenticação
+     * @param idUsuario ID do usuário
+     * @return Lista de itens do carrinho com valor total
      */
     @Headers(
         "Content-Type: application/json",
@@ -44,6 +59,11 @@ interface CarrinhoApiService {
     /**
      * Atualizar quantidade de um item
      * PUT /carrinho/{id}
+     *
+     * @param token Bearer token para autenticação
+     * @param idCarrinho ID do item no carrinho
+     * @param request Nova quantidade (mínimo 1)
+     * @return Status 200 quando quantidade for atualizada
      */
     @Headers(
         "Content-Type: application/json",
@@ -57,8 +77,12 @@ interface CarrinhoApiService {
     ): Response<CarrinhoOperationResponse>
 
     /**
-     * Remover item do carrinho
+     * Remover item específico do carrinho
      * DELETE /carrinho/{id}
+     *
+     * @param token Bearer token para autenticação
+     * @param idCarrinho ID do item no carrinho
+     * @return Status 200 quando item for removido
      */
     @Headers(
         "Content-Type: application/json",
@@ -71,8 +95,12 @@ interface CarrinhoApiService {
     ): Response<CarrinhoOperationResponse>
 
     /**
-     * Limpar carrinho
+     * Limpar carrinho completamente
      * DELETE /carrinho/limpar/{id_usuario}
+     *
+     * @param token Bearer token para autenticação
+     * @param idUsuario ID do usuário
+     * @return Status 200 quando carrinho for limpo
      */
     @Headers(
         "Content-Type: application/json",

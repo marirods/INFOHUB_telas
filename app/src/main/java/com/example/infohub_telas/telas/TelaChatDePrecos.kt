@@ -30,24 +30,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
 import com.example.infohub_telas.model.ChatRequest
 import com.example.infohub_telas.model.ChatResponse
 import com.example.infohub_telas.service.RetrofitFactory
-import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.primaryLight
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.infohub_telas.utils.getCurrentTime
 import java.util.UUID
 
 data class ChatMessage(
@@ -87,6 +84,7 @@ fun TelaChatDePrecos(navController: NavController?) {
     )) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val isMenuVisible = listState.rememberMenuVisibility()
 
     // Instância do serviço da API
     val retrofitFactory = remember { RetrofitFactory() }
@@ -308,11 +306,14 @@ fun TelaChatDePrecos(navController: NavController?) {
         showOptions = false
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
         // Header laranja
         Box(
             modifier = Modifier
@@ -439,49 +440,63 @@ fun TelaChatDePrecos(navController: NavController?) {
             }
         }
 
-        // Campo de input
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 8.dp)
-                .background(Color(0xFFF6F6F6), RoundedCornerShape(24.dp))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BasicTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                modifier = Modifier.weight(1f),
-                textStyle = TextStyle(color = Color.Black, fontSize = 15.sp),
-                decorationBox = { innerTextField ->
-                    if (inputText.isEmpty()) {
-                        Text(
-                            text = "Digite o produto que você procura...",
-                            color = Color.Gray,
-                            fontSize = 15.sp
-                        )
-                    }
-                    innerTextField()
-                }
-            )
-            IconButton(
-                onClick = { sendMessage(inputText) },
-                modifier = Modifier.size(32.dp)
+            // Campo de input
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 8.dp)
+                    .background(Color(0xFFF6F6F6), RoundedCornerShape(24.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Send,
-                    contentDescription = "Enviar",
-                    tint = if (inputText.isNotBlank()) Color(0xFFF9A01B) else Color.Gray,
-                    modifier = Modifier.size(24.dp)
+                BasicTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    modifier = Modifier.weight(1f),
+                    textStyle = TextStyle(color = Color.Black, fontSize = 15.sp),
+                    decorationBox = { innerTextField ->
+                        if (inputText.isEmpty()) {
+                            Text(
+                                text = "Digite o produto que você procura...",
+                                color = Color.Gray,
+                                fontSize = 15.sp
+                            )
+                        }
+                        innerTextField()
+                    }
                 )
+                IconButton(
+                    onClick = { sendMessage(inputText) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Enviar",
+                        tint = if (inputText.isNotBlank()) Color(0xFFF9A01B) else Color.Gray,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
-        }
-        // Menu inferior
-        BottomMenu(navController = navController ?: return, isAdmin = isAdmin)
-    }
-}
+        } // Fecha a Column
 
+        // Menu inferior animado - dentro do Box principal, fora da Column
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+        ) {
+            AnimatedScrollableBottomMenu(
+                navController = navController,
+                isAdmin = isAdmin,
+                isVisible = isMenuVisible,
+                extraBottomPadding = 72.dp // espaço para barra de input do chat
+            )
+        }
+    } // Fecha o Box principal
+} // Fecha a função TelaChatDePrecos
+
+// Componente para exibir mensagens do chat
 @Composable
 fun ChatMessageItem(message: ChatMessage) {
     Row(
@@ -598,15 +613,3 @@ fun OptionItem(text: String, onClick: () -> Unit) {
     }
 }
 
-fun getCurrentTime(): String {
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-    return sdf.format(Date())
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun TelaChatDePrecosPreview() {
-    InfoHub_telasTheme {
-        TelaChatDePrecos(null)
-    }
-}
