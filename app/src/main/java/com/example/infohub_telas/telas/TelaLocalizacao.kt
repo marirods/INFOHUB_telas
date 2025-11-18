@@ -61,7 +61,6 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.content.Context
-import com.example.infohub_telas.components.MenuComponent
 
 
 // Função para criar alfinete vermelho
@@ -325,6 +324,14 @@ fun TelaLocalizacao(navController: NavController) {
     var localizacaoUsuario by remember { mutableStateOf<GeoPoint?>(null) }
     var estabelecimentoSelecionado by remember { mutableStateOf<Estabelecimento?>(null) }
 
+    // Configurar OSMDroid
+    LaunchedEffect(Unit) {
+        org.osmdroid.config.Configuration.getInstance().apply {
+            userAgentValue = context.packageName
+            load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+        }
+    }
+
     val mapView = if (!isPreview) {
         remember {
             org.osmdroid.views.MapView(context).apply {
@@ -344,36 +351,38 @@ fun TelaLocalizacao(navController: NavController) {
         }
     }
 
-    // Box externo para conter todos os composables da tela
+    // Box externo para o modal
     Box(modifier = Modifier.fillMaxSize()) {
-        // Box principal com conteúdo
-        Box(
+        // Column principal com todo o conteúdo
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            // Conteúdo com scroll
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+            // Cabeçalho da tela
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color(0xFFF9A01B))
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(16.dp),
+                contentAlignment = Alignment.CenterStart
             ) {
-                MenuComponent(navController = navController)
+                Text(
+                    text = "Localização de Estabelecimentos",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
 
-
-
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             if (!isPreview) {
                 Card(
@@ -679,18 +688,18 @@ fun TelaLocalizacao(navController: NavController) {
                     
                     Spacer(modifier = Modifier.height(16.dp))
                 }
-                }
             }
-        }
-        } // Fecha o Box principal
+            } // Fecha Column com scroll
 
-        // Menu inferior animado - dentro do Box externo
-        AnimatedScrollableBottomMenu(
-            navController = navController,
-            isAdmin = isAdmin,
-            isVisible = isMenuVisible
-        )
+            // Menu inferior fixo
+            AnimatedScrollableBottomMenu(
+                navController = navController,
+                isAdmin = isAdmin,
+                isVisible = isMenuVisible
+            )
+        } // Fecha Column principal
 
+        // Modal de detalhes do estabelecimento
         estabelecimentoSelecionado?.let { estab ->
         Box(
             modifier = Modifier
@@ -884,11 +893,6 @@ fun TelaLocalizacao(navController: NavController) {
     } // Fecha o Box externo
 } // Fecha a função TelaLocalizacao
 
-// Função auxiliar para o menu (placeholder)
-@Composable
-fun MenuComponent(navController: NavController) {
-    TODO("Not yet implemented")
-}
 
 // Preview da tela de localização
 @Preview(showSystemUi = true)

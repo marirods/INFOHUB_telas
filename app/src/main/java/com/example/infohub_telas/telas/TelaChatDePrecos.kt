@@ -3,7 +3,6 @@ package com.example.infohub_telas.telas
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -34,10 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
-import com.example.infohub_telas.components.rememberMenuVisibility
-import com.example.infohub_telas.model.ChatRequest
-import com.example.infohub_telas.model.ChatResponse
+
+import com.example.infohub_telas.model.GroqRequest
+import com.example.infohub_telas.model.GroqResponse
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.primaryLight
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +43,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Response
 import com.example.infohub_telas.utils.getCurrentTime
-import java.util.UUID
 
 data class ChatMessage(
     val text: String,
@@ -60,7 +57,6 @@ data class ChatMessage(
 fun TelaChatDePrecos(navController: NavController?) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val isAdmin = prefs.getBoolean("isAdmin", false)
     val token = prefs.getString("token", "") ?: ""
 
     // Log para verificar se o token está disponível
@@ -77,25 +73,29 @@ fun TelaChatDePrecos(navController: NavController?) {
     var isLoadingResponse by remember { mutableStateOf(false) }
     var messages by remember { mutableStateOf(listOf(
         ChatMessage(
-            text = "Olá! Sou sua assistente de compras inteligente. Posso ajudar você a encontrar os melhores preços de qualquer produto. Digite o nome do produto que você procura!",
+            text = "Olá! Sou sua assistente de compras inteligente powered by Groq IA. Posso ajudar você a encontrar os melhores preços, comparar produtos, e responder suas dúvidas sobre compras. Digite o que você procura!",
             isUser = false,
             time = getCurrentTime()
         )
     )) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val isMenuVisible = listState.rememberMenuVisibility()
 
     // Instância do serviço da API
     val retrofitFactory = remember { RetrofitFactory() }
     val chatApiService = remember { retrofitFactory.getInfoHub_UserService() }
 
-    // ID único de sessão do chat
-    val sessionId = remember { UUID.randomUUID().toString() }
+    fun showLoadingMessage(userMessage: String) {
+        val loadingText = when {
+            userMessage.lowercase().contains("preço") -> "🤖 Pesquisando melhores preços"
+            userMessage.lowercase().contains("produto") -> "🔍 Analisando produtos"
+            userMessage.lowercase().contains("comparar") -> "⚖️ Fazendo comparação"
+            userMessage.lowercase().contains("onde") -> "📍 Localizando opções"
+            else -> "🤖 Processando com IA Groq"
+        }
 
-    fun showLoadingMessage() {
         val loadingMessage = ChatMessage(
-            text = "Digitando...",
+            text = loadingText,
             isUser = false,
             time = getCurrentTime(),
             isLoading = true
@@ -107,7 +107,7 @@ fun TelaChatDePrecos(navController: NavController?) {
         messages = messages.filterNot { it.isLoading }
     }
 
-    suspend fun sendMessageToAPI(messageText: String): ChatResponse? {
+    suspend fun sendMessageToAPI(messageText: String): GroqResponse? {
         return try {
             // Validar token antes de enviar
             if (token.isBlank()) {
@@ -115,17 +115,15 @@ fun TelaChatDePrecos(navController: NavController?) {
                 return null
             }
 
-            Log.d("TelaChatDePrecos", "🚀 Enviando mensagem para API: $messageText")
+            Log.d("TelaChatDePrecos", "🚀 Enviando mensagem para IA Groq: $messageText")
             Log.d("TelaChatDePrecos", "📝 Token: ${token.take(10)}...")
-            Log.d("TelaChatDePrecos", "🆔 SessionId: $sessionId")
 
-            val request = ChatRequest(
-                chatId = sessionId,
-                message = messageText
+            val request = GroqRequest(
+                pergunta = messageText
             )
 
-            val response: Response<ChatResponse> = withContext(Dispatchers.IO) {
-                chatApiService.enviarMensagemChat("Bearer $token", request).execute()
+            val response: Response<GroqResponse> = withContext(Dispatchers.IO) {
+                chatApiService.enviarMensagemGroq("Bearer $token", request).execute()
             }
 
             Log.d("TelaChatDePrecos", "📈 HTTP Status Code: ${response.code()}")
@@ -136,11 +134,13 @@ fun TelaChatDePrecos(navController: NavController?) {
                     val body = response.body()
                     Log.d("TelaChatDePrecos", "📦 Response Body: $body")
 
-                    if (body?.sucesso == true) {
-                        Log.d("TelaChatDePrecos", "🎉 Resposta da IA recebida: ${body.resposta}")
+                    if (body != null && body.resposta.isNotEmpty()) {
+                        Log.d("TelaChatDePrecos", "🎉 Resposta da IA Groq recebida: ${body.resposta}")
+                        Log.d("TelaChatDePrecos", "🔗 Fonte: ${body.fonte}")
+                        Log.d("TelaChatDePrecos", "⏱️ Tempo de resposta: ${body.tempoResposta}")
                         body
                     } else {
-                        Log.e("TelaChatDePrecos", "❌ API retornou sucesso=false: $body")
+                        Log.e("TelaChatDePrecos", "❌ API retornou resposta vazia: $body")
                         null
                     }
                 }
@@ -193,7 +193,7 @@ fun TelaChatDePrecos(navController: NavController?) {
             inputText = ""
 
             isLoadingResponse = true
-            showLoadingMessage()
+            showLoadingMessage(text)
 
             coroutineScope.launch {
                 try {
@@ -215,8 +215,13 @@ fun TelaChatDePrecos(navController: NavController?) {
 
                         Log.d("TelaChatDePrecos", "✅ Mensagem da IA adicionada: ${apiResponse.resposta}")
 
-                        // Mostrar toast de sucesso (opcional)
-                        Toast.makeText(context, "Resposta recebida!", Toast.LENGTH_SHORT).show()
+                        // Mostrar toast de sucesso com informações da fonte
+                        val sourceInfo = when {
+                            apiResponse.fonte.contains("groq") -> "🤖 Groq IA"
+                            apiResponse.fonte.contains("cache") -> "⚡ Cache"
+                            else -> "🔄 ${apiResponse.fonte}"
+                        }
+                        Toast.makeText(context, "Resposta de $sourceInfo", Toast.LENGTH_SHORT).show()
 
                     } else {
                         // Erro na API - mostrar mensagem de erro específica
@@ -427,10 +432,10 @@ fun TelaChatDePrecos(navController: NavController?) {
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(bottom = 12.dp)
                                 )
-                                OptionItem("Comparar preços") { handleOptionClick("Comparar preços") }
-                                OptionItem("Comparar lista de compras") { handleOptionClick("Comparar lista de compras") }
-                                OptionItem("Dúvidas") { handleOptionClick("Dúvidas") }
-                                OptionItem("Como funciona?") { handleOptionClick("Como funciona?") }
+                                OptionItem("🔍 Comparar preços de produtos") { handleOptionClick("Quero comparar preços de produtos. Como posso fazer isso?") }
+                                OptionItem("🛒 Melhor época para comprar") { handleOptionClick("Qual é a melhor época para comprar produtos com desconto?") }
+                                OptionItem("💡 Dicas de economia") { handleOptionClick("Me dê dicas para economizar nas compras") }
+                                OptionItem("❓ Como funciona o sistema") { handleOptionClick("Como funciona o sistema de comparação de preços do InfoHub?") }
                             }
                         }
                     }
@@ -479,20 +484,6 @@ fun TelaChatDePrecos(navController: NavController?) {
                 }
             }
         } // Fecha a Column
-
-        // Menu inferior animado - dentro do Box principal, fora da Column
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-        ) {
-            AnimatedScrollableBottomMenu(
-                navController = navController,
-                isAdmin = isAdmin,
-                isVisible = isMenuVisible,
-                extraBottomPadding = 72.dp // espaço para barra de input do chat
-            )
-        }
     } // Fecha o Box principal
 } // Fecha a função TelaChatDePrecos
 
@@ -560,23 +551,10 @@ fun ChatMessageItem(message: ChatMessage) {
                     modifier = Modifier.weight(1f, fill = false)
                 )
 
-                // Indicador de loading
+                // Indicador de loading com animação
                 if (message.isLoading) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    // Simulação de pontos pulsantes para loading
-                    val alpha by animateFloatAsState(
-                        targetValue = 0.3f,
-                        animationSpec = tween(
-                            durationMillis = 1000,
-                            easing = FastOutSlowInEasing
-                        ),
-                        label = "loading_alpha"
-                    )
-                    Text(
-                        text = "●●●",
-                        fontSize = 12.sp,
-                        color = Color.Gray.copy(alpha = alpha),
-                    )
+                    TypingIndicator()
                 }
             }
 
@@ -590,6 +568,38 @@ fun ChatMessageItem(message: ChatMessage) {
                     fontWeight = FontWeight.Light
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun TypingIndicator() {
+    var currentDot by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(500)
+            currentDot = (currentDot + 1) % 4
+        }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        repeat(3) { index ->
+            val alpha = if (currentDot > index) 1f else 0.3f
+            val animatedAlpha by animateFloatAsState(
+                targetValue = alpha,
+                animationSpec = tween(durationMillis = 200),
+                label = "dot_alpha_$index"
+            )
+
+            Text(
+                text = "●",
+                fontSize = 8.sp,
+                color = primaryLight.copy(alpha = animatedAlpha)
+            )
         }
     }
 }
