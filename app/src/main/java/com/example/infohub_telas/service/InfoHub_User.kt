@@ -5,6 +5,8 @@ import com.example.infohub_telas.model.AtualizarSenhaRequest
 import com.example.infohub_telas.model.AtualizarSenhaResponse
 import com.example.infohub_telas.model.ChatRequest
 import com.example.infohub_telas.model.ChatResponse
+import com.example.infohub_telas.model.GroqRequest
+import com.example.infohub_telas.model.GroqResponse
 import com.example.infohub_telas.model.LoginResponse
 import com.example.infohub_telas.model.LoginUsuario
 import com.example.infohub_telas.model.Usuario
@@ -54,4 +56,11 @@ interface InfoHub_User {
         @Header("Authorization") token: String,
         @Body request: ChatRequest
     ): Call<ChatResponse>
+
+    @POST("groq")
+    @Headers("Content-Type: application/json")
+    fun enviarMensagemGroq(
+        @Header("Authorization") token: String,
+        @Body request: GroqRequest
+    ): Call<GroqResponse>
 }
