@@ -226,14 +226,15 @@ fun JuridicoCadastroEmpresaScreen(
                 Button(
                     onClick = {
                         if (validarCampos()) {
-                            // TODO: Implementar salvamento
+                            // TODO: Implementar integração com API para salvar estabelecimento
+                            // Por enquanto apenas volta para a tela anterior
                             navController.popBackStack()
                         }
                     },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
                 ) {
-                    Text("Salvar")
+                    Text(if (empresaId == null) "Cadastrar" else "Atualizar")
                 }
             }
         }

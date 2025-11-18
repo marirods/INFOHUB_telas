@@ -43,12 +43,7 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
 
     var nomeEstabelecimento by remember { mutableStateOf("") }
     var cnpj by remember { mutableStateOf("") }
-    var endereco by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var categoriaExpandida by remember { mutableStateOf(false) }
-    val categorias = listOf("Alimentação", "Varejo", "Serviços", "Saúde", "Educação", "Outros")
-    var categoriaSelecionada by remember { mutableStateOf(categorias[0]) }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
@@ -78,14 +73,23 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text(
+                text = "Dados do Estabelecimento",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF25992E),
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
             OutlinedTextField(
                 value = nomeEstabelecimento,
                 onValueChange = { nomeEstabelecimento = it },
                 label = { Text("Nome do Estabelecimento*") },
+                placeholder = { Text("Ex: Supermercado Central") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color(0xFF25992E),
                     unfocusedBorderColor = Color.Gray,
                     focusedContainerColor = textFieldBackground,
                     unfocusedContainerColor = textFieldBackground
@@ -94,27 +98,25 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
             
             OutlinedTextField(
                 value = cnpj,
-                onValueChange = { cnpj = it },
+                onValueChange = { newValue ->
+                    val digitsOnly = newValue.filter { it.isDigit() }
+                    if (digitsOnly.length <= 14) {
+                        cnpj = when {
+                            digitsOnly.length <= 2 -> digitsOnly
+                            digitsOnly.length <= 5 -> "${digitsOnly.substring(0, 2)}.${digitsOnly.substring(2)}"
+                            digitsOnly.length <= 8 -> "${digitsOnly.substring(0, 2)}.${digitsOnly.substring(2, 5)}.${digitsOnly.substring(5)}"
+                            digitsOnly.length <= 12 -> "${digitsOnly.substring(0, 2)}.${digitsOnly.substring(2, 5)}.${digitsOnly.substring(5, 8)}/${digitsOnly.substring(8)}"
+                            else -> "${digitsOnly.substring(0, 2)}.${digitsOnly.substring(2, 5)}.${digitsOnly.substring(5, 8)}/${digitsOnly.substring(8, 12)}-${digitsOnly.substring(12)}"
+                        }
+                    }
+                },
                 label = { Text("CNPJ*") },
+                placeholder = { Text("12.345.678/0001-90") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedContainerColor = textFieldBackground,
-                    unfocusedContainerColor = textFieldBackground
-                )
-            )
-            
-            OutlinedTextField(
-                value = endereco,
-                onValueChange = { endereco = it },
-                label = { Text("Endereço*") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color(0xFF25992E),
                     unfocusedBorderColor = Color.Gray,
                     focusedContainerColor = textFieldBackground,
                     unfocusedContainerColor = textFieldBackground
@@ -123,96 +125,59 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
             
             OutlinedTextField(
                 value = telefone,
-                onValueChange = { telefone = it },
-                label = { Text("Telefone*") },
+                onValueChange = { newValue ->
+                    val digitsOnly = newValue.filter { it.isDigit() }
+                    if (digitsOnly.length <= 11) {
+                        telefone = when {
+                            digitsOnly.length <= 2 -> "($digitsOnly"
+                            digitsOnly.length <= 6 -> "(${digitsOnly.substring(0, 2)}) ${digitsOnly.substring(2)}"
+                            else -> "(${digitsOnly.substring(0, 2)}) ${digitsOnly.substring(2, 7)}-${digitsOnly.substring(7)}"
+                        }
+                    }
+                },
+                label = { Text("Telefone (opcional)") },
+                placeholder = { Text("(11) 3333-4444") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color(0xFF25992E),
                     unfocusedBorderColor = Color.Gray,
                     focusedContainerColor = textFieldBackground,
                     unfocusedContainerColor = textFieldBackground
                 )
             )
-            
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("E-mail*") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Gray,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedContainerColor = textFieldBackground,
-                    unfocusedContainerColor = textFieldBackground
-                )
-            )
-            ExposedDropdownMenuBox(
-                expanded = categoriaExpandida,
-                onExpandedChange = { categoriaExpandida = !categoriaExpandida },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-            ) {
-                OutlinedTextField(
-                    value = categoriaSelecionada,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Categoria do Negócio*") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Gray,
-                        unfocusedBorderColor = Color.Gray,
-                        focusedContainerColor = textFieldBackground,
-                        unfocusedContainerColor = textFieldBackground
-                    )
-                )
-                ExposedDropdownMenu(
-                    expanded = categoriaExpandida,
-                    onDismissRequest = { categoriaExpandida = false }
-                ) {
-                    categorias.forEach { cat ->
-                        DropdownMenuItem(
-                            text = { Text(cat) },
-                            onClick = {
-                                categoriaSelecionada = cat
-                                categoriaExpandida = false
-                            }
-                        )
-                    }
-                }
-            }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
                     when {
-                        nomeEstabelecimento.isBlank() -> errorMessage = "Nome é obrigatório"
-                        cnpj.isBlank() -> errorMessage = "CNPJ é obrigatório"
-                        endereco.isBlank() -> errorMessage = "Endereço é obrigatório"
-                        telefone.isBlank() -> errorMessage = "Telefone é obrigatório"
-                        email.isBlank() -> errorMessage = "E-mail é obrigatório"
+                        nomeEstabelecimento.isBlank() -> {
+                            errorMessage = "Nome do estabelecimento é obrigatório"
+                            showErrorDialog = true
+                        }
+                        cnpj.isBlank() -> {
+                            errorMessage = "CNPJ é obrigatório"
+                            showErrorDialog = true
+                        }
+                        cnpj.filter { it.isDigit() }.length != 14 -> {
+                            errorMessage = "CNPJ inválido. Digite os 14 dígitos"
+                            showErrorDialog = true
+                        }
                         else -> {
                             isLoading = true
                             
                             val estabelecimento = Estabelecimento(
                                 nome = nomeEstabelecimento,
-                                cnpj = cnpj.filter { it.isDigit() },
-                                endereco = endereco,
-                                telefone = telefone.filter { it.isDigit() },
-                                email = email,
-                                categoria = categoriaSelecionada
+                                cnpj = cnpj,
+                                telefone = telefone.ifBlank { null }
                             )
                             
                             Log.d("ESTABELECIMENTO", "Cadastrando: $estabelecimento")
                             
-                            estabelecimentoApi.cadastrarEstabelecimento(estabelecimento).enqueue(
+                            val authToken = "Bearer $token"
+                            estabelecimentoApi.cadastrarEstabelecimento(authToken, estabelecimento).enqueue(
                                 object : Callback<Estabelecimento> {
                                     override fun onResponse(
                                         call: Call<Estabelecimento>,
@@ -238,10 +203,6 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
                                 }
                             )
                         }
-                    }
-                    
-                    if (errorMessage.isNotEmpty()) {
-                        showErrorDialog = true
                     }
                 },
                 modifier = Modifier
