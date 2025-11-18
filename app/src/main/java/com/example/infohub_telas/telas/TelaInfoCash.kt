@@ -3,12 +3,14 @@ package com.example.infohub_telas.telas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,9 +30,13 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
 import com.example.infohub_telas.model.SaldoInfoCash
+import com.example.infohub_telas.model.TransacaoInfoCash
 import com.example.infohub_telas.viewmodel.InfoCashViewModel
 import com.example.infohub_telas.viewmodel.InfoCashUiState
+import com.example.infohub_telas.viewmodel.HistoricoUiState
 import com.example.infohub_telas.ui.theme.*
 import com.example.infohub_telas.navigation.Routes
 import android.util.Log
@@ -41,6 +47,7 @@ fun TelaInfoCash(navController: NavController?) {
     // ViewModel e estado
     val viewModel: InfoCashViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val historicoState by viewModel.historicoState.collectAsState()
     val context = LocalContext.current
 
     // Pega o ID do usuário e token das preferências
@@ -48,6 +55,19 @@ fun TelaInfoCash(navController: NavController?) {
     val userId = prefs.getInt("user_id", 0)
     val token = prefs.getString("token", "") ?: ""
     val isAdmin = prefs.getBoolean("isAdmin", false)
+
+    // Estado para controlar rolagem e visibilidade do menu
+    val lazyListState = rememberLazyListState()
+    val isMenuVisible = lazyListState.rememberMenuVisibility()
+
+    // Função para recarregar dados
+    fun recarregarDados() {
+        if (userId > 0 && token.isNotEmpty()) {
+            Log.d("TelaInfoCash", "🔄 Recarregando dados do InfoCash")
+            viewModel.carregarPerfilCompleto(token, userId)
+            viewModel.carregarHistoricoInfoCash(token, userId, 5)
+        }
+    }
 
     // Log para debug
     LaunchedEffect(Unit) {
@@ -65,8 +85,9 @@ fun TelaInfoCash(navController: NavController?) {
     // Carrega os dados quando a tela é exibida
     LaunchedEffect(userId, token) {
         if (userId > 0 && token.isNotEmpty()) {
-            Log.d("TelaInfoCash", "✅ Carregando saldo InfoCash para usuário $userId")
-            viewModel.carregarSaldoInfoCash(token, userId)
+            Log.d("TelaInfoCash", "✅ Carregando perfil completo e histórico InfoCash para usuário $userId")
+            viewModel.carregarPerfilCompleto(token, userId)
+            viewModel.carregarHistoricoInfoCash(token, userId, 5)
         } else {
             Log.w("TelaInfoCash", "⚠️ Não é possível carregar dados: userId=$userId, token=${if (token.isEmpty()) "vazio" else "presente"}")
         }
@@ -156,8 +177,21 @@ fun TelaInfoCash(navController: NavController?) {
                             text = "InfoCash",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Color.White,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        // Botão de refresh
+                        IconButton(
+                            onClick = { recarregarDados() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Recarregar",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
 
@@ -204,6 +238,7 @@ fun TelaInfoCash(navController: NavController?) {
 
                     is InfoCashUiState.Success -> {
                         LazyColumn(
+                            state = lazyListState,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(16.dp),
@@ -215,13 +250,18 @@ fun TelaInfoCash(navController: NavController?) {
                             }
 
                             item {
+                                // Card Histórico Recente
+                                HistoricoRecenteCard(historicoState)
+                            }
+
+                            item {
                                 // Card Conquistas
                                 ConquistasCard()
                             }
 
                             item {
                                 // Card Como Ganhar HubCoins
-                                ComoGanharHubCoinsCard()
+                                ComoGanharHubCoinsCard(navController)
                             }
 
                             item {
@@ -238,13 +278,30 @@ fun TelaInfoCash(navController: NavController?) {
                 }
             }
 
-            // Menu inferior
-            Box(
+            // FloatingActionButton para Chat
+            FloatingActionButton(
+                onClick = { navController?.navigate(Routes.CHAT_PRECOS) },
+                containerColor = PrimaryOrange,
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .background(Color.White)
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = 96.dp)
             ) {
-                BottomMenu(navController = navController!!, isAdmin = isAdmin)
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Chat,
+                    contentDescription = "Chat IA",
+                    tint = Color.White
+                )
+            }
+
+            // Menu inferior animado
+            Box(
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                AnimatedScrollableBottomMenu(
+                    navController = navController,
+                    isAdmin = isAdmin,
+                    isVisible = isMenuVisible
+                )
             }
         }
     }
@@ -523,7 +580,7 @@ fun ConquistaItem(
 }
 
 @Composable
-fun ComoGanharHubCoinsCard() {
+fun ComoGanharHubCoinsCard(navController: NavController?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -622,7 +679,9 @@ fun ComoGanharHubCoinsCard() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* TODO: Implementar ação */ },
+                onClick = {
+                    navController?.navigate(Routes.GANHAR_HUBCOINS)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -703,6 +762,182 @@ fun ComunidadeCard() {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun HistoricoRecenteCard(historicoState: HistoricoUiState) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Histórico Recente",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = OnSurfaceGray
+                )
+
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = "Histórico",
+                    tint = PrimaryOrange,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when (historicoState) {
+                is HistoricoUiState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = PrimaryOrange,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+
+                is HistoricoUiState.Error -> {
+                    Text(
+                        text = "Não foi possível carregar o histórico",
+                        fontSize = 14.sp,
+                        color = OnSurfaceGray.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                is HistoricoUiState.Success -> {
+                    val transacoes = historicoState.transacoes
+
+                    if (transacoes.isEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "📭",
+                                fontSize = 48.sp
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Nenhuma transação ainda",
+                                fontSize = 14.sp,
+                                color = OnSurfaceGray.copy(alpha = 0.6f)
+                            )
+                        }
+                    } else {
+                        transacoes.take(5).forEach { transacao ->
+                            TransacaoItem(transacao)
+                            if (transacao != transacoes.last()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TransacaoItem(transacao: TransacaoInfoCash) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = BackgroundGray,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Ícone baseado no tipo
+        Surface(
+            modifier = Modifier.size(40.dp),
+            shape = RoundedCornerShape(20.dp),
+            color = when (transacao.tipoAcao) {
+                "compra" -> Color(0xFF4CAF50)
+                "avaliacao" -> Color(0xFFFFA726)
+                "cadastro" -> Color(0xFF42A5F5)
+                else -> PrimaryOrange
+            }.copy(alpha = 0.1f)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = when (transacao.tipoAcao) {
+                        "compra" -> "🛍️"
+                        "avaliacao" -> "⭐"
+                        "cadastro" -> "✨"
+                        else -> "💰"
+                    },
+                    fontSize = 20.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = when (transacao.tipoAcao) {
+                    "compra" -> "Compra de produto"
+                    "avaliacao" -> "Avaliação de mercado"
+                    "cadastro" -> "Cadastro realizado"
+                    else -> transacao.tipoAcao.replaceFirstChar { it.uppercase() }
+                },
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = OnSurfaceGray
+            )
+
+            Text(
+                text = formatDataTransacao(transacao.dataTransacao),
+                fontSize = 12.sp,
+                color = OnSurfaceGray.copy(alpha = 0.6f)
+            )
+        }
+
+        Text(
+            text = "+${transacao.pontos} HC",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = when (transacao.tipoAcao) {
+                "compra" -> Color(0xFF4CAF50)
+                "avaliacao" -> Color(0xFFFFA726)
+                "cadastro" -> Color(0xFF42A5F5)
+                else -> PrimaryOrange
+            }
+        )
+    }
+}
+
+private fun formatDataTransacao(dataTransacao: String): String {
+    return try {
+        val data = dataTransacao.substring(0, 10) // YYYY-MM-DD
+        val partes = data.split("-")
+        "${partes[2]}/${partes[1]}/${partes[0]}"
+    } catch (_: Exception) {
+        "Data inválida"
     }
 }
 

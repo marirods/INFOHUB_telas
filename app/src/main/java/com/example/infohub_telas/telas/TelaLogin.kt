@@ -51,6 +51,56 @@ fun TelaLogin(navController: NavController) {
     val context = LocalContext.current
     val userApi = RetrofitFactory().getInfoHub_UserService()
 
+    fun tentarLoginAlternativo(loginReq: LoginUsuario, context: Context) {
+        Log.d("TelaLogin", "🔄 Usando endpoint alternativo /auth/login")
+
+        userApi.loginUsuarios(loginReq).enqueue(object : Callback<LoginResponse> {
+            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                isLoading = false
+                Log.d("TelaLogin", "📥 Resposta alternativa - Code: ${response.code()}")
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    Log.d("TelaLogin", "📦 Body alternativo: $body")
+
+                    if (body != null && body.status) {
+                        Log.d("TelaLogin", "✅ Login alternativo bem-sucedido!")
+
+                        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+                        val isAdminUser = body.usuario.perfil == "estabelecimento"
+
+                        prefs.edit().apply {
+                            putString("token", body.token)
+                            putBoolean("isAdmin", isAdminUser)
+                            putInt("user_id", body.usuario.id)
+                            putString("userEmail", body.usuario.email)
+                            putString("userName", body.usuario.nome)
+                            apply()
+                        }
+
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    } else {
+                        errorMessage = "Login falhou: dados inválidos"
+                        Log.e("TelaLogin", "❌ Status false no endpoint alternativo")
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    errorMessage = "Email ou senha incorretos"
+                    Log.e("TelaLogin", "❌ Erro no endpoint alternativo ${response.code()}")
+                    Log.e("TelaLogin", "❌ Error body alternativo: $errorBody")
+                }
+            }
+
+            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                isLoading = false
+                errorMessage = "Falha na conexão. Verifique sua internet."
+                Log.e("TelaLogin", "💥 Falha no endpoint alternativo: ${t.message}", t)
+            }
+        })
+    }
+
     fun validar(): Boolean {
         val emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches()
         val senhaValida = senha.isNotEmpty()
@@ -192,14 +242,19 @@ fun TelaLogin(navController: NavController) {
                     } else {
                         // Login real via API
                         val loginReq = LoginUsuario(email, senha)
-                        Log.d("TelaLogin", "🚀 Enviando requisição de login para: $email")
+                        Log.d("TelaLogin", "🚀 Tentando login com endpoint /login")
+                        Log.d("TelaLogin", "📧 Email: $email")
+                        Log.d("TelaLogin", "🔑 Senha: ${senha.take(3)}***")
+                        Log.d("TelaLogin", "🌐 URL base: ${RetrofitFactory().getRetrofit().baseUrl()}")
+                        Log.d("TelaLogin", "🌐 URL completa: ${RetrofitFactory().getRetrofit().baseUrl()}login")
+                        Log.d("TelaLogin", "📱 Servidor esperado: http://10.0.2.2:8080/v1/infohub/")
 
+                        // Primeiro tenta o endpoint /login
                         userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
                             override fun onResponse(
                                 call: Call<LoginResponse>,
                                 response: Response<LoginResponse>
                             ) {
-                                isLoading = false
                                 Log.d("TelaLogin", "📥 Resposta recebida - Code: ${response.code()}")
 
                                 if (response.isSuccessful) {
@@ -239,16 +294,24 @@ fun TelaLogin(navController: NavController) {
                                     }
                                 } else {
                                     val errorBody = response.errorBody()?.string()
-                                    errorMessage = "Erro ${response.code()}: ${response.message()}"
                                     Log.e("TelaLogin", "❌ Erro HTTP ${response.code()}")
                                     Log.e("TelaLogin", "❌ Error body: $errorBody")
+
+                                    // Se for 404, tenta o endpoint alternativo /auth/login
+                                    if (response.code() == 404) {
+                                        Log.d("TelaLogin", "🔄 Tentando endpoint alternativo /auth/login")
+                                        tentarLoginAlternativo(loginReq, context)
+                                    } else {
+                                        isLoading = false
+                                        errorMessage = "Erro ${response.code()}: Email ou senha incorretos"
+                                    }
                                 }
                             }
 
                             override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                                isLoading = false
-                                errorMessage = "Falha na conexão: ${t.message}"
-                                Log.e("TelaLogin", "💥 Falha na requisição: ${t.message}", t)
+                                Log.e("TelaLogin", "💥 Falha na requisição /login: ${t.message}", t)
+                                Log.d("TelaLogin", "🔄 Tentando endpoint alternativo /auth/login devido à falha")
+                                tentarLoginAlternativo(loginReq, context)
                             }
                         })
                     }

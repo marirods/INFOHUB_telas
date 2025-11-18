@@ -27,8 +27,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.components.BottomMenu
-import com.example.infohub_telas.model.HubCoinData
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,23 +54,23 @@ fun TelaPerfil(navController: NavController?) {
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
 
+    // Estado para controlar rolagem e visibilidade do menu
+    val lazyListState = rememberLazyListState()
+    val isMenuVisible = lazyListState.rememberMenuVisibility()
+
     Scaffold(
         topBar = { TopBar() },
-        bottomBar = {
-            BottomMenu(
-                navController = navController ?: return@Scaffold,
-                isAdmin = isAdmin
-            )
-        },
         containerColor = LightGrayColor
     ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
 
-        LazyColumn(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             item { ProfileHeader() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { HubCoinCard() }
@@ -79,8 +80,18 @@ fun TelaPerfil(navController: NavController?) {
             item { SettingsCard() }
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
-    }
-}
+
+            // Menu inferior animado
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                AnimatedScrollableBottomMenu(
+                    navController = navController,
+                    isAdmin = isAdmin,
+                    isVisible = isMenuVisible
+                )
+            }
+        } // Fecha o Box principal
+    } // Fecha o lambda do Scaffold
+} // Fecha a função TelaPerfil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -703,6 +714,7 @@ fun SettingsCardPreview() {
 @Composable
 fun BottomAppBarWithAnimationPreview() {
     MaterialTheme {
-        val navController = rememberNavController()
+        TelaPerfil(navController = rememberNavController())
     }
 }
+

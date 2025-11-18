@@ -19,7 +19,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
 import com.example.infohub_telas.components.InfoRow
 import com.example.infohub_telas.components.MyTopAppBar
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
@@ -33,6 +34,10 @@ fun TelaMeuEstabelecimento(navController: NavController) {
     val isAdmin = prefs.getBoolean("isAdmin", false)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // Estado para controlar rolagem e visibilidade do menu
+    val scrollState = rememberScrollState()
+    val isMenuVisible = scrollState.rememberMenuVisibility()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -64,14 +69,14 @@ fun TelaMeuEstabelecimento(navController: NavController) {
                     onNavigationIconClick = { scope.launch { drawerState.open() } }
                 )
             },
-            bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
         ) { paddingValues ->
-            Column(
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xFFF5F5F5))
                     .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -142,11 +147,20 @@ fun TelaMeuEstabelecimento(navController: NavController) {
                         Text("Criar Promoção", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
-            }
-        }
-    }
-}
+            } // Fecha a Column principal
 
+            // Menu inferior animado
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                AnimatedScrollableBottomMenu(
+                    navController = navController,
+                    isAdmin = isAdmin,
+                    isVisible = isMenuVisible
+                )
+            }
+        } // Fecha o Box principal
+        } // Fecha o Scaffold
+    } // Fecha o ModalNavigationDrawer
+} // Fecha a função TelaMeuEstabelecimento
 
 @Preview(showBackground = true)
 @Composable

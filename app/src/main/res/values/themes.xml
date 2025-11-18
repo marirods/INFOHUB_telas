@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.InfoHub_telas" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.InfoHub_telas" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Custom theme optimizations -->
+        <item name="android:windowBackground">@color/ic_launcher_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
 </resources>

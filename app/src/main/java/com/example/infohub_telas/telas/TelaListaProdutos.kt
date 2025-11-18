@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -28,7 +29,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.infohub_telas.components.BottomMenu
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import com.example.infohub_telas.model.PromocaoProduto
 import com.example.infohub_telas.navigation.Routes
 import java.util.*
@@ -40,6 +43,10 @@ fun TelaListaProdutos(navController: NavController) {
     val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
     
+    // Estado para controlar rolagem e visibilidade do menu
+    val lazyGridState = rememberLazyGridState()
+    val isMenuVisible = lazyGridState.rememberMenuVisibility()
+
     // Produtos mockados
     val produtos = remember { 
         mutableStateListOf<PromocaoProduto>().apply {
@@ -221,9 +228,9 @@ fun TelaListaProdutos(navController: NavController) {
                 }
             }
         },
-        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
     ) { paddingValues ->
-        val produtosFiltrados = produtos.filter {
+        Box(modifier = Modifier.fillMaxSize()) {
+            val produtosFiltrados = produtos.filter {
             val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
             val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
             matchesSearch && matchesCategoria
@@ -267,6 +274,7 @@ fun TelaListaProdutos(navController: NavController) {
             }
         } else {
             LazyVerticalGrid(
+                state = lazyGridState,
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
@@ -281,8 +289,20 @@ fun TelaListaProdutos(navController: NavController) {
                 }
             }
         }
-    }
-}
+
+        // Menu inferior animado
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            AnimatedScrollableBottomMenu(
+                navController = navController,
+                isAdmin = isAdmin,
+                isVisible = isMenuVisible
+            )
+        }
+    } // Fecha Box
+} // Fecha Scaffold
+} // Fecha TelaListaProdutos
+
+
 
 @Composable
 fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
@@ -298,7 +318,7 @@ fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
                 indication = null
             ) { 
                 // Navegar para TelaProduto passando o ID do produto
-                navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.id.toString()))
+                navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.id))
             },
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         shape = RoundedCornerShape(16.dp),
@@ -381,7 +401,7 @@ fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
                         .fillMaxWidth()
                         .padding(top = 8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Laranja
+                        containerColor = Color(0xFFF9A01B)
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {

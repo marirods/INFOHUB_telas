@@ -1,5 +1,6 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
@@ -20,7 +21,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.infohub_telas.components.BottomMenu
+
+import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
+import com.example.infohub_telas.components.rememberMenuVisibility
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.example.infohub_telas.components.CarrinhoCheio
 import com.example.infohub_telas.components.CarrinhoVazio
 import com.example.infohub_telas.components.Header
@@ -36,8 +40,12 @@ private const val TAG = "TelaCarrinho"
 @Composable
 fun TelaCarrinho(navController: NavController) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
+
+    // Estado para controlar rolagem e visibilidade do menu
+    val lazyListState = rememberLazyListState()
+    val isMenuVisible = lazyListState.rememberMenuVisibility()
     val token = prefs.getString("token", "") ?: ""
     val userId = prefs.getInt("user_id", 0)
 
@@ -111,60 +119,70 @@ fun TelaCarrinho(navController: NavController) {
     }
 
     Scaffold(
-        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) },
-        bottomBar = { BottomMenu(navController = navController, isAdmin = isAdmin) }
+        topBar = { Header(title = "Meu Carrinho", onBackClick = { navigateBack() }) }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            // Renderizar baseado no estado da API
-            when (val state = carrinhoState) {
-                is CarrinhoUiState.Loading -> {
-                    // Estado de carregamento
-                    Log.d(TAG, "⏳ Estado: Loading - Carregando carrinho...")
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                // Renderizar baseado no estado da API
+                when (val state = carrinhoState) {
+                    is CarrinhoUiState.Loading -> {
+                        // Estado de carregamento
+                        Log.d(TAG, "⏳ Estado: Loading - Carregando carrinho...")
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
 
-                is CarrinhoUiState.Success -> {
-                    val itens = state.itens
-                    val valorTotal = state.valorTotal
+                    is CarrinhoUiState.Success -> {
+                        val itens = state.itens
+                        val valorTotal = state.valorTotal
 
-                    Log.d(TAG, "✅ Estado: Success - ${itens.size} itens, Total: R$ $valorTotal")
+                        Log.d(TAG, "✅ Estado: Success - ${itens.size} itens, Total: R$ $valorTotal")
 
-                    if (itens.isEmpty()) {
-                        // Carrinho vazio
-                        Log.d(TAG, "📦 Carrinho vazio - Mostrando CarrinhoVazio")
+                        if (itens.isEmpty()) {
+                            // Carrinho vazio
+                            Log.d(TAG, "📦 Carrinho vazio - Mostrando CarrinhoVazio")
+                            CarrinhoVazio(navController = navController)
+                        } else {
+                            // Carrinho com itens
+                            Log.d(TAG, "🛒 Carrinho com ${itens.size} itens - Mostrando CarrinhoCheio")
+                            CarrinhoCheio(navController = navController)
+                        }
+                    }
+
+                    is CarrinhoUiState.Error -> {
+                        // Estado de erro - mostrar carrinho vazio como fallback
+                        Log.e(TAG, "❌ Estado: Error - ${state.message}")
+                        Log.e(TAG, "⚠️ Mostrando CarrinhoVazio como fallback devido ao erro")
+
+                        // Mostrar toast com erro
+                        LaunchedEffect(state.message) {
+                            Toast.makeText(
+                                context,
+                                "Erro ao carregar carrinho: ${state.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+
                         CarrinhoVazio(navController = navController)
-                    } else {
-                        // Carrinho com itens
-                        Log.d(TAG, "🛒 Carrinho com ${itens.size} itens - Mostrando CarrinhoCheio")
-                        CarrinhoCheio(navController = navController)
                     }
                 }
+            }
 
-                is CarrinhoUiState.Error -> {
-                    // Estado de erro - mostrar carrinho vazio como fallback
-                    Log.e(TAG, "❌ Estado: Error - ${state.message}")
-                    Log.e(TAG, "⚠️ Mostrando CarrinhoVazio como fallback devido ao erro")
-
-                    // Mostrar toast com erro
-                    LaunchedEffect(state.message) {
-                        Toast.makeText(
-                            context,
-                            "Erro ao carregar carrinho: ${state.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-
-                    CarrinhoVazio(navController = navController)
-                }
+            // Menu inferior animado
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                AnimatedScrollableBottomMenu(
+                    navController = navController,
+                    isAdmin = isAdmin,
+                    isVisible = isMenuVisible
+                )
             }
         }
     }

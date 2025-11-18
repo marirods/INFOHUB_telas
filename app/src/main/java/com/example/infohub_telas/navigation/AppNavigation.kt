@@ -120,6 +120,10 @@ fun AppNavigation(
             TelaInfoCash(navController)
         }
 
+        composable(Routes.GANHAR_HUBCOINS) {
+            TelaGanharHubCoins(navController)
+        }
+
         // User Profile
         composable(Routes.PERFIL) {
             TelaPerfil(navController)
