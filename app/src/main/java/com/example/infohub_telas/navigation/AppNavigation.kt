@@ -124,6 +124,10 @@ fun AppNavigation(
             TelaGanharHubCoins(navController)
         }
 
+        composable(Routes.AVALIAR_ESTABELECIMENTOS) {
+            TelaAvaliarEstabelecimentos(navController)
+        }
+
         // User Profile
         composable(Routes.PERFIL) {
             TelaPerfil(navController)

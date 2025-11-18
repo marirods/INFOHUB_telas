@@ -146,12 +146,12 @@ fun TelaGanharHubCoins(navController: NavController) {
                 // Opção 2: Avaliar Mercados
                 OpcaoGanharCard(
                     icon = Icons.Default.Star,
-                    titulo = "Avaliar Mercados",
+                    titulo = "Avaliar Estabelecimentos",
                     descricao = "Avalie estabelecimentos e ganhe HubCoins por cada avaliação",
                     pontos = "10 pontos por avaliação",
                     corIcone = Color(0xFFFFA726),
                     onClick = {
-                        navController.navigate(Routes.HOME)
+                        navController.navigate("avaliar_estabelecimentos")
                     }
                 )
 

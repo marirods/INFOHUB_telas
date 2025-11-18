@@ -1,5 +1,7 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -11,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,8 +21,13 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.model.Empresa
+import com.example.infohub_telas.model.Estabelecimento
+import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.PrimaryOrange
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,30 +36,32 @@ fun CadastroEdicaoEmpresaScreen(
     empresaId: Int? = null,
     empresa: Empresa? = null
 ) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val token = prefs.getString("token", "") ?: ""
+
     var nome by remember { mutableStateOf(empresa?.nome ?: "") }
     var cnpj by remember { mutableStateOf(empresa?.cnpj ?: "") }
-    var email by remember { mutableStateOf(empresa?.email ?: "") }
     var telefone by remember { mutableStateOf(empresa?.telefone ?: "") }
-    var endereco by remember { mutableStateOf(empresa?.endereco ?: "") }
-    var ativa by remember { mutableStateOf(empresa?.let { true } ?: true) }
+
+    // Estados de controle
+    var isLoading by remember { mutableStateOf(false) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
 
     // Estados de erro
     var nomeError by remember { mutableStateOf(false) }
     var cnpjError by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf(false) }
-    var telefoneError by remember { mutableStateOf(false) }
-    var enderecoError by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
+    val estabelecimentoApi = remember { RetrofitFactory().getInfoHub_EstabelecimentoService() }
 
     fun validarCampos(): Boolean {
         nomeError = nome.isBlank()
-        cnpjError = cnpj.isBlank() || !cnpj.matches(Regex("^\\d{2}\\.\\d{3}\\.\\d{3}/\\d{4}-\\d{2}$"))
-        emailError = email.isBlank() || !email.contains("@")
-        telefoneError = telefone.isBlank()
-        enderecoError = endereco.isBlank()
+        cnpjError = cnpj.isBlank() || cnpj.filter { it.isDigit() }.length != 14
 
-        return !(nomeError || cnpjError || emailError || telefoneError || enderecoError)
+        return !(nomeError || cnpjError)
     }
 
     fun formatarCNPJ(text: String): String {
@@ -126,81 +136,22 @@ fun CadastroEdicaoEmpresaScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            // Email
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    emailError = false
-                },
-                label = { Text("E-mail Corporativo") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                isError = emailError,
-                supportingText = if (emailError) {
-                    { Text("E-mail inválido") }
-                } else null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
-            )
-
-            // Telefone
+            // Telefone (opcional)
             OutlinedTextField(
                 value = telefone,
                 onValueChange = {
                     if (it.filter { c -> c.isDigit() }.length <= 11) {
                         telefone = formatarTelefone(it)
-                        telefoneError = false
                     }
                 },
-                label = { Text("Telefone") },
+                label = { Text("Telefone (opcional)") },
+                placeholder = { Text("(11) 3333-4444") },
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 modifier = Modifier.fillMaxWidth(),
-                isError = telefoneError,
-                supportingText = if (telefoneError) {
-                    { Text("Campo obrigatório") }
-                } else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
             )
 
-            // Endereço
-            OutlinedTextField(
-                value = endereco,
-                onValueChange = {
-                    endereco = it
-                    enderecoError = false
-                },
-                label = { Text("Endereço Completo") },
-                leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-                modifier = Modifier.fillMaxWidth(),
-                isError = enderecoError,
-                supportingText = if (enderecoError) {
-                    { Text("Campo obrigatório") }
-                } else null
-            )
-
-            // Status
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Status da Empresa")
-                Switch(
-                    checked = ativa,
-                    onCheckedChange = { ativa = it },
-                    thumbContent = if (ativa) {
-                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                    } else null,
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = Color(0xFF4CAF50),
-                        checkedIconColor = Color(0xFF4CAF50)
-                    )
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Botões
             Row(
@@ -216,17 +167,133 @@ fun CadastroEdicaoEmpresaScreen(
 
                 Button(
                     onClick = {
-                        if (validarCampos()) {
-                            // TODO: Implementar salvamento
-                            navController.popBackStack()
+                        when {
+                            nome.isBlank() -> {
+                                nomeError = true
+                                errorMessage = "Nome é obrigatório"
+                                showErrorDialog = true
+                            }
+                            cnpj.isBlank() -> {
+                                cnpjError = true
+                                errorMessage = "CNPJ é obrigatório"
+                                showErrorDialog = true
+                            }
+                            cnpj.filter { it.isDigit() }.length != 14 -> {
+                                cnpjError = true
+                                errorMessage = "CNPJ deve ter 14 dígitos"
+                                showErrorDialog = true
+                            }
+                            else -> {
+                                isLoading = true
+
+                                val estabelecimento = Estabelecimento(
+                                    nome = nome,
+                                    cnpj = cnpj,
+                                    telefone = telefone.ifBlank { null }
+                                )
+
+                                Log.d("CadastroEmpresa", "📤 Enviando estabelecimento: $estabelecimento")
+
+                                val authToken = "Bearer $token"
+                                estabelecimentoApi.cadastrarEstabelecimento(authToken, estabelecimento).enqueue(
+                                    object : Callback<Estabelecimento> {
+                                        override fun onResponse(
+                                            call: Call<Estabelecimento>,
+                                            response: Response<Estabelecimento>
+                                        ) {
+                                            isLoading = false
+                                            if (response.isSuccessful) {
+                                                Log.d("CadastroEmpresa", "✅ Estabelecimento cadastrado: ${response.body()}")
+                                                showSuccessDialog = true
+                                            } else {
+                                                Log.e("CadastroEmpresa", "❌ Erro: ${response.code()} - ${response.errorBody()?.string()}")
+                                                errorMessage = "Erro ao cadastrar: ${response.message()}"
+                                                showErrorDialog = true
+                                            }
+                                        }
+
+                                        override fun onFailure(call: Call<Estabelecimento>, t: Throwable) {
+                                            isLoading = false
+                                            Log.e("CadastroEmpresa", "💥 Falha: ${t.message}", t)
+                                            errorMessage = "Erro de conexão: ${t.message}"
+                                            showErrorDialog = true
+                                        }
+                                    }
+                                )
+                            }
                         }
                     },
                     modifier = Modifier.weight(1f),
+                    enabled = !isLoading,
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
                 ) {
-                    Text("Salvar")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(if (empresaId == null) "Cadastrar" else "Atualizar")
+                    }
                 }
             }
+        }
+
+        // Diálogo de Sucesso
+        if (showSuccessDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showSuccessDialog = false
+                    navController.popBackStack()
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF25992E),
+                        modifier = Modifier.size(48.dp)
+                    )
+                },
+                title = { Text("Sucesso!") },
+                text = { Text("Estabelecimento cadastrado com sucesso!") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showSuccessDialog = false
+                            navController.popBackStack()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E))
+                    ) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+
+        // Diálogo de Erro
+        if (showErrorDialog) {
+            AlertDialog(
+                onDismissRequest = { showErrorDialog = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        tint = Color.Red,
+                        modifier = Modifier.size(48.dp)
+                    )
+                },
+                title = { Text("Erro") },
+                text = { Text(errorMessage) },
+                confirmButton = {
+                    Button(
+                        onClick = { showErrorDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) {
+                        Text("OK")
+                    }
+                }
+            )
         }
     }
 }

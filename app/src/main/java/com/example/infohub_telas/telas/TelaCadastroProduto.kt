@@ -32,6 +32,10 @@ import com.example.infohub_telas.service.RetrofitFactory
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,7 +67,71 @@ fun TelaCadastroProduto(navController: NavController) {
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val produtoApi = RetrofitFactory().getInfoHub_ProdutoService()
+    // Estados para categorias e estabelecimentos
+    var categorias by remember { mutableStateOf<List<com.example.infohub_telas.model.Categoria>>(emptyList()) }
+    var estabelecimentos by remember { mutableStateOf<List<com.example.infohub_telas.model.Estabelecimento>>(emptyList()) }
+    var isLoadingData by remember { mutableStateOf(true) }
+
+    val coroutineScope = rememberCoroutineScope()
+    val retrofitFactory = remember { RetrofitFactory() }
+    val produtoApi = remember { retrofitFactory.getInfoHub_ProdutoService() }
+    val categoriaApi = remember { retrofitFactory.getCategoriaApiService() }
+    val estabelecimentoApi = remember { retrofitFactory.getInfoHub_EstabelecimentoService() }
+
+    // Buscar categorias e estabelecimentos ao carregar a tela
+    LaunchedEffect(Unit) {
+        Log.d("TelaCadastroProduto", "🚀 Buscando categorias e estabelecimentos...")
+        isLoadingData = true
+
+        coroutineScope.launch {
+            try {
+                // Buscar categorias
+                val categoriasResponse = withContext(Dispatchers.IO) {
+                    categoriaApi.listarCategorias().execute()
+                }
+
+                if (categoriasResponse.isSuccessful) {
+                    categorias = categoriasResponse.body() ?: emptyList()
+                    Log.d("TelaCadastroProduto", "✅ ${categorias.size} categorias carregadas")
+                } else {
+                    Log.e("TelaCadastroProduto", "❌ Erro ao buscar categorias: ${categoriasResponse.code()}")
+                }
+
+                // Buscar estabelecimentos
+                val estabelecimentosResponse = withContext(Dispatchers.IO) {
+                    estabelecimentoApi.listarEstabelecimentos().execute()
+                }
+
+                if (estabelecimentosResponse.isSuccessful) {
+                    estabelecimentos = estabelecimentosResponse.body() ?: emptyList()
+                    Log.d("TelaCadastroProduto", "✅ ${estabelecimentos.size} estabelecimentos carregados")
+                } else {
+                    Log.e("TelaCadastroProduto", "❌ Erro ao buscar estabelecimentos: ${estabelecimentosResponse.code()}")
+                }
+
+                if (categorias.isEmpty() || estabelecimentos.isEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            context,
+                            "⚠️ Cadastre categorias e estabelecimentos primeiro",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TelaCadastroProduto", "💥 Erro ao buscar dados: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        "Erro ao carregar dados: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            } finally {
+                isLoadingData = false
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -156,48 +224,151 @@ fun TelaCadastroProduto(navController: NavController) {
                         )
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    // Dropdown de Categorias
+                    var categoriaExpandida by remember { mutableStateOf(false) }
+                    var categoriaSelecionada by remember { mutableStateOf<com.example.infohub_telas.model.Categoria?>(null) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = categoriaExpandida,
+                        onExpandedChange = { categoriaExpandida = !categoriaExpandida }
                     ) {
                         OutlinedTextField(
-                            value = idCategoria,
-                            onValueChange = { idCategoria = it },
-                            label = { Text("ID Categoria") },
+                            value = categoriaSelecionada?.nome ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Categoria*") },
+                            placeholder = { Text("Selecione a categoria") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Category,
                                     contentDescription = null
                                 )
                             },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF25992E),
                                 focusedLabelColor = Color(0xFF25992E)
-                            )
+                            ),
+                            enabled = !isLoadingData
                         )
 
+                        ExposedDropdownMenu(
+                            expanded = categoriaExpandida,
+                            onDismissRequest = { categoriaExpandida = false }
+                        ) {
+                            if (categorias.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Nenhuma categoria disponível") },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else {
+                                categorias.forEach { categoria ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(categoria.nome, fontWeight = FontWeight.Bold)
+                                                categoria.descricao?.let {
+                                                    Text(it, fontSize = 12.sp, color = Color.Gray)
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            categoriaSelecionada = categoria
+                                            idCategoria = categoria.id?.toString() ?: ""
+                                            categoriaExpandida = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Dropdown de Estabelecimentos
+                    var estabelecimentoExpandido by remember { mutableStateOf(false) }
+                    var estabelecimentoSelecionado by remember { mutableStateOf<com.example.infohub_telas.model.Estabelecimento?>(null) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = estabelecimentoExpandido,
+                        onExpandedChange = { estabelecimentoExpandido = !estabelecimentoExpandido }
+                    ) {
                         OutlinedTextField(
-                            value = idEstabelecimento,
-                            onValueChange = { idEstabelecimento = it },
-                            label = { Text("ID Estabelecimento") },
+                            value = estabelecimentoSelecionado?.nome ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Estabelecimento*") },
+                            placeholder = { Text("Selecione o estabelecimento") },
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Default.Store,
                                     contentDescription = null
                                 )
                             },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.weight(1f),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = estabelecimentoExpandido) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF25992E),
                                 focusedLabelColor = Color(0xFF25992E)
-                            )
+                            ),
+                            enabled = !isLoadingData
                         )
+
+                        ExposedDropdownMenu(
+                            expanded = estabelecimentoExpandido,
+                            onDismissRequest = { estabelecimentoExpandido = false }
+                        ) {
+                            if (estabelecimentos.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Nenhum estabelecimento disponível") },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else {
+                                estabelecimentos.forEach { estab ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(estab.nome, fontWeight = FontWeight.Bold)
+                                                Text(estab.cnpj, fontSize = 12.sp, color = Color.Gray)
+                                            }
+                                        },
+                                        onClick = {
+                                            estabelecimentoSelecionado = estab
+                                            idEstabelecimento = estab.id?.toString() ?: ""
+                                            estabelecimentoExpandido = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
+
+                    OutlinedTextField(
+                        value = preco,
+                        onValueChange = { preco = it },
+                        label = { Text("Preço (R$)*") },
+                        placeholder = { Text("Ex: 19.90") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.AttachMoney,
+                                contentDescription = null
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF25992E),
+                            focusedLabelColor = Color(0xFF25992E)
+                        )
+                    )
 
                     OutlinedTextField(
                         value = preco,

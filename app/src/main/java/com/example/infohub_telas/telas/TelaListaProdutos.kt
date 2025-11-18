@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,6 +35,12 @@ import com.example.infohub_telas.components.rememberMenuVisibility
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import com.example.infohub_telas.model.PromocaoProduto
 import com.example.infohub_telas.navigation.Routes
+import com.example.infohub_telas.service.RetrofitFactory
+import android.util.Log
+import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,113 +54,118 @@ fun TelaListaProdutos(navController: NavController) {
     val lazyGridState = rememberLazyGridState()
     val isMenuVisible = lazyGridState.rememberMenuVisibility()
 
-    // Produtos mockados
-    val produtos = remember { 
-        mutableStateListOf<PromocaoProduto>().apply {
-            addAll(listOf(
-                PromocaoProduto(
-                    id = "1",
-                    nome = "Arroz Branco 5kg",
-                    categoria = "Grãos e Cereais",
-                    precoPromocional = "18.90",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
-                    descricao = "Arroz branco tipo 1, grãos longos e soltos",
-                    imagemUrl = "https://picsum.photos/seed/rice/300/200"
-                ),
-                PromocaoProduto(
-                    id = "2",
-                    nome = "Feijão Preto 1kg",
-                    categoria = "Grãos e Cereais", 
-                    precoPromocional = "7.50",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 5),
-                    descricao = "Feijão preto selecionado, rico em proteínas",
-                    imagemUrl = "https://picsum.photos/seed/beans/300/200"
-                ),
-                PromocaoProduto(
-                    id = "3",
-                    nome = "Leite Integral 1L",
-                    categoria = "Laticínios",
-                    precoPromocional = "4.25",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
-                    descricao = "Leite integral pasteurizado, fonte de cálcio",
-                    imagemUrl = "https://picsum.photos/seed/milk/300/200"
-                ),
-                PromocaoProduto(
-                    id = "4",
-                    nome = "Banana Prata 1kg",
-                    categoria = "Frutas",
-                    precoPromocional = "5.90",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 2),
-                    descricao = "Banana prata fresca, rica em potássio",
-                    imagemUrl = "https://picsum.photos/seed/banana/300/200"
-                ),
-                PromocaoProduto(
-                    id = "5",
-                    nome = "Carne Moída 500g",
-                    categoria = "Carnes",
-                    precoPromocional = "16.90",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 1),
-                    descricao = "Carne bovina moída primeira qualidade",
-                    imagemUrl = "https://picsum.photos/seed/meat/300/200"
-                ),
-                PromocaoProduto(
-                    id = "6",
-                    nome = "Pão de Forma Integral",
-                    categoria = "Padaria",
-                    precoPromocional = "6.80",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 4),
-                    descricao = "Pão de forma integral com fibras, 500g",
-                    imagemUrl = "https://picsum.photos/seed/bread/300/200"
-                ),
-                PromocaoProduto(
-                    id = "7",
-                    nome = "Ovos Brancos 12 unid",
-                    categoria = "Laticínios",
-                    precoPromocional = "8.90",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 6),
-                    descricao = "Ovos frescos de granja, cartela com 12 unidades",
-                    imagemUrl = "https://picsum.photos/seed/eggs/300/200"
-                ),
-                PromocaoProduto(
-                    id = "8",
-                    nome = "Tomate 1kg",
-                    categoria = "Verduras e Legumes",
-                    precoPromocional = "7.20",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
-                    descricao = "Tomate maduro selecionado, ideal para saladas",
-                    imagemUrl = "https://picsum.photos/seed/tomato/300/200"
-                ),
-                PromocaoProduto(
-                    id = "9",
-                    nome = "Refrigerante Cola 2L",
-                    categoria = "Bebidas",
-                    precoPromocional = "5.50",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 10),
-                    descricao = "Refrigerante sabor cola, garrafa 2 litros",
-                    imagemUrl = "https://picsum.photos/seed/soda/300/200"
-                ),
-                PromocaoProduto(
-                    id = "10",
-                    nome = "Sabão em Pó 1kg",
-                    categoria = "Limpeza",
-                    precoPromocional = "12.90",
-                    dataInicio = Date(),
-                    dataTermino = Date(System.currentTimeMillis() + 86400000 * 15),
-                    descricao = "Sabão em pó concentrado, remove manchas difíceis",
-                    imagemUrl = "https://picsum.photos/seed/soap/300/200"
-                )
-            ))
+    // Estados da API
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val produtos = remember { mutableStateListOf<PromocaoProduto>() }
+    val coroutineScope = rememberCoroutineScope()
+
+    val produtoApi = remember { RetrofitFactory().getInfoHub_ProdutoService() }
+
+    // Função auxiliar para produtos de exemplo (fallback)
+    fun getProdutosExemplo(): List<PromocaoProduto> {
+        return listOf(
+            PromocaoProduto(
+                id = "exemplo_1",
+                nome = "Arroz Branco 5kg",
+                categoria = "Grãos e Cereais",
+                precoPromocional = "18.90",
+                dataInicio = Date(),
+                dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
+                descricao = "Arroz branco tipo 1, grãos longos e soltos",
+                imagemUrl = "https://picsum.photos/seed/rice/300/200"
+            ),
+            PromocaoProduto(
+                id = "exemplo_2",
+                nome = "Feijão Preto 1kg",
+                categoria = "Grãos e Cereais",
+                precoPromocional = "7.50",
+                dataInicio = Date(),
+                dataTermino = Date(System.currentTimeMillis() + 86400000 * 5),
+                descricao = "Feijão preto selecionado, rico em proteínas",
+                imagemUrl = "https://picsum.photos/seed/beans/300/200"
+            ),
+            PromocaoProduto(
+                id = "exemplo_3",
+                nome = "Leite Integral 1L",
+                categoria = "Laticínios",
+                precoPromocional = "4.25",
+                dataInicio = Date(),
+                dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
+                descricao = "Leite integral pasteurizado, fonte de cálcio",
+                imagemUrl = "https://picsum.photos/seed/milk/300/200"
+            )
+        )
+    }
+
+    // Buscar produtos da API
+    LaunchedEffect(Unit) {
+        Log.d("TelaListaProdutos", "🚀 Iniciando busca de produtos da API...")
+        isLoading = true
+
+        coroutineScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    produtoApi.listarProdutos().execute()
+                }
+
+                if (response.isSuccessful) {
+                    val produtosAPI = response.body() ?: emptyList()
+                    Log.d("TelaListaProdutos", "✅ ${produtosAPI.size} produtos recebidos da API")
+
+                    produtos.clear()
+
+                    // Converter Produto para PromocaoProduto
+                    produtosAPI.forEach { produto ->
+                        val promocaoProduto = PromocaoProduto(
+                            id = produto.id?.toString() ?: "0",
+                            nome = produto.nome,
+                            categoria = "Categoria ${produto.idCategoria}",
+                            precoPromocional = produto.promocao?.precoPromocional?.toString() ?: produto.preco.toString(),
+                            dataInicio = Date(),
+                            dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
+                            descricao = produto.descricao,
+                            imagemUrl = "https://picsum.photos/seed/${produto.nome.hashCode()}/300/200"
+                        )
+                        produtos.add(promocaoProduto)
+                    }
+
+                    // Se não houver produtos da API, adicionar produtos de exemplo
+                    if (produtos.isEmpty()) {
+                        Log.w("TelaListaProdutos", "⚠️ Nenhum produto na API, adicionando produtos de exemplo...")
+                        produtos.addAll(getProdutosExemplo())
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "✅ ${produtos.size} produtos carregados", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.e("TelaListaProdutos", "❌ Erro na API: ${response.code()} - ${response.errorBody()?.string()}")
+                    errorMessage = "Erro ao carregar produtos: ${response.code()}"
+
+                    // Usar produtos de exemplo em caso de erro
+                    produtos.addAll(getProdutosExemplo())
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "⚠️ Usando produtos de exemplo", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TelaListaProdutos", "💥 Exceção ao buscar produtos: ${e.message}", e)
+                errorMessage = "Erro de conexão: ${e.message}"
+
+                // Usar produtos de exemplo em caso de erro
+                produtos.addAll(getProdutosExemplo())
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "⚠️ Erro ao conectar, usando produtos de exemplo", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                isLoading = false
+            }
         }
     }
+
     val searchQuery = remember { mutableStateOf("") }
     val selectedCategoria = remember { mutableStateOf<String?>(null) }
     val categorias = produtos.map { it.categoria }.distinct()
@@ -170,7 +182,7 @@ fun TelaListaProdutos(navController: NavController) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                     Text(
                         "Promoções",
@@ -230,34 +242,57 @@ fun TelaListaProdutos(navController: NavController) {
         },
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
-            val produtosFiltrados = produtos.filter {
-            val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
-            val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
-            matchesSearch && matchesCategoria
-        }
+            // Indicador de loading
+            if (isLoading) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Carregando produtos da API...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                val produtosFiltrados = produtos.filter {
+                    val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
+                    val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
+                    matchesSearch && matchesCategoria
+                }
 
-        if (produtosFiltrados.isEmpty()) {
-            // Estado vazio
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    Icons.Default.ShoppingBag,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
-                        "Nenhum produto encontrado"
-                    } else {
-                        "Nenhuma promoção disponível"
+                if (produtosFiltrados.isEmpty()) {
+                    // Estado vazio
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Default.ShoppingBag,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = if (isLoading) {
+                                "Carregando produtos..."
+                            } else if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
+                                "Nenhum produto encontrado"
+                            } else {
+                                "Nenhum produto disponível no momento"
                     },
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -270,10 +305,10 @@ fun TelaListaProdutos(navController: NavController) {
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyVerticalGrid(
+                    )
+                }
+            } else {
+                LazyVerticalGrid(
                 state = lazyGridState,
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
@@ -284,22 +319,23 @@ fun TelaListaProdutos(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
-                items(produtosFiltrados) { produto ->
-                    ProdutoCard(produto = produto, navController = navController)
+                    items(produtosFiltrados) { produto ->
+                        ProdutoCard(produto = produto, navController = navController)
+                    }
                 }
             }
-        }
+        } // Fecha else do loading
 
-        // Menu inferior animado
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            AnimatedScrollableBottomMenu(
-                navController = navController,
-                isAdmin = isAdmin,
-                isVisible = isMenuVisible
-            )
-        }
-    } // Fecha Box
-} // Fecha Scaffold
+            // Menu inferior animado
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                AnimatedScrollableBottomMenu(
+                    navController = navController,
+                    isAdmin = isAdmin,
+                    isVisible = isMenuVisible
+                )
+            }
+        } // Fecha Box principal
+    } // Fecha Scaffold
 } // Fecha TelaListaProdutos
 
 

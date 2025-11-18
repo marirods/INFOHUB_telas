@@ -86,6 +86,14 @@ class RetrofitFactory {
         return retrofitFactory.create(CarrinhoApiService::class.java)
     }
 
+    fun getAvaliacaoApiService(): AvaliacaoApiService {
+        return retrofitFactory.create(AvaliacaoApiService::class.java)
+    }
+
+    fun getCategoriaApiService(): CategoriaApiService {
+        return retrofitFactory.create(CategoriaApiService::class.java)
+    }
+
     fun getRetrofit(): Retrofit {
         return retrofitFactory
     }
