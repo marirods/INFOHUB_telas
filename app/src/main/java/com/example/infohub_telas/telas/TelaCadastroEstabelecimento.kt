@@ -178,10 +178,10 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
                             
                             val authToken = "Bearer $token"
                             estabelecimentoApi.cadastrarEstabelecimento(authToken, estabelecimento).enqueue(
-                                object : Callback<Estabelecimento> {
+                                                                                                                                                                                                                                                                                                             object : Callback<com.example.infohub_telas.model.EstabelecimentoResponse> {
                                     override fun onResponse(
-                                        call: Call<Estabelecimento>,
-                                        response: Response<Estabelecimento>
+                                        call: Call<com.example.infohub_telas.model.EstabelecimentoResponse>,
+                                        response: Response<com.example.infohub_telas.model.EstabelecimentoResponse>
                                     ) {
                                         isLoading = false
                                         if (response.isSuccessful) {
@@ -194,7 +194,7 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
                                         }
                                     }
                                     
-                                    override fun onFailure(call: Call<Estabelecimento>, t: Throwable) {
+                                    override fun onFailure(call: Call<com.example.infohub_telas.model.EstabelecimentoResponse>, t: Throwable) {
                                         isLoading = false
                                         Log.e("ESTABELECIMENTO", "Falha: ${t.message}")
                                         errorMessage = "Erro de conexão: ${t.message}"

@@ -64,13 +64,19 @@ fun GerenciamentoEmpresasScreen(navController: NavController) {
                 }
 
                 if (response.isSuccessful) {
-                    val lista = response.body() ?: emptyList()
-                    estabelecimentos = lista
-                    filteredEstabelecimentos = lista
-                    Log.d("GerenciamentoEmpresas", "✅ ${lista.size} estabelecimentos carregados")
+                    val apiResponse = response.body()
+                    if (apiResponse?.status == true) {
+                        val lista = apiResponse.estabelecimentos
+                        estabelecimentos = lista
+                        filteredEstabelecimentos = lista
+                        Log.d("GerenciamentoEmpresas", "✅ ${lista.size} estabelecimentos carregados")
 
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "✅ ${lista.size} estabelecimentos carregados", Toast.LENGTH_SHORT).show()
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "✅ ${lista.size} estabelecimentos carregados", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        errorMessage = "API retornou status false: ${apiResponse?.message}"
+                        Log.e("GerenciamentoEmpresas", "❌ $errorMessage")
                     }
                 } else {
                     errorMessage = "Erro ao carregar estabelecimentos: ${response.code()}"

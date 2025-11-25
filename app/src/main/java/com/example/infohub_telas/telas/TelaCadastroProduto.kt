@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
+import com.example.infohub_telas.model.Categoria
 import com.example.infohub_telas.model.Produto
 import com.example.infohub_telas.model.PromocaoProdutoRequest
 import com.example.infohub_telas.service.RetrofitFactory
@@ -88,7 +89,7 @@ fun TelaCadastroProduto(navController: NavController) {
     var errorMessage by remember { mutableStateOf("") }
 
     // Estados para categorias e estabelecimentos
-    var categorias by remember { mutableStateOf<List<com.example.infohub_telas.model.Categoria>>(emptyList()) }
+    var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
     var estabelecimentos by remember { mutableStateOf<List<com.example.infohub_telas.model.Estabelecimento>>(emptyList()) }
     var isLoadingData by remember { mutableStateOf(true) }
 
@@ -105,48 +106,42 @@ fun TelaCadastroProduto(navController: NavController) {
 
         coroutineScope.launch {
             try {
-                // Buscar categorias
+                // Buscar categorias da API
                 val categoriasResponse = withContext(Dispatchers.IO) {
                     categoriaApi.listarCategorias().execute()
                 }
 
                 if (categoriasResponse.isSuccessful) {
-                    categorias = categoriasResponse.body() ?: emptyList()
-                    Log.d("TelaCadastroProduto", "✅ ${categorias.size} categorias carregadas")
+                    val apiResponse = categoriasResponse.body()
+                    if (apiResponse?.status == true) {
+                        categorias = apiResponse.categorias
+                        Log.d("TelaCadastroProduto", "✅ ${categorias.size} categorias carregadas")
+                    } else {
+                        Log.e("TelaCadastroProduto", "❌ API categorias retornou status false: ${apiResponse?.message}")
+                    }
                 } else {
                     Log.e("TelaCadastroProduto", "❌ Erro ao buscar categorias: ${categoriasResponse.code()}")
                 }
 
-                // Buscar estabelecimentos
+                // Buscar estabelecimentos da API
                 val estabelecimentosResponse = withContext(Dispatchers.IO) {
                     estabelecimentoApi.listarEstabelecimentos().execute()
                 }
 
                 if (estabelecimentosResponse.isSuccessful) {
-                    estabelecimentos = estabelecimentosResponse.body() ?: emptyList()
-                    Log.d("TelaCadastroProduto", "✅ ${estabelecimentos.size} estabelecimentos carregados")
+                    val apiResponse = estabelecimentosResponse.body()
+                    if (apiResponse?.status == true) {
+                        estabelecimentos = apiResponse.estabelecimentos.toMutableList()
+                        Log.d("TelaCadastroProduto", "✅ ${estabelecimentos.size} estabelecimentos carregados")
+                    } else {
+                        Log.e("TelaCadastroProduto", "❌ API estabelecimentos retornou status false: ${apiResponse?.message}")
+                    }
                 } else {
                     Log.e("TelaCadastroProduto", "❌ Erro ao buscar estabelecimentos: ${estabelecimentosResponse.code()}")
                 }
 
-                if (categorias.isEmpty() || estabelecimentos.isEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context,
-                            "⚠️ Cadastre categorias e estabelecimentos primeiro",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
             } catch (e: Exception) {
-                Log.e("TelaCadastroProduto", "💥 Erro ao buscar dados: ${e.message}", e)
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        context,
-                        "Erro ao carregar dados: ${e.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                Log.e("TelaCadastroProduto", "❌ Erro ao buscar dados: ${e.message}", e)
             } finally {
                 isLoadingData = false
             }
@@ -247,7 +242,7 @@ fun TelaCadastroProduto(navController: NavController) {
 
                     // Dropdown de Categorias
                     var categoriaExpandida by remember { mutableStateOf(false) }
-                    var categoriaSelecionada by remember { mutableStateOf<com.example.infohub_telas.model.Categoria?>(null) }
+                    var categoriaSelecionada by remember { mutableStateOf<Categoria?>(null) }
 
                     ExposedDropdownMenuBox(
                         expanded = categoriaExpandida,
@@ -300,7 +295,7 @@ fun TelaCadastroProduto(navController: NavController) {
                                 )
                             } else if (categorias.isEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("❌ Nenhuma categoria disponível") },
+                                    text = { Text("Nenhuma categoria disponível") },
                                     onClick = {},
                                     enabled = false
                                 )
@@ -381,7 +376,7 @@ fun TelaCadastroProduto(navController: NavController) {
                                 )
                             } else if (estabelecimentos.isEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("❌ Nenhum estabelecimento disponível") },
+                                    text = { Text("Nenhum estabelecimento disponível") },
                                     onClick = {},
                                     enabled = false
                                 )
@@ -760,11 +755,6 @@ fun TelaCadastroProduto(navController: NavController) {
                             "Carregando dados...",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            "Buscando categorias e estabelecimentos",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
