@@ -1,6 +1,6 @@
 package com.example.infohub_telas.service
 
-import com.example.infohub_telas.model.*
+import com.example.infohub_telas.network.models.*
 import retrofit2.Response
 import retrofit2.http.*
 

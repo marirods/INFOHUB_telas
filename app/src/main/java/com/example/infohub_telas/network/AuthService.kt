@@ -13,6 +13,7 @@ interface AuthService {
      * Fazer login
      * POST /login
      */
+    @Headers("Content-Type: application/json")
     @POST("login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
@@ -20,6 +21,7 @@ interface AuthService {
      * Cadastrar usuário
      * POST /usuarios/cadastro
      */
+    @Headers("Content-Type: application/json")
     @POST("usuarios/cadastro")
     suspend fun cadastro(@Body request: CadastroRequest): Response<UsuarioResponse>
 
@@ -27,6 +29,7 @@ interface AuthService {
      * Solicitar recuperação de senha
      * POST /recuperar-senha
      */
+    @Headers("Content-Type: application/json")
     @POST("recuperar-senha")
     suspend fun recuperarSenha(@Body request: RecuperacaoSenhaRequest): Response<ApiResponse<Any>>
 
@@ -34,6 +37,7 @@ interface AuthService {
      * Validar código de recuperação
      * POST /validar-codigo
      */
+    @Headers("Content-Type: application/json")
     @POST("validar-codigo")
     suspend fun validarCodigo(@Body request: ValidarCodigoRequest): Response<ApiResponse<Any>>
 
@@ -41,6 +45,7 @@ interface AuthService {
      * Redefinir senha
      * POST /redefinir-senha
      */
+    @Headers("Content-Type: application/json")
     @POST("redefinir-senha")
     suspend fun redefinirSenha(@Body request: RedefinirSenhaRequest): Response<ApiResponse<Any>>
 }

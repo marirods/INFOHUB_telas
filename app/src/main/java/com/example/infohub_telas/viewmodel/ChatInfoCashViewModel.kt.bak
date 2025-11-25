@@ -1,0 +1,418 @@
+package com.example.infohub_telas.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.infohub_telas.network.models.*
+import com.example.infohub_telas.repository.ChatIARepository
+import com.example.infohub_telas.repository.InfoCashRepository
+import kotlinx.coroutines.launch
+
+/**
+ * ViewModel para operações do Chat IA
+ */
+class ChatIAViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val chatRepository = ChatIARepository(application.applicationContext)
+
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _mensagens = MutableLiveData<List<MensagemChat>>()
+    val mensagens: LiveData<List<MensagemChat>> = _mensagens
+
+    private val _ultimaResposta = MutableLiveData<ChatData?>()
+    val ultimaResposta: LiveData<ChatData?> = _ultimaResposta
+
+    private val _groqResposta = MutableLiveData<GroqResponse?>()
+    val groqResposta: LiveData<GroqResponse?> = _groqResposta
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    private val listaMensagens = mutableListOf<MensagemChat>()
+
+    /**
+     * Enviar mensagem para IA
+     */
+    fun enviarMensagem(mensagem: String, idUsuario: Int) {
+        if (mensagem.isBlank()) return
+
+        // Adicionar mensagem do usuário
+        val mensagemUsuario = MensagemChat(
+            texto = mensagem,
+            isUsuario = true,
+            timestamp = System.currentTimeMillis()
+        )
+
+        listaMensagens.add(mensagemUsuario)
+        _mensagens.value = listaMensagens.toList()
+
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = chatRepository.interagir(mensagem, idUsuario)
+
+                if (result.isSuccess) {
+                    val chatData = result.getOrNull()!!
+                    _ultimaResposta.value = chatData
+
+                    // Adicionar resposta da IA
+                    val mensagemIA = MensagemChat(
+                        texto = chatData.reply,
+                        isUsuario = false,
+                        timestamp = System.currentTimeMillis(),
+                        confidence = chatData.confidence,
+                        responseTime = chatData.responseTimeMs
+                    )
+
+                    listaMensagens.add(mensagemIA)
+                    _mensagens.value = listaMensagens.toList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro na comunicação com IA"
+
+                    // Adicionar mensagem de erro
+                    val mensagemErro = MensagemChat(
+                        texto = "Desculpe, não consegui processar sua mensagem. Tente novamente.",
+                        isUsuario = false,
+                        timestamp = System.currentTimeMillis(),
+                        isError = true
+                    )
+
+                    listaMensagens.add(mensagemErro)
+                    _mensagens.value = listaMensagens.toList()
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Chat com Groq
+     */
+    fun chatGroq(pergunta: String) {
+        if (pergunta.isBlank()) return
+
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = chatRepository.chatGroq(pergunta)
+
+                if (result.isSuccess) {
+                    _groqResposta.value = result.getOrNull()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro na comunicação com Groq"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Chat rápido - para consultas simples
+     */
+    fun chatRapido(mensagem: String, idUsuario: Int, callback: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val result = chatRepository.chatRapido(mensagem, idUsuario)
+
+                if (result.isSuccess) {
+                    callback(result.getOrNull() ?: "Resposta não disponível")
+                } else {
+                    callback("Erro: ${result.exceptionOrNull()?.message}")
+                }
+            } catch (e: Exception) {
+                callback("Erro: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Limpar histórico de mensagens
+     */
+    fun limparHistorico() {
+        listaMensagens.clear()
+        _mensagens.value = emptyList()
+    }
+
+    /**
+     * Obter sugestões de mensagens
+     */
+    fun getSugestoes(): List<String> {
+        return listOf(
+            "Quais as promoções de hoje?",
+            "Produtos mais baratos",
+            "Melhores ofertas perto de mim",
+            "Como funciona o InfoCash?",
+            "Produtos em promoção",
+            "Estabelecimentos parceiros"
+        )
+    }
+
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+}
+
+/**
+ * Data class para representar mensagens do chat
+ */
+data class MensagemChat(
+    val texto: String,
+    val isUsuario: Boolean,
+    val timestamp: Long,
+    val confidence: Float? = null,
+    val responseTime: Int? = null,
+    val isError: Boolean = false
+)
+
+/**
+ * ViewModel para operações do InfoCash
+ */
+class InfoCashViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val infoCashRepository = InfoCashRepository(application.applicationContext)
+
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _saldo = MutableLiveData<SaldoInfoCash?>()
+    val saldo: LiveData<SaldoInfoCash?> = _saldo
+
+    private val _historico = MutableLiveData<List<TransacaoInfoCash>>()
+    val historico: LiveData<List<TransacaoInfoCash>> = _historico
+
+    private val _resumo = MutableLiveData<List<ResumoAcaoInfoCash>>()
+    val resumo: LiveData<List<ResumoAcaoInfoCash>> = _resumo
+
+    private val _perfil = MutableLiveData<PerfilInfoCash?>()
+    val perfil: LiveData<PerfilInfoCash?> = _perfil
+
+    private val _ranking = MutableLiveData<List<RankingInfoCash>>()
+    val ranking: LiveData<List<RankingInfoCash>> = _ranking
+
+    private val _estatisticas = MutableLiveData<EstatisticasInfoCash?>()
+    val estatisticas: LiveData<EstatisticasInfoCash?> = _estatisticas
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    /**
+     * Carregar saldo do usuário
+     */
+    fun carregarSaldo(idUsuario: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarSaldo(idUsuario)
+                if (result.isSuccess) {
+                    _saldo.value = result.getOrNull()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar saldo"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar histórico de transações
+     */
+    fun carregarHistorico(idUsuario: Int, limite: Int? = null) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarHistorico(idUsuario, limite)
+                if (result.isSuccess) {
+                    _historico.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar histórico"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar resumo por tipo de ação
+     */
+    fun carregarResumo(idUsuario: Int) {
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarResumo(idUsuario)
+                if (result.isSuccess) {
+                    _resumo.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar resumo"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            }
+        }
+    }
+
+    /**
+     * Carregar perfil completo (saldo + resumo)
+     */
+    fun carregarPerfil(idUsuario: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarPerfil(idUsuario)
+                if (result.isSuccess) {
+                    val perfil = result.getOrNull()
+                    _perfil.value = perfil
+                    _saldo.value = perfil?.saldo
+                    _resumo.value = perfil?.resumo ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar perfil"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar ranking de usuários
+     */
+    fun carregarRanking(limite: Int? = null) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarRanking(limite)
+                if (result.isSuccess) {
+                    _ranking.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar ranking"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar transações por período
+     */
+    fun carregarTransacoesPorPeriodo(idUsuario: Int, dataInicio: String, dataFim: String) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarTransacoesPorPeriodo(idUsuario, dataInicio, dataFim)
+                if (result.isSuccess) {
+                    _historico.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar transações"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar estatísticas gerais (Admin)
+     */
+    fun carregarEstatisticas() {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.consultarEstatisticas()
+                if (result.isSuccess) {
+                    _estatisticas.value = result.getOrNull()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar estatísticas"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Conceder pontos (Admin)
+     */
+    fun concederPontos(
+        idUsuario: Int,
+        tipoAcao: String,
+        pontos: Int,
+        descricao: String,
+        referenciaId: Int? = null
+    ) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = infoCashRepository.concederPontos(idUsuario, tipoAcao, pontos, descricao, referenciaId)
+                if (result.isSuccess) {
+                    // Recarregar dados após concessão
+                    carregarPerfil(idUsuario)
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao conceder pontos"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Obter saldo atual
+     */
+    fun getSaldoAtual(): Int {
+        return _saldo.value?.saldoTotal ?: 0
+    }
+
+    /**
+     * Verificar se usuário tem pontos suficientes
+     */
+    fun temPontosSuficientes(pontos: Int): Boolean {
+        return getSaldoAtual() >= pontos
+    }
+
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+}

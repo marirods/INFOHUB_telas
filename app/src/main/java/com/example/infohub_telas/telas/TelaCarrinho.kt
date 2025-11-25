@@ -12,7 +12,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,14 +24,21 @@ import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
 import com.example.infohub_telas.components.rememberMenuVisibility
 import androidx.compose.foundation.lazy.rememberLazyListState
-import com.example.infohub_telas.components.CarrinhoCheio
 import com.example.infohub_telas.components.CarrinhoVazio
 import com.example.infohub_telas.components.Header
 import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
-import com.example.infohub_telas.viewmodel.CarrinhoUiState
 import com.example.infohub_telas.viewmodel.CarrinhoViewModel
+import com.example.infohub_telas.viewmodel.CarrinhoUiState
 import com.example.infohub_telas.viewmodel.OperationUiState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
+import com.example.infohub_telas.utils.AppUtils
 
 private const val TAG = "TelaCarrinho"
 
@@ -62,9 +68,9 @@ fun TelaCarrinho(navController: NavController) {
     }
 
     // ViewModel para gerenciar o carrinho
-    val viewModel: CarrinhoViewModel = viewModel()
-    val carrinhoState by viewModel.carrinhoState.collectAsState()
-    val operationState by viewModel.operationState.collectAsState()
+    val carrinhoViewModel: CarrinhoViewModel = viewModel()
+    val carrinhoState by carrinhoViewModel.carrinhoState.collectAsStateWithLifecycle()
+    val operationState by carrinhoViewModel.operationState.collectAsStateWithLifecycle()
 
     // Carregar carrinho ao abrir a tela
     LaunchedEffect(userId) {
@@ -78,26 +84,31 @@ fun TelaCarrinho(navController: NavController) {
             Toast.makeText(context, "Erro ao identificar usuário", Toast.LENGTH_LONG).show()
         } else {
             Log.d(TAG, "✅ Carregando carrinho do usuário $userId")
-            viewModel.carregarCarrinho(token, userId)
+            carrinhoViewModel.carregarCarrinho(token, userId)
         }
     }
 
-    // Observar estado das operações e mostrar feedback
+    // Observar estados
+    LaunchedEffect(carrinhoState) {
+        when (val state = carrinhoState) {
+            is CarrinhoUiState.Error -> {
+                AppUtils.showErrorToast(context, state.message)
+            }
+            else -> { /* Handle other states if needed */ }
+        }
+    }
+
     LaunchedEffect(operationState) {
         when (val state = operationState) {
             is OperationUiState.Success -> {
-                Log.d(TAG, "✅ Operação bem-sucedida: ${state.message}")
-                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
-                viewModel.resetOperationState()
+                Toast.makeText(context, "Operação realizada com sucesso!", Toast.LENGTH_SHORT).show()
+                // Reload cart after successful operation
+                carrinhoViewModel.carregarCarrinho(token, userId)
             }
             is OperationUiState.Error -> {
-                Log.e(TAG, "❌ Erro na operação: ${state.message}")
-                Toast.makeText(context, "Erro: ${state.message}", Toast.LENGTH_LONG).show()
-                viewModel.resetOperationState()
+                AppUtils.showErrorToast(context, state.message)
             }
-            else -> {
-                // Idle ou Loading - não fazer nada
-            }
+            else -> { /* Handle other states */ }
         }
     }
 
@@ -127,8 +138,8 @@ fun TelaCarrinho(navController: NavController) {
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // Renderizar baseado no estado da API
-                when (val state = carrinhoState) {
+                // Renderizar baseado no estado do ViewModel
+                when (carrinhoState) {
                     is CarrinhoUiState.Loading -> {
                         // Estado de carregamento
                         Log.d(TAG, "⏳ Estado: Loading - Carregando carrinho...")
@@ -141,36 +152,48 @@ fun TelaCarrinho(navController: NavController) {
                     }
 
                     is CarrinhoUiState.Success -> {
+                        val state = carrinhoState as CarrinhoUiState.Success
                         val itens = state.itens
                         val valorTotal = state.valorTotal
 
-                        Log.d(TAG, "✅ Estado: Success - ${itens.size} itens, Total: R$ $valorTotal")
+                        Log.d(TAG, "✅ Estado: Success - ${itens.size} itens, Total: R$ ${AppUtils.formatarMoeda(valorTotal)}")
 
-                        if (itens.isEmpty()) {
+                        if (itens.isNotEmpty()) {
+                            // Carrinho com itens
+                            Log.d(TAG, "🛒 Carrinho com ${itens.size} itens - Mostrando CarrinhoCheio")
+                            // TODO: Implementar CarrinhoCheio
+                            LazyColumn {
+                                items(itens) { item ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            Text(text = "Item: ${item.produto?.nome ?: "Produto não disponível"}")
+                                            Text(text = "Quantidade: ${item.quantidade}")
+                                            Text(text = "Preço: R$ ${AppUtils.formatarMoeda(item.produto?.preco ?: 0.0)}")
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
                             // Carrinho vazio
                             Log.d(TAG, "📦 Carrinho vazio - Mostrando CarrinhoVazio")
                             CarrinhoVazio(navController = navController)
-                        } else {
-                            // Carrinho com itens
-                            Log.d(TAG, "🛒 Carrinho com ${itens.size} itens - Mostrando CarrinhoCheio")
-                            CarrinhoCheio(navController = navController)
                         }
                     }
 
                     is CarrinhoUiState.Error -> {
-                        // Estado de erro - mostrar carrinho vazio como fallback
+                        // Estado de erro
+                        val state = carrinhoState as CarrinhoUiState.Error
                         Log.e(TAG, "❌ Estado: Error - ${state.message}")
-                        Log.e(TAG, "⚠️ Mostrando CarrinhoVazio como fallback devido ao erro")
+                        CarrinhoVazio(navController = navController)
+                    }
 
-                        // Mostrar toast com erro
-                        LaunchedEffect(state.message) {
-                            Toast.makeText(
-                                context,
-                                "Erro ao carregar carrinho: ${state.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-
+                    else -> {
+                        // Estado inicial - carrinho vazio
+                        Log.d(TAG, "🆕 Estado inicial - Mostrando CarrinhoVazio")
                         CarrinhoVazio(navController = navController)
                     }
                 }

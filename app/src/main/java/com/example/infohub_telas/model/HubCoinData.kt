@@ -1,5 +1,6 @@
 package com.example.infohub_telas.model
 
+import com.example.infohub_telas.network.models.SaldoInfoCash
 import java.util.Locale
 
 data class HubCoinData(

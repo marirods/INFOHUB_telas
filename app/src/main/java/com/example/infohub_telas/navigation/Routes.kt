@@ -29,6 +29,10 @@ object Routes {
     // Shopping Routes
     const val LISTA_PRODUTOS = "lista_produtos"
     const val PRODUTO = "produto/{produtoId}"
+
+    // Juridico Routes
+    const val CADASTRO_ESTABELECIMENTO = "cadastro_estabelecimento"
+    const val CADASTRO_PRODUTO = "cadastro_produto"
     const val CARRINHO = "carrinho"
     const val CHECKOUT = "checkout"
     const val PAGAMENTO = "pagamento"
@@ -36,9 +40,7 @@ object Routes {
 
     // Establishment Routes
     const val MEU_ESTABELECIMENTO = "meu_estabelecimento"
-    const val CADASTRO_ESTABELECIMENTO = "cadastro_estabelecimento"
     const val CADASTRO_PROMOCAO = "cadastro_promocao"
-    const val CADASTRO_PRODUTO = "cadastro_produto"
 
     // Management & Reports Routes
     const val DASHBOARD_EMPRESA = "dashboard_empresa"

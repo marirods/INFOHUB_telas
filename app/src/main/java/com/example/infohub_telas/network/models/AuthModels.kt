@@ -21,7 +21,9 @@ data class Usuario(
     @SerializedName("data_nascimento")
     val dataNascimento: String? = null,
     @SerializedName("telefone")
-    val telefone: String? = null
+    val telefone: String? = null,
+    @SerializedName("perfil")
+    val perfil: String? = null
 )
 
 // ===============================
@@ -97,10 +99,10 @@ data class LoginResponse(
     @SerializedName("status_code")
     val statusCode: Int,
     @SerializedName("message")
-    val message: String,
+    val message: String? = null,
     @SerializedName("token")
     val token: String,
-    @SerializedName("user")
+    @SerializedName("usuario")
     val user: Usuario
 )
 
@@ -133,3 +135,5 @@ data class UsuariosListResponse(
     @SerializedName("data")
     val data: List<Usuario>
 )
+
+

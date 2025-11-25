@@ -1,0 +1,410 @@
+package com.example.infohub_telas.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import com.example.infohub_telas.network.models.*
+import com.example.infohub_telas.repository.ProdutoRepository
+import com.example.infohub_telas.repository.CarrinhoRepository
+import com.example.infohub_telas.repository.PromocaoRepository
+import kotlinx.coroutines.launch
+
+/**
+ * ViewModel para operações de produtos
+ */
+class ProdutoViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val produtoRepository = ProdutoRepository(application.applicationContext)
+
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _produtos = MutableLiveData<List<Produto>>()
+    val produtos: LiveData<List<Produto>> = _produtos
+
+    private val _categorias = MutableLiveData<List<Categoria>>()
+    val categorias: LiveData<List<Categoria>> = _categorias
+
+    private val _categoriasComProdutos = MutableLiveData<List<CategoriaComProdutos>>()
+    val categoriasComProdutos: LiveData<List<CategoriaComProdutos>> = _categoriasComProdutos
+
+    private val _produtoSelecionado = MutableLiveData<Produto?>()
+    val produtoSelecionado: LiveData<Produto?> = _produtoSelecionado
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    /**
+     * Carregar todos os produtos
+     */
+    fun carregarProdutos() {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = produtoRepository.listarProdutos()
+                if (result.isSuccess) {
+                    _produtos.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar produtos"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar categorias
+     */
+    fun carregarCategorias() {
+        viewModelScope.launch {
+            try {
+                val result = produtoRepository.listarCategorias()
+                if (result.isSuccess) {
+                    _categorias.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar categorias"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            }
+        }
+    }
+
+    /**
+     * Carregar categorias com produtos
+     */
+    fun carregarCategoriasComProdutos() {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = produtoRepository.listarCategoriasComProdutos()
+                if (result.isSuccess) {
+                    _categoriasComProdutos.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar categorias"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Buscar produto por ID
+     */
+    fun buscarProduto(id: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = produtoRepository.buscarProduto(id)
+                if (result.isSuccess) {
+                    _produtoSelecionado.value = result.getOrNull()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Produto não encontrado"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Filtrar produtos por categoria
+     */
+    fun filtrarPorCategoria(idCategoria: Int) {
+        val produtosFiltrados = _produtos.value?.filter {
+            it.idCategoria == idCategoria
+        } ?: emptyList()
+
+        _produtos.value = produtosFiltrados
+    }
+
+    /**
+     * Buscar produtos por nome
+     */
+    fun buscarPorNome(nome: String) {
+        val produtosFiltrados = _produtos.value?.filter {
+            it.nome.contains(nome, ignoreCase = true)
+        } ?: emptyList()
+
+        _produtos.value = produtosFiltrados
+    }
+
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+}
+
+/**
+ * ViewModel para operações do carrinho
+ */
+class CarrinhoViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val carrinhoRepository = CarrinhoRepository()
+
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _carrinho = MutableLiveData<CarrinhoResponse?>()
+    val carrinho: LiveData<CarrinhoResponse?> = _carrinho
+
+    private val _operacaoSucesso = MutableLiveData<Boolean?>()
+    val operacaoSucesso: LiveData<Boolean?> = _operacaoSucesso
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    /**
+     * Carregar itens do carrinho
+     */
+    fun carregarCarrinho(idUsuario: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = carrinhoRepository.listarCarrinho("", idUsuario)
+                if (result.isSuccess) {
+                    _carrinho.value = result.getOrNull()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar carrinho"
+                    _carrinho.value = CarrinhoResponse(false, emptyList(), 0.0)
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+                _carrinho.value = CarrinhoResponse(false, emptyList(), 0.0)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Adicionar item ao carrinho
+     */
+    fun adicionarItem(idUsuario: Int, idProduto: Int, idEstabelecimento: Int, quantidade: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+        _operacaoSucesso.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = carrinhoRepository.adicionarItem("", idUsuario, idProduto, idEstabelecimento, quantidade)
+                _operacaoSucesso.value = result.isSuccess
+
+                if (result.isSuccess) {
+                    // Recarregar carrinho após adicionar
+                    carregarCarrinho(idUsuario)
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao adicionar item"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+                _operacaoSucesso.value = false
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Atualizar quantidade
+     */
+    fun atualizarQuantidade(idCarrinho: Int, quantidade: Int, idUsuario: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+            val result = carrinhoRepository.atualizarQuantidade("", idCarrinho, quantidade)
+                if (result.isSuccess) {
+                    // Recarregar carrinho após atualizar
+                    carregarCarrinho(idUsuario)
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao atualizar quantidade"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Remover item
+     */
+    fun removerItem(idCarrinho: Int, idUsuario: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+            val result = carrinhoRepository.removerItem("", idCarrinho)
+                if (result.isSuccess) {
+                    // Recarregar carrinho após remover
+                    carregarCarrinho(idUsuario)
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao remover item"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Limpar carrinho
+     */
+    fun limparCarrinho(idUsuario: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = carrinhoRepository.limparCarrinho("", idUsuario)
+                if (result.isSuccess) {
+                    _carrinho.value = CarrinhoResponse(true, emptyList(), 0.0)
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao limpar carrinho"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Obter quantidade total de itens
+     */
+    fun getTotalItens(): Int {
+        return _carrinho.value?.carrinho?.sumOf { it.quantidade } ?: 0
+    }
+
+    /**
+     * Verificar se carrinho está vazio
+     */
+    fun isCarrinhoVazio(): Boolean {
+        return _carrinho.value?.carrinho?.isEmpty() ?: true
+    }
+
+    fun clearOperacaoSucesso() {
+        _operacaoSucesso.value = null
+    }
+
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+}
+
+/**
+ * ViewModel para operações de promoções
+ */
+class PromocaoViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val promocaoRepository = PromocaoRepository(application.applicationContext)
+
+    private val _isLoading = MutableLiveData<Boolean>(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _promocoes = MutableLiveData<List<Promocao>>()
+    val promocoes: LiveData<List<Promocao>> = _promocoes
+
+    private val _melhoresPromocoes = MutableLiveData<List<Promocao>>()
+    val melhoresPromocoes: LiveData<List<Promocao>> = _melhoresPromocoes
+
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
+    /**
+     * Carregar promoções ativas
+     */
+    fun carregarPromocoes() {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = promocaoRepository.listarPromocoes()
+                if (result.isSuccess) {
+                    _promocoes.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar promoções"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Carregar melhores promoções
+     */
+    fun carregarMelhoresPromocoes(limit: Int? = null) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = promocaoRepository.melhoresPromocoes(limit)
+                if (result.isSuccess) {
+                    _melhoresPromocoes.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar melhores promoções"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Buscar promoções de um produto
+     */
+    fun carregarPromocoesProduto(idProduto: Int) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        viewModelScope.launch {
+            try {
+                val result = promocaoRepository.promocoesProduto(idProduto)
+                if (result.isSuccess) {
+                    _promocoes.value = result.getOrNull() ?: emptyList()
+                } else {
+                    _errorMessage.value = result.exceptionOrNull()?.message ?: "Erro ao carregar promoções do produto"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "Erro inesperado"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+}

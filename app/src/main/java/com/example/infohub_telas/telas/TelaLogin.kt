@@ -1,23 +1,24 @@
 package com.example.infohub_telas.telas
 
-import android.content.Context
-import android.util.Log
-import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -25,107 +26,102 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.infohub_telas.navigation.JuridicoRoutes
 import com.example.infohub_telas.R
 import com.example.infohub_telas.navigation.Routes
-import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.model.LoginResponse
-import com.example.infohub_telas.model.LoginUsuario
-import com.example.infohub_telas.service.RetrofitFactory
+import com.example.infohub_telas.utils.AppUtils
+
+import com.example.infohub_telas.viewmodel.AuthViewModel
+import com.example.infohub_telas.network.models.LoginResponse as NetworkLoginResponse
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.PrimaryOrange
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaLogin(navController: NavController) {
+fun TelaLogin(
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
+) {
+
+    val focusManager = LocalFocusManager.current
+    val passwordFocusRequester = remember { FocusRequester() }
+
+    // Estados da UI
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var mostrarSenha by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    val context = LocalContext.current
-    val userApi = RetrofitFactory().getInfoHub_UserService()
+    // Estados dos diálogos
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
 
-    fun tentarLoginAlternativo(loginReq: LoginUsuario, context: Context) {
-        Log.d("TelaLogin", "🔄 Usando endpoint alternativo /auth/login")
+    // Observer dos estados do ViewModel
+    val isLoading by authViewModel.isLoading.observeAsState(false)
+    val loginResult by authViewModel.loginResult.observeAsState()
+    val errorMessage by authViewModel.errorMessage.observeAsState()
 
-        userApi.loginUsuarios(loginReq).enqueue(object : Callback<LoginResponse> {
-            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
-                isLoading = false
-                Log.d("TelaLogin", "📥 Resposta alternativa - Code: ${response.code()}")
+    // Efeitos para tratar resultados
+    LaunchedEffect(loginResult) {
+        loginResult?.getOrNull()?.let { loginResponse ->
+            // Verificar o perfil do usuário para redirecionar adequadamente
+            val perfil = loginResponse.user.perfil
 
-                if (response.isSuccessful) {
-                    val body = response.body()
-                    Log.d("TelaLogin", "📦 Body alternativo: $body")
+            println("=== LOGIN SUCCESS - Redirecionando ===")
+            println("Perfil: $perfil")
+            println("====================================")
 
-                    if (body != null && body.status) {
-                        Log.d("TelaLogin", "✅ Login alternativo bem-sucedido!")
-
-                        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                        val isAdminUser = body.usuario.perfil == "estabelecimento"
-
-                        prefs.edit().apply {
-                            putString("token", body.token)
-                            putBoolean("isAdmin", isAdminUser)
-                            putInt("user_id", body.usuario.id)
-                            putString("userEmail", body.usuario.email)
-                            putString("userName", body.usuario.nome)
-                            apply()
-                        }
-
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
-                    } else {
-                        errorMessage = "Login falhou: dados inválidos"
-                        Log.e("TelaLogin", "❌ Status false no endpoint alternativo")
-                    }
-                } else {
-                    val errorBody = response.errorBody()?.string()
-                    errorMessage = "Email ou senha incorretos"
-                    Log.e("TelaLogin", "❌ Erro no endpoint alternativo ${response.code()}")
-                    Log.e("TelaLogin", "❌ Error body alternativo: $errorBody")
+            // Definir destino baseado no perfil
+            val destination = when (perfil?.lowercase()) {
+                "estabelecimento" -> {
+                    println("Redirecionando para: MEU_ESTABELECIMENTO")
+                    Routes.MEU_ESTABELECIMENTO
+                }
+                "juridico", "jurídico" -> {
+                    println("Redirecionando para: HOME (Jurídico)")
+                    Routes.HOME
+                }
+                else -> {
+                    println("Redirecionando para: HOME (Consumidor)")
+                    Routes.HOME
                 }
             }
 
-            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                isLoading = false
-                errorMessage = "Falha na conexão. Verifique sua internet."
-                Log.e("TelaLogin", "💥 Falha no endpoint alternativo: ${t.message}", t)
+            // Navegar para o destino correto
+            navController.navigate(destination) {
+                // Limpa toda a pilha de navegação até o login
+                popUpTo(Routes.LOGIN) {
+                    inclusive = true
+                }
+                // Evita múltiplas instâncias da mesma tela
+                launchSingleTop = true
             }
-        })
-    }
 
-    fun validar(): Boolean {
-        val emailValido = Patterns.EMAIL_ADDRESS.matcher(email).matches()
-        val senhaValida = senha.isNotEmpty()
-        return emailValido && senhaValida
-    }
-
-    // Credenciais de teste
-    fun isTestUser(): Boolean {
-        return (email == "teste@infohub.com" && senha == "123456") ||
-               (email == "admin@infohub.com" && senha == "admin123")
-    }
-
-    fun navigateToHome() {
-        navController.navigate(Routes.HOME) {
-            popUpTo(Routes.LOGIN) { inclusive = true }
+            authViewModel.clearResults()
         }
     }
 
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            dialogMessage = AppUtils.getErrorMessage(Exception(message))
+            showErrorDialog = true
+        }
+    }
+
+    // Função de login
+    fun realizarLogin() {
+        focusManager.clearFocus()
+        authViewModel.clearErrorMessage()
+        authViewModel.login(email, senha)
+    }
+
+    // Funções de navegação
     fun navigateToForgotPassword() {
         navController.navigate(Routes.REDEFINICAO_SENHA)
     }
 
-    fun navigateToSignUp() {
-        navController.navigate(Routes.CADASTRO)
-    }
 
     Column(
         modifier = Modifier
@@ -159,10 +155,20 @@ fun TelaLogin(navController: NavController) {
         
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                authViewModel.clearErrorMessage()
+            },
             placeholder = { Text("E-mail", color = Color.Gray) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { passwordFocusRequester.requestFocus() }
+            ),
             shape = RoundedCornerShape(15.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = PrimaryOrange,
@@ -176,12 +182,23 @@ fun TelaLogin(navController: NavController) {
 
         OutlinedTextField(
             value = senha,
-            onValueChange = { senha = it },
+            onValueChange = {
+                senha = it
+                authViewModel.clearErrorMessage()
+            },
             placeholder = { Text("Senha", color = Color.Gray) },
             singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(passwordFocusRequester),
             visualTransformation = if (mostrarSenha) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { realizarLogin() }
+            ),
             trailingIcon = {
                 IconButton(onClick = { mostrarSenha = !mostrarSenha }) {
                     Icon(
@@ -220,103 +237,8 @@ fun TelaLogin(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-                if (validar()) {
-                    isLoading = true
-                    errorMessage = null
-
-                    // Verificar se é usuário de teste
-                    if (isTestUser()) {
-                        // Login de teste - navegar diretamente
-                        isLoading = false
-                        Log.d("TelaLogin", "🧪 Login de teste detectado")
-                        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                        prefs.edit().apply {
-                            putString("token", "test_token_123")
-                            putBoolean("isAdmin", email == "admin@infohub.com")
-                            putInt("user_id", 1) // ID de teste
-                            apply()
-                        }
-                        Log.d("TelaLogin", "✅ Token de teste salvo")
-                        navigateToHome()
-                    } else {
-                        // Login real via API
-                        val loginReq = LoginUsuario(email, senha)
-                        Log.d("TelaLogin", "🚀 Tentando login com endpoint /login")
-                        Log.d("TelaLogin", "📧 Email: $email")
-                        Log.d("TelaLogin", "🔑 Senha: ${senha.take(3)}***")
-                        Log.d("TelaLogin", "🌐 URL base: ${RetrofitFactory().getRetrofit().baseUrl()}")
-                        Log.d("TelaLogin", "🌐 URL completa: ${RetrofitFactory().getRetrofit().baseUrl()}login")
-                        Log.d("TelaLogin", "📱 Servidor esperado: http://10.0.2.2:8080/v1/infohub/")
-
-                        // Primeiro tenta o endpoint /login
-                        userApi.logarUsuario(loginReq).enqueue(object : Callback<LoginResponse> {
-                            override fun onResponse(
-                                call: Call<LoginResponse>,
-                                response: Response<LoginResponse>
-                            ) {
-                                Log.d("TelaLogin", "📥 Resposta recebida - Code: ${response.code()}")
-
-                                if (response.isSuccessful) {
-                                    val body = response.body()
-                                    Log.d("TelaLogin", "📦 Body: $body")
-
-                                    if (body != null && body.status) {
-                                        Log.d("TelaLogin", "✅ Login bem-sucedido!")
-                                        Log.d("TelaLogin", "🔑 Token recebido: ${body.token}")
-                                        Log.d("TelaLogin", "👤 User ID: ${body.usuario.id}")
-                                        Log.d("TelaLogin", "📧 Email: ${body.usuario.email}")
-                                        Log.d("TelaLogin", "👔 Perfil: ${body.usuario.perfil}")
-
-                                        val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                                        
-                                        // Determinar se é admin baseado no perfil retornado pela API
-                                        val isAdminUser = body.usuario.perfil == "estabelecimento"
-
-                                        prefs.edit().apply {
-                                            putString("token", body.token)
-                                            putBoolean("isAdmin", isAdminUser)
-                                            putInt("user_id", body.usuario.id)
-                                            putString("userEmail", body.usuario.email)
-                                            putString("userName", body.usuario.nome)
-                                            apply()
-                                        }
-
-                                        Log.d("TelaLogin", "💾 Dados salvos no SharedPreferences:")
-                                        Log.d("TelaLogin", "   - Token: ${prefs.getString("token", "ERRO")}")
-                                        Log.d("TelaLogin", "   - User ID: ${prefs.getInt("user_id", -1)}")
-                                        Log.d("TelaLogin", "   - IsAdmin: ${prefs.getBoolean("isAdmin", false)}")
-
-                                        navigateToHome()
-                                    } else {
-                                        errorMessage = "Login falhou: status inválido"
-                                        Log.e("TelaLogin", "❌ Status false ou body null")
-                                    }
-                                } else {
-                                    val errorBody = response.errorBody()?.string()
-                                    Log.e("TelaLogin", "❌ Erro HTTP ${response.code()}")
-                                    Log.e("TelaLogin", "❌ Error body: $errorBody")
-
-                                    // Se for 404, tenta o endpoint alternativo /auth/login
-                                    if (response.code() == 404) {
-                                        Log.d("TelaLogin", "🔄 Tentando endpoint alternativo /auth/login")
-                                        tentarLoginAlternativo(loginReq, context)
-                                    } else {
-                                        isLoading = false
-                                        errorMessage = "Erro ${response.code()}: Email ou senha incorretos"
-                                    }
-                                }
-                            }
-
-                            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
-                                Log.e("TelaLogin", "💥 Falha na requisição /login: ${t.message}", t)
-                                Log.d("TelaLogin", "🔄 Tentando endpoint alternativo /auth/login devido à falha")
-                                tentarLoginAlternativo(loginReq, context)
-                            }
-                        })
-                    }
-                }
-            },
+            onClick = { realizarLogin() },
+            enabled = isLoading.not(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -331,10 +253,10 @@ fun TelaLogin(navController: NavController) {
         }
         
         // Mostrar mensagem de erro se houver
-        errorMessage?.let { msg ->
+        if (errorMessage != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = msg,
+                text = AppUtils.getErrorMessage(Exception(errorMessage)),
                 color = Color.Red,
                 fontSize = 14.sp,
                 textAlign = TextAlign.Center,
@@ -344,6 +266,19 @@ fun TelaLogin(navController: NavController) {
 
         Spacer(modifier = Modifier.height(32.dp))
     }
+
+    // Diálogos
+    if (showErrorDialog) {
+        AppUtils.ErrorDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showErrorDialog = false
+                authViewModel.clearErrorMessage()
+            }
+        )
+    }
+
+
 }
 
 @Preview(showBackground = true, showSystemUi = true)

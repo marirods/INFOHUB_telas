@@ -1,7 +1,5 @@
 package com.example.infohub_telas.telas
 
-import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,54 +10,83 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.model.Estabelecimento
-import com.example.infohub_telas.service.RetrofitFactory
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.example.infohub_telas.utils.AppUtils
+import com.example.infohub_telas.viewmodel.EstabelecimentoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaCadastroEstabelecimento(navController: NavController) {
-    val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val token = prefs.getString("token", "") ?: ""
-
-    // Log para verificar se o token está disponível (caso seja necessário no futuro)
-    LaunchedEffect(Unit) {
-        Log.d("TelaCadastroEstabelecimento", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO"}")
-        Log.d("TelaCadastroEstabelecimento", "ℹ️ Nota: Este endpoint atualmente não requer autenticação")
-    }
-
+fun TelaCadastroEstabelecimento(
+    navController: NavController,
+    estabelecimentoId: String? = null,
+    viewModel: EstabelecimentoViewModel = viewModel()
+) {
+    // Estados do formulário
     var nomeEstabelecimento by remember { mutableStateOf("") }
     var cnpj by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
 
+    // Estados dos diálogos
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
+    var dialogMessage by remember { mutableStateOf("") }
 
+    // Estados do ViewModel
+    val isLoading by viewModel.isLoading.observeAsState(false)
+    val createResult by viewModel.createResult.observeAsState()
+    val updateResult by viewModel.updateResult.observeAsState()
+    val errorMessage by viewModel.errorMessage.observeAsState()
+
+    // Verificar se é edição
+    val isEditing = estabelecimentoId != null
+
+    // Cores da UI
     val lightGray = Color(0xFFF0F0F0)
     val textFieldBackground = Color.White
 
-    val estabelecimentoApi = RetrofitFactory().getInfoHub_EstabelecimentoService()
+    // Tratar resultados do ViewModel
+    LaunchedEffect(createResult) {
+        createResult?.onSuccess {
+            dialogMessage = "Estabelecimento criado com sucesso!"
+            showSuccessDialog = true
+            viewModel.clearResults()
+        }?.onFailure {
+            // Erro já tratado pelo errorMessage
+        }
+    }
+
+    LaunchedEffect(updateResult) {
+        updateResult?.onSuccess {
+            dialogMessage = "Estabelecimento atualizado com sucesso!"
+            showSuccessDialog = true
+            viewModel.clearResults()
+        }?.onFailure {
+            // Erro já tratado pelo errorMessage
+        }
+    }
+
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { error ->
+            dialogMessage = error
+            showErrorDialog = true
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         AppTopBar(
-            title = "Cadastro de Estabelecimento",
+            title = if (isEditing) "Editar Estabelecimento" else "Cadastro de Estabelecimento",
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
             onNavigationIconClick = { navController.popBackStack() }
         )
@@ -152,57 +179,22 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
 
             Button(
                 onClick = {
-                    when {
-                        nomeEstabelecimento.isBlank() -> {
-                            errorMessage = "Nome do estabelecimento é obrigatório"
-                            showErrorDialog = true
-                        }
-                        cnpj.isBlank() -> {
-                            errorMessage = "CNPJ é obrigatório"
-                            showErrorDialog = true
-                        }
-                        cnpj.filter { it.isDigit() }.length != 14 -> {
-                            errorMessage = "CNPJ inválido. Digite os 14 dígitos"
-                            showErrorDialog = true
-                        }
-                        else -> {
-                            isLoading = true
-                            
-                            val estabelecimento = Estabelecimento(
+                    if (isEditing) {
+                        val id = estabelecimentoId?.toIntOrNull()
+                        if (id != null) {
+                            viewModel.atualizarEstabelecimento(
+                                id = id,
                                 nome = nomeEstabelecimento,
                                 cnpj = cnpj,
                                 telefone = telefone.ifBlank { null }
                             )
-                            
-                            Log.d("ESTABELECIMENTO", "Cadastrando: $estabelecimento")
-                            
-                            val authToken = "Bearer $token"
-                            estabelecimentoApi.cadastrarEstabelecimento(authToken, estabelecimento).enqueue(
-                                object : Callback<Estabelecimento> {
-                                    override fun onResponse(
-                                        call: Call<Estabelecimento>,
-                                        response: Response<Estabelecimento>
-                                    ) {
-                                        isLoading = false
-                                        if (response.isSuccessful) {
-                                            Log.d("ESTABELECIMENTO", "Sucesso: ${response.body()}")
-                                            showSuccessDialog = true
-                                        } else {
-                                            Log.e("ESTABELECIMENTO", "Erro: ${response.code()} - ${response.errorBody()?.string()}")
-                                            errorMessage = "Erro ao cadastrar: ${response.message()}"
-                                            showErrorDialog = true
-                                        }
-                                    }
-                                    
-                                    override fun onFailure(call: Call<Estabelecimento>, t: Throwable) {
-                                        isLoading = false
-                                        Log.e("ESTABELECIMENTO", "Falha: ${t.message}")
-                                        errorMessage = "Erro de conexão: ${t.message}"
-                                        showErrorDialog = true
-                                    }
-                                }
-                            )
                         }
+                    } else {
+                        viewModel.criarEstabelecimento(
+                            nome = nomeEstabelecimento,
+                            cnpj = cnpj,
+                            telefone = telefone.ifBlank { null }
+                        )
                     }
                 },
                 modifier = Modifier
@@ -219,7 +211,7 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
                     )
                 } else {
                     Text(
-                        text = "Cadastrar",
+                        text = if (isEditing) "Atualizar" else "Cadastrar",
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
@@ -229,39 +221,24 @@ fun TelaCadastroEstabelecimento(navController: NavController) {
         }
     }
     
-    // Diálogo de sucesso
+    // Diálogos
     if (showSuccessDialog) {
-        AlertDialog(
-            onDismissRequest = { },
-            confirmButton = {
-                TextButton(onClick = {
-                    showSuccessDialog = false
-                    navController.popBackStack()
-                }) {
-                    Text("OK", color = Color(0xFF25992E))
-                }
-            },
-            title = { Text("Sucesso!", fontWeight = FontWeight.Bold) },
-            text = { Text("Estabelecimento cadastrado com sucesso!") },
-            containerColor = Color.White
+        AppUtils.SuccessDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showSuccessDialog = false
+                navController.popBackStack()
+            }
         )
     }
-    
-    // Diálogo de erro
+
     if (showErrorDialog) {
-        AlertDialog(
-            onDismissRequest = { showErrorDialog = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    showErrorDialog = false
-                    errorMessage = ""
-                }) {
-                    Text("OK", color = Color.Red)
-                }
-            },
-            title = { Text("Erro", fontWeight = FontWeight.Bold, color = Color.Red) },
-            text = { Text(errorMessage) },
-            containerColor = Color.White
+        AppUtils.ErrorDialog(
+            message = dialogMessage,
+            onDismiss = {
+                showErrorDialog = false
+                viewModel.clearErrorMessage()
+            }
         )
     }
 }

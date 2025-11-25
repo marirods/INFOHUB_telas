@@ -23,12 +23,18 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.foundation.lazy.items
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
 import com.example.infohub_telas.components.rememberMenuVisibility
 import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
+import com.example.infohub_telas.viewmodel.HomeViewModel
+import com.example.infohub_telas.network.models.Promocao
+import com.example.infohub_telas.utils.AppUtils
 
 // Paleta de cores
 val Laranja = Color(0xFFF9A01B)
@@ -39,12 +45,21 @@ val CinzaClaro = Color(0xFFE0E0E0)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaHome(navController: NavController) {
+fun TelaHome(
+    navController: NavController,
+    homeViewModel: HomeViewModel = viewModel()
+) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
+    val userPerfil = prefs.getString("perfil", null)
     val scrollState = rememberScrollState()
     val isMenuVisible = scrollState.rememberMenuVisibility()
+
+    // Estados do ViewModel
+    val promocoes by homeViewModel.promocoes.observeAsState(emptyList())
+    val isLoading by homeViewModel.isLoading.observeAsState(false)
+    val errorMessage by homeViewModel.errorMessage.observeAsState()
 
     fun navigateToProfile() {
         navController.navigate(Routes.PERFIL)
@@ -224,11 +239,20 @@ fun TelaHome(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(3) { index ->
-                                CardProduto()
+                        if (isLoading) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(color = Laranja)
+                            }
+                        } else {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(promocoes) { promocao ->
+                                    CardProduto(promocao = promocao)
+                                }
                             }
                         }
 
@@ -320,7 +344,8 @@ fun TelaHome(navController: NavController) {
                 AnimatedScrollableBottomMenu(
                     navController = navController,
                     isAdmin = isAdmin,
-                    isVisible = isMenuVisible
+                    isVisible = isMenuVisible,
+                    userPerfil = userPerfil
                 )
             }
         }
@@ -328,7 +353,7 @@ fun TelaHome(navController: NavController) {
 }
 
 @Composable
-fun CardProduto() {
+fun CardProduto(promocao: Promocao) {
     Card(
         modifier = Modifier
             .width(120.dp)
@@ -375,7 +400,7 @@ fun CardProduto() {
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = "-25%",
+                    text = "-${promocao.valorDesconto.toInt()}%",
                     color = Color.White,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
@@ -386,7 +411,7 @@ fun CardProduto() {
 
             // Preço
             Text(
-                text = "R$ 7,99",
+                text = AppUtils.formatarMoeda(promocao.precoPromocional ?: 0.0),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = Verde

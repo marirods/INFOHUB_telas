@@ -120,6 +120,15 @@ fun AppNavigation(
             TelaInfoCash(navController)
         }
 
+        // Rotas Jurídico - Estabelecimentos e Produtos
+        composable(Routes.CADASTRO_ESTABELECIMENTO) {
+            TelaCadastroEstabelecimento(navController)
+        }
+
+        composable(Routes.CADASTRO_PRODUTO) {
+            TelaCadastroProduto(navController)
+        }
+
         composable(Routes.GANHAR_HUBCOINS) {
             TelaGanharHubCoins(navController)
         }
@@ -181,17 +190,11 @@ fun AppNavigation(
             TelaMeuEstabelecimento(navController)
         }
 
-        composable(Routes.CADASTRO_ESTABELECIMENTO) {
-            TelaCadastroEstabelecimento(navController)
-        }
 
         composable(Routes.CADASTRO_PROMOCAO) {
             TelaCadastroPromocao(navController)
         }
 
-        composable(Routes.CADASTRO_PRODUTO) {
-            TelaCadastroProduto(navController)
-        }
 
         // Business Management & Reports
         composable(Routes.DASHBOARD_EMPRESA) {
@@ -214,10 +217,7 @@ fun AppNavigation(
         }
 
         composable(Routes.PERFIL_EMPRESA) {
-            PerfilEmpresa(
-                navController = navController,
-                empresa = Empresa()
-            )
+            PerfilEmpresa(navController = navController)
         }
 
         composable(Routes.RELATORIOS) {

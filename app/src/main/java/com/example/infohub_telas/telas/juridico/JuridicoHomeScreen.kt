@@ -46,28 +46,34 @@ fun JuridicoHomeScreen(
             color = Color(0xFF2196F3)
         ),
         JuridicoMenuItem(
-            icon = Icons.Default.Assessment,
-            title = "Relatórios",
-            route = "${Routes.DETALHES_RELATORIO.replace("{relatorioId}", "1")}", // ID padrão
+            icon = Icons.Default.Add,
+            title = "Novo Estabelecimento",
+            route = Routes.CADASTRO_ESTABELECIMENTO,
             color = Color(0xFF4CAF50)
         ),
         JuridicoMenuItem(
-            icon = Icons.Default.Add,
-            title = "Nova Empresa",
-            route = JuridicoRoutes.CADASTRO_EMPRESA,
+            icon = Icons.Default.ShoppingBag,
+            title = "Novo Produto",
+            route = Routes.CADASTRO_PRODUTO,
             color = Color(0xFFF9A825)
+        ),
+        JuridicoMenuItem(
+            icon = Icons.Default.Assessment,
+            title = "Relatórios",
+            route = "${Routes.DETALHES_RELATORIO.replace("{relatorioId}", "1")}", // ID padrão
+            color = Color(0xFF9C27B0)
+        ),
+        JuridicoMenuItem(
+            icon = Icons.Default.Store,
+            title = "Meus Estabelecimentos",
+            route = Routes.LISTA_PRODUTOS, // Reutilizar para mostrar produtos por estabelecimento
+            color = Color(0xFF607D8B)
         ),
         JuridicoMenuItem(
             icon = Icons.Default.AccountBox,
             title = "Perfil",
             route = Routes.PERFIL,
-            color = Color(0xFF9C27B0)
-        ),
-        JuridicoMenuItem(
-            icon = Icons.Default.Settings,
-            title = "Configurações",
-            route = JuridicoRoutes.CONFIGURACOES,
-            color = Color(0xFF607D8B)
+            color = Color(0xFF795548)
         )
     )
 

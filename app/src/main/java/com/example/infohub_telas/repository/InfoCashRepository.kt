@@ -1,7 +1,7 @@
 package com.example.infohub_telas.repository
 
 import android.util.Log
-import com.example.infohub_telas.model.*
+import com.example.infohub_telas.network.models.*
 import com.example.infohub_telas.service.InfoCashApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -1,10 +1,6 @@
 package com.example.infohub_telas.telas
 
-import android.content.Context
-import android.util.Log
-import android.widget.Toast
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,10 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,284 +26,99 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
-
-import com.example.infohub_telas.model.GroqRequest
-import com.example.infohub_telas.model.GroqResponse
-import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.primaryLight
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.Response
-import com.example.infohub_telas.utils.getCurrentTime
-
-data class ChatMessage(
-    val text: String,
-    val isUser: Boolean,
-    val time: String,
-    val isLoading: Boolean = false,
-    val isError: Boolean = false,
-    val errorMessage: String? = null
+import com.example.infohub_telas.utils.AppUtils
+// Modelo local para substituir ViewModel
+data class MensagemChat(
+    val id: Long = System.currentTimeMillis(),
+    val texto: String,
+    val isUsuario: Boolean,
+    val timestamp: Long = System.currentTimeMillis(),
+    val isError: Boolean = false
 )
 
 @Composable
-fun TelaChatDePrecos(navController: NavController?) {
+fun TelaChatDePrecos(
+    navController: NavController? = null
+) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val token = prefs.getString("token", "") ?: ""
-
-    // Log para verificar se o token está disponível
-    LaunchedEffect(Unit) {
-        Log.d("TelaChatDePrecos", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO - USUÁRIO NÃO LOGADO"}")
-        if (token.isEmpty()) {
-            Log.e("TelaChatDePrecos", "❌ ATENÇÃO: Token vazio! Usuário precisa fazer login.")
-            Log.e("TelaChatDePrecos", "⚠️ Chat IA pode não funcionar sem token de autenticação")
-        }
-    }
 
     var inputText by remember { mutableStateOf("") }
     var showOptions by remember { mutableStateOf(false) }
-    var isLoadingResponse by remember { mutableStateOf(false) }
-    var messages by remember { mutableStateOf(listOf(
-        ChatMessage(
-            text = "Olá! Sou sua assistente de compras inteligente powered by Groq IA. Posso ajudar você a encontrar os melhores preços, comparar produtos, e responder suas dúvidas sobre compras. Digite o que você procura!",
-            isUser = false,
-            time = getCurrentTime()
-        )
-    )) }
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
-    // Instância do serviço da API
-    val retrofitFactory = remember { RetrofitFactory() }
-    val chatApiService = remember { retrofitFactory.getInfoHub_UserService() }
-
-    fun showLoadingMessage(userMessage: String) {
-        val loadingText = when {
-            userMessage.lowercase().contains("preço") -> "🤖 Pesquisando melhores preços"
-            userMessage.lowercase().contains("produto") -> "🔍 Analisando produtos"
-            userMessage.lowercase().contains("comparar") -> "⚖️ Fazendo comparação"
-            userMessage.lowercase().contains("onde") -> "📍 Localizando opções"
-            else -> "🤖 Processando com IA Groq"
-        }
-
-        val loadingMessage = ChatMessage(
-            text = loadingText,
-            isUser = false,
-            time = getCurrentTime(),
-            isLoading = true
-        )
-        messages = messages + loadingMessage
-    }
-
-    fun removeLoadingMessage() {
-        messages = messages.filterNot { it.isLoading }
-    }
-
-    suspend fun sendMessageToAPI(messageText: String): GroqResponse? {
-        return try {
-            // Validar token antes de enviar
-            if (token.isBlank()) {
-                Log.e("TelaChatDePrecos", "❌ Token de autenticação não encontrado")
-                return null
-            }
-
-            Log.d("TelaChatDePrecos", "🚀 Enviando mensagem para IA Groq: $messageText")
-            Log.d("TelaChatDePrecos", "📝 Token: ${token.take(10)}...")
-
-            val request = GroqRequest(
-                pergunta = messageText
+    // Estados locais para substituir o ViewModel
+    var isLoading by remember { mutableStateOf(false) }
+    var mensagens by remember { mutableStateOf<List<MensagemChat>>(
+        listOf(
+            MensagemChat(
+                texto = "Olá! Eu sou sua assistente IA para comparação de preços. Como posso ajudá-lo hoje?",
+                isUsuario = false,
+                timestamp = System.currentTimeMillis()
             )
+        )
+    )}
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-            val response: Response<GroqResponse> = withContext(Dispatchers.IO) {
-                chatApiService.enviarMensagemGroq("Bearer $token", request).execute()
+    val listState = rememberLazyListState()
+
+    // Estado para controlar quando processar mensagens
+    var textoParaProcessar by remember { mutableStateOf<String?>(null) }
+
+    // Função para enviar mensagem (simulação)
+    fun enviarMensagem(texto: String) {
+        if (texto.isBlank()) return
+
+        // Adiciona mensagem do usuário
+        val mensagemUsuario = MensagemChat(
+            texto = texto,
+            isUsuario = true,
+            timestamp = System.currentTimeMillis()
+        )
+        mensagens = mensagens + mensagemUsuario
+
+        // Simula processamento da IA
+        isLoading = true
+        textoParaProcessar = texto
+    }
+
+    // LaunchedEffect para simular resposta da IA
+    LaunchedEffect(textoParaProcessar) {
+        textoParaProcessar?.let { texto ->
+            kotlinx.coroutines.delay(1500)
+
+            val respostaIA = when {
+                texto.contains("comparar", ignoreCase = true) ->
+                    "Para comparar preços, digite o nome do produto que você procura. Nossa IA analisa ofertas de diversos estabelecimentos parceiros e mostra as melhores opções para você!"
+                texto.contains("época", ignoreCase = true) || texto.contains("quando", ignoreCase = true) ->
+                    "As melhores épocas para comprar são: Black Friday (novembro), liquidações de fim de ano, início do ano (janeiro) e datas sazonais específicas de cada categoria de produto."
+                texto.contains("dicas", ignoreCase = true) || texto.contains("economia", ignoreCase = true) ->
+                    "Dicas de economia: 1) Compare preços antes de comprar, 2) Use nossos alertas de preço, 3) Aproveite promoções sazonais, 4) Acumule pontos no InfoCash, 5) Verifique cupons disponíveis."
+                texto.contains("sistema", ignoreCase = true) || texto.contains("funciona", ignoreCase = true) ->
+                    "Nosso sistema monitora preços em tempo real de estabelecimentos parceiros. Você pesquisa um produto, nossa IA encontra as melhores ofertas, compara preços e histórico, e sugere a melhor opção de compra!"
+                else ->
+                    "Entendo que você está procurando por '$texto'. Estou analisando as melhores ofertas disponíveis... Em breve teremos informações mais detalhadas sobre este produto!"
             }
 
-            Log.d("TelaChatDePrecos", "📈 HTTP Status Code: ${response.code()}")
-            Log.d("TelaChatDePrecos", "✅ Response Success: ${response.isSuccessful}")
-
-            when (response.code()) {
-                200 -> {
-                    val body = response.body()
-                    Log.d("TelaChatDePrecos", "📦 Response Body: $body")
-
-                    if (body != null && body.resposta.isNotEmpty()) {
-                        Log.d("TelaChatDePrecos", "🎉 Resposta da IA Groq recebida: ${body.resposta}")
-                        Log.d("TelaChatDePrecos", "🔗 Fonte: ${body.fonte}")
-                        Log.d("TelaChatDePrecos", "⏱️ Tempo de resposta: ${body.tempoResposta}")
-                        body
-                    } else {
-                        Log.e("TelaChatDePrecos", "❌ API retornou resposta vazia: $body")
-                        null
-                    }
-                }
-                401 -> {
-                    Log.e("TelaChatDePrecos", "🔒 Erro de autenticação: Token inválido ou expirado")
-                    null
-                }
-                403 -> {
-                    Log.e("TelaChatDePrecos", "🚫 Acesso negado: Usuário sem permissão")
-                    null
-                }
-                404 -> {
-                    Log.e("TelaChatDePrecos", "🔍 Endpoint não encontrado: Verifique a URL da API")
-                    null
-                }
-                500 -> {
-                    Log.e("TelaChatDePrecos", "🔧 Erro interno do servidor")
-                    null
-                }
-                else -> {
-                    val errorBody = response.errorBody()?.string()
-                    Log.e("TelaChatDePrecos", "🚨 Erro HTTP ${response.code()}: $errorBody")
-                    Log.e("TelaChatDePrecos", "🚨 Error Headers: ${response.headers()}")
-                    null
-                }
-            }
-        } catch (e: java.net.SocketTimeoutException) {
-            Log.e("TelaChatDePrecos", "⏱️ Timeout na requisição: ${e.message}")
-            null
-        } catch (_: java.net.UnknownHostException) {
-            Log.e("TelaChatDePrecos", "🌐 Erro de conectividade: Verifique sua conexão com a internet")
-            null
-        } catch (e: java.net.ConnectException) {
-            Log.e("TelaChatDePrecos", "🔌 Falha ao conectar com o servidor: ${e.message}")
-            null
-        } catch (e: Exception) {
-            Log.e("TelaChatDePrecos", "💥 Exceção geral ao chamar API: ${e.message}", e)
-            Log.e("TelaChatDePrecos", "💥 Exception Stack Trace: ${e.stackTraceToString()}")
-            null
+            val mensagemIA = MensagemChat(
+                texto = respostaIA,
+                isUsuario = false,
+                timestamp = System.currentTimeMillis()
+            )
+            mensagens = mensagens + mensagemIA
+            isLoading = false
+            // textoParaProcessar = null (removido para evitar warning)
         }
     }
 
-    fun sendMessage(text: String) {
-        if (text.isNotBlank() && !isLoadingResponse) {
-            Log.d("TelaChatDePrecos", "💬 Usuário enviou: $text")
-
-            // Adiciona mensagem do usuário
-            val newMessage = ChatMessage(text, true, getCurrentTime())
-            messages = messages + newMessage
-            inputText = ""
-
-            isLoadingResponse = true
-            showLoadingMessage(text)
-
-            coroutineScope.launch {
-                try {
-                    // Scroll para mostrar mensagem do usuário
-                    listState.animateScrollToItem(messages.size - 1)
-
-                    val apiResponse = sendMessageToAPI(text)
-
-                    removeLoadingMessage()
-
-                    if (apiResponse != null) {
-                        // Resposta bem-sucedida da API
-                        val responseMessage = ChatMessage(
-                            text = apiResponse.resposta,
-                            isUser = false,
-                            time = getCurrentTime()
-                        )
-                        messages = messages + responseMessage
-
-                        Log.d("TelaChatDePrecos", "✅ Mensagem da IA adicionada: ${apiResponse.resposta}")
-
-                        // Mostrar toast de sucesso com informações da fonte
-                        val sourceInfo = when {
-                            apiResponse.fonte.contains("groq") -> "🤖 Groq IA"
-                            apiResponse.fonte.contains("cache") -> "⚡ Cache"
-                            else -> "🔄 ${apiResponse.fonte}"
-                        }
-                        Toast.makeText(context, "Resposta de $sourceInfo", Toast.LENGTH_SHORT).show()
-
-                    } else {
-                        // Erro na API - mostrar mensagem de erro específica
-                        val errorMessage = when {
-                            token.isBlank() -> ChatMessage(
-                                text = "Para usar o chat, você precisa estar logado. Por favor, faça login novamente.",
-                                isUser = false,
-                                time = getCurrentTime(),
-                                isError = true,
-                                errorMessage = "Token de autenticação ausente"
-                            )
-                            else -> ChatMessage(
-                                text = "Desculpe, não consegui processar sua mensagem no momento. Tente novamente em alguns instantes.",
-                                isUser = false,
-                                time = getCurrentTime(),
-                                isError = true,
-                                errorMessage = "Erro na comunicação com a API"
-                            )
-                        }
-                        messages = messages + errorMessage
-
-                        Log.e("TelaChatDePrecos", "❌ Erro ao obter resposta da API")
-
-                        val toastMessage = when {
-                            token.isBlank() -> "Faça login para usar o chat"
-                            else -> "Erro ao conectar com a IA"
-                        }
-                        Toast.makeText(context, toastMessage, Toast.LENGTH_LONG).show()
-                    }
-
-                } catch (e: Exception) {
-                    Log.e("TelaChatDePrecos", "💥 Erro geral no envio da mensagem: ${e.message}", e)
-
-                    removeLoadingMessage()
-
-                    val errorMessage = when (e) {
-                        is java.net.SocketTimeoutException -> ChatMessage(
-                            text = "A resposta está demorando mais que o esperado. Verifique sua conexão e tente novamente.",
-                            isUser = false,
-                            time = getCurrentTime(),
-                            isError = true,
-                            errorMessage = "Timeout na requisição"
-                        )
-                        is java.net.UnknownHostException -> ChatMessage(
-                            text = "Não foi possível conectar com o servidor. Verifique sua conexão com a internet.",
-                            isUser = false,
-                            time = getCurrentTime(),
-                            isError = true,
-                            errorMessage = "Erro de conectividade"
-                        )
-                        is java.net.ConnectException -> ChatMessage(
-                            text = "Falha ao conectar com o servidor. Tente novamente mais tarde.",
-                            isUser = false,
-                            time = getCurrentTime(),
-                            isError = true,
-                            errorMessage = "Falha de conexão"
-                        )
-                        else -> ChatMessage(
-                            text = "Ops! Ocorreu um erro inesperado. Por favor, tente novamente.",
-                            isUser = false,
-                            time = getCurrentTime(),
-                            isError = true,
-                            errorMessage = e.message
-                        )
-                    }
-                    messages = messages + errorMessage
-
-                    Toast.makeText(context, "Erro inesperado: ${e.message}", Toast.LENGTH_LONG).show()
-
-                } finally {
-                    isLoadingResponse = false
-
-                    // Scroll para a última mensagem
-                    coroutineScope.launch {
-                        listState.animateScrollToItem(messages.size - 1)
-                    }
-                }
-            }
-        } else if (isLoadingResponse) {
-            Log.d("TelaChatDePrecos", "⏳ Aguardando resposta anterior...")
-            Toast.makeText(context, "Aguarde a resposta anterior...", Toast.LENGTH_SHORT).show()
+    // Tratar erros
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            AppUtils.showErrorToast(context, message)
+            // errorMessage = null (removido para evitar warning)
         }
-    }
-
-    fun handleOptionClick(option: String) {
-        sendMessage(option)
-        showOptions = false
     }
 
     Box(
@@ -319,131 +129,151 @@ fun TelaChatDePrecos(navController: NavController?) {
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-        // Header laranja
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .background(primaryLight),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            // Header laranja
+            Box(
                 modifier = Modifier
-                    .padding(start = 16.dp)
-                    .padding(top = 20.dp)
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .background(primaryLight),
+                contentAlignment = Alignment.CenterStart
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .size(40.dp)
-                        .clickable { navController?.navigateUp() }
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Chat de Preços IA",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-
-        // Área de mensagens do chat
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f)
-                .padding(horizontal = 16.dp)
-                .padding(top = 16.dp),
-            state = listState
-        ) {
-            // Subtítulo
-            item {
-                Text(
-                    text = "Compare preços instantaneamente com nossa IA",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFF9A01B),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-            }
-
-            // Mensagens do chat
-            items(messages) { message ->
-                ChatMessageItem(message)
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            // Botão de opções
-            item {
-                Column {
-                    Box(
+                        .padding(start = 16.dp)
+                        .padding(top = 20.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Logo",
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .background(Color(0xFFF9A01B), RoundedCornerShape(12.dp))
-                            .clickable { showOptions = !showOptions }
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.menu),
-                                contentDescription = "Menu",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (showOptions) "Fechar opções" else "Abrir opções",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = if (showOptions) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
+                            .size(40.dp)
+                            .clickable { navController?.navigateUp() }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Chat de Preços IA",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
 
-                    // Lista de opções (aparece quando showOptions é true)
-                    if (showOptions) {
+            // Área de mensagens do chat
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+                state = listState
+            ) {
+                // Subtítulo
+                item {
+                    Text(
+                        text = "Compare preços instantaneamente com nossa IA",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFF9A01B),
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
+                // Mensagens do chat
+                items(mensagens) { mensagem ->
+                    ChatMessageItemPrecos(mensagem)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                // Botão de opções
+                item {
+                    Column {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 8.dp)
-                                .background(Color(0xFFFFF8E7), RoundedCornerShape(12.dp))
-                                .padding(16.dp)
+                                .background(Color(0xFFF9A01B), RoundedCornerShape(12.dp))
+                                .clickable { showOptions = !showOptions }
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column {
-                                Text(
-                                    text = "Selecione uma opção:",
-                                    color = Color.Black,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(bottom = 12.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.menu),
+                                    contentDescription = "Menu",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
                                 )
-                                OptionItem("🔍 Comparar preços de produtos") { handleOptionClick("Quero comparar preços de produtos. Como posso fazer isso?") }
-                                OptionItem("🛒 Melhor época para comprar") { handleOptionClick("Qual é a melhor época para comprar produtos com desconto?") }
-                                OptionItem("💡 Dicas de economia") { handleOptionClick("Me dê dicas para economizar nas compras") }
-                                OptionItem("❓ Como funciona o sistema") { handleOptionClick("Como funciona o sistema de comparação de preços do InfoHub?") }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (showOptions) "Fechar opções" else "Abrir opções",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    imageVector = if (showOptions) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                        // Lista de opções (aparece quando showOptions é true)
+                        if (showOptions) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                                    .background(Color(0xFFFFF8E7), RoundedCornerShape(12.dp))
+                                    .padding(16.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Selecione uma opção:",
+                                        color = Color.Black,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                    )
+                                    OptionItemPrecos("🔍 Comparar preços de produtos") {
+                                        if (!isLoading) {
+                                            enviarMensagem("Quero comparar preços de produtos. Como posso fazer isso?")
+                                            showOptions = false
+                                        }
+                                    }
+                                    OptionItemPrecos("🛒 Melhor época para comprar") {
+                                        if (!isLoading) {
+                                            enviarMensagem("Qual é a melhor época para comprar produtos com desconto?")
+                                            showOptions = false
+                                        }
+                                    }
+                                    OptionItemPrecos("💡 Dicas de economia") {
+                                        if (!isLoading) {
+                                            enviarMensagem("Me dê dicas para economizar nas compras")
+                                            showOptions = false
+                                        }
+                                    }
+                                    OptionItemPrecos("❓ Como funciona o sistema") {
+                                        if (!isLoading) {
+                                            enviarMensagem("Como funciona o sistema de comparação de preços do InfoHub?")
+                                            showOptions = false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
-        }
 
             // Campo de input
             Row(
@@ -472,7 +302,12 @@ fun TelaChatDePrecos(navController: NavController?) {
                     }
                 )
                 IconButton(
-                    onClick = { sendMessage(inputText) },
+                    onClick = {
+                        if (inputText.isNotBlank() && !isLoading) {
+                            enviarMensagem(inputText)
+                            inputText = ""
+                        }
+                    },
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
@@ -483,18 +318,17 @@ fun TelaChatDePrecos(navController: NavController?) {
                     )
                 }
             }
-        } // Fecha a Column
-    } // Fecha o Box principal
-} // Fecha a função TelaChatDePrecos
+        }
+    }
+}
 
-// Componente para exibir mensagens do chat
 @Composable
-fun ChatMessageItem(message: ChatMessage) {
+fun ChatMessageItemPrecos(mensagem: MensagemChat) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (message.isUser) Arrangement.End else Arrangement.Start
+        horizontalArrangement = if (mensagem.isUsuario) Arrangement.End else Arrangement.Start
     ) {
-        if (!message.isUser) {
+        if (!mensagem.isUsuario) {
             Icon(
                 painter = painterResource(id = R.drawable.robo),
                 contentDescription = "Robô",
@@ -510,116 +344,60 @@ fun ChatMessageItem(message: ChatMessage) {
                 .widthIn(max = 280.dp)
                 .background(
                     color = when {
-                        message.isUser -> Color(0xFFF9A01B)
-                        message.isError -> Color(0xFFFFE5E5)
-                        message.isLoading -> Color(0xFFF0F0F0)
+                        mensagem.isUsuario -> Color(0xFFF9A01B)
+                        mensagem.isError -> Color(0xFFFFE5E5)
                         else -> Color(0xFFFFF8E7)
                     },
                     shape = RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
-                        bottomStart = if (message.isUser) 16.dp else 4.dp,
-                        bottomEnd = if (message.isUser) 4.dp else 16.dp
+                        bottomStart = if (mensagem.isUsuario) 16.dp else 4.dp,
+                        bottomEnd = if (mensagem.isUsuario) 4.dp else 16.dp
                     )
                 )
                 .padding(12.dp)
         ) {
             Text(
-                text = message.time,
+                text = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(mensagem.timestamp)),
                 fontSize = 11.sp,
                 color = when {
-                    message.isUser -> Color.White.copy(alpha = 0.8f)
-                    message.isError -> Color.Red.copy(alpha = 0.7f)
+                    mensagem.isUsuario -> Color.White.copy(alpha = 0.8f)
+                    mensagem.isError -> Color.Red.copy(alpha = 0.7f)
                     else -> Color.Gray
                 },
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
-            // Texto da mensagem com indicador de loading
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = message.text,
-                    fontSize = 14.sp,
-                    color = when {
-                        message.isUser -> Color.White
-                        message.isError -> Color.Red
-                        else -> Color.Black
-                    },
-                    lineHeight = 20.sp,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-
-                // Indicador de loading com animação
-                if (message.isLoading) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TypingIndicator()
-                }
-            }
-
-            // Mostrar erro detalhado se houver
-            if (message.isError && !message.errorMessage.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Erro: ${message.errorMessage}",
-                    fontSize = 10.sp,
-                    color = Color.Red.copy(alpha = 0.8f),
-                    fontWeight = FontWeight.Light
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun TypingIndicator() {
-    var currentDot by remember { mutableStateOf(0) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            kotlinx.coroutines.delay(500)
-            currentDot = (currentDot + 1) % 4
-        }
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        repeat(3) { index ->
-            val alpha = if (currentDot > index) 1f else 0.3f
-            val animatedAlpha by animateFloatAsState(
-                targetValue = alpha,
-                animationSpec = tween(durationMillis = 200),
-                label = "dot_alpha_$index"
-            )
-
+            // Texto da mensagem
             Text(
-                text = "●",
-                fontSize = 8.sp,
-                color = primaryLight.copy(alpha = animatedAlpha)
+                text = mensagem.texto,
+                fontSize = 14.sp,
+                color = when {
+                    mensagem.isUsuario -> Color.White
+                    mensagem.isError -> Color.Red
+                    else -> Color.Black
+                },
+                lineHeight = 20.sp
             )
         }
     }
 }
 
 @Composable
-fun OptionItem(text: String, onClick: () -> Unit) {
-    Box(
+fun OptionItemPrecos(text: String, onClick: () -> Unit) {
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .background(Color.White, RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(vertical = 4.dp)
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Text(
             text = text,
+            modifier = Modifier.padding(12.dp),
             fontSize = 14.sp,
-            color = Color.Black,
-            fontWeight = FontWeight.Medium
+            color = Color.Black
         )
     }
 }
-

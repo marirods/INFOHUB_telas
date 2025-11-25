@@ -6,11 +6,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
-import com.example.infohub_telas.navigation.JuridicoRoutes
 import com.example.infohub_telas.navigation.Routes
 import com.example.infohub_telas.ui.theme.PrimaryOrange
 
@@ -70,7 +70,11 @@ fun MenuItem(
 
 // Menu inferior completo
 @Composable
-fun BottomMenu(navController: NavController?, isAdmin: Boolean = false) {
+fun BottomMenu(
+    navController: NavController?,
+    isAdmin: Boolean = false,
+    userPerfil: String? = null
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = Color.White,
@@ -120,41 +124,88 @@ fun BottomMenu(navController: NavController?, isAdmin: Boolean = false) {
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Primeiro item - Sempre HOME
                 MenuItem(
                     icon = Icons.Default.Home,
                     label = "Início",
                     navController = navController,
                     route = Routes.HOME
                 )
-                MenuItem(
-                    icon = Icons.Default.LocalOffer,
-                    label = "Promoções",
-                    navController = navController,
-                    route = Routes.LISTA_PRODUTOS
-                )
-                MenuItem(
-                    icon = Icons.Default.LocationOn,
-                    label = "Localização",
-                    navController = navController,
-                    route = Routes.LOCALIZACAO
-                )
-                MenuItem(
-                    icon = Icons.Filled.AttachMoney,
-                    label = "InfoCash",
-                    navController = navController,
-                    route = Routes.INFOCASH
-                )
 
-                // Pessoa Jurídica (Admin) vê botão Jurídico
-                if (isAdmin) {
+                // Menu específico baseado no perfil
+                if (userPerfil?.lowercase() == "juridico" ||
+                    userPerfil?.lowercase() == "jurídico") {
+                    // Menu para JURÍDICO
                     MenuItem(
-                        icon = Icons.Default.Gavel,
-                        label = "Jurídico",
+                        icon = Icons.Default.Business,
+                        label = "Empresas",
                         navController = navController,
-                        route = JuridicoRoutes.HOME
+                        route = Routes.GERENCIAMENTO_EMPRESAS
+                    )
+                    MenuItem(
+                        icon = Icons.Default.LocalOffer,
+                        label = "Dashboard",
+                        navController = navController,
+                        route = Routes.DASHBOARD_EMPRESA
+                    )
+                    MenuItem(
+                        icon = Icons.Default.ShoppingBag,
+                        label = "Relatórios",
+                        navController = navController,
+                        route = Routes.RELATORIOS
+                    )
+                    MenuItem(
+                        icon = Icons.Default.Person,
+                        label = "Perfil",
+                        navController = navController,
+                        route = Routes.PERFIL
+                    )
+                } else if (userPerfil?.lowercase() == "estabelecimento") {
+                    // Menu para ESTABELECIMENTO
+                    MenuItem(
+                        icon = Icons.Default.LocalOffer,
+                        label = "Promoções",
+                        navController = navController,
+                        route = Routes.LISTA_PRODUTOS
+                    )
+                    MenuItem(
+                        icon = Icons.Default.ShoppingBag,
+                        label = "Produtos",
+                        navController = navController,
+                        route = Routes.LISTA_PRODUTOS
+                    )
+                    MenuItem(
+                        icon = Icons.Default.Business,
+                        label = "Meu Negócio",
+                        navController = navController,
+                        route = Routes.MEU_ESTABELECIMENTO
+                    )
+                    MenuItem(
+                        icon = Icons.Default.Person,
+                        label = "Perfil",
+                        navController = navController,
+                        route = Routes.PERFIL
                     )
                 } else {
-                    // Pessoa Física vê botão Meu Perfil
+                    // Menu para CONSUMIDOR (padrão)
+                    MenuItem(
+                        icon = Icons.Default.LocalOffer,
+                        label = "Promoções",
+                        navController = navController,
+                        route = Routes.LISTA_PRODUTOS
+                    )
+                    MenuItem(
+                        icon = Icons.Default.LocationOn,
+                        label = "Localização",
+                        navController = navController,
+                        route = Routes.LOCALIZACAO
+                    )
+                    MenuItem(
+                        icon = Icons.Filled.AttachMoney,
+                        label = "InfoCash",
+                        navController = navController,
+                        route = Routes.INFOCASH
+                    )
                     MenuItem(
                         icon = Icons.Default.Person,
                         label = "Meu Perfil",

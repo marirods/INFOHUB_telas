@@ -3,7 +3,7 @@ package com.example.infohub_telas.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.infohub_telas.model.*
+import com.example.infohub_telas.network.models.*
 import com.example.infohub_telas.repository.InfoCashRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
  */
 sealed class InfoCashUiState {
     object Loading : InfoCashUiState()
-    data class Success(val saldoInfoCash: SaldoInfoCash) : InfoCashUiState()
+    data class Success(val saldoInfoCash: com.example.infohub_telas.network.models.SaldoInfoCash) : InfoCashUiState()
     data class Error(val message: String) : InfoCashUiState()
 }
 
@@ -24,7 +24,7 @@ sealed class InfoCashUiState {
  */
 sealed class HistoricoUiState {
     object Loading : HistoricoUiState()
-    data class Success(val transacoes: List<TransacaoInfoCash>) : HistoricoUiState()
+    data class Success(val transacoes: List<com.example.infohub_telas.network.models.TransacaoInfoCash>) : HistoricoUiState()
     data class Error(val message: String) : HistoricoUiState()
 }
 
@@ -33,7 +33,7 @@ sealed class HistoricoUiState {
  */
 sealed class RankingUiState {
     object Loading : RankingUiState()
-    data class Success(val ranking: List<RankingInfoCash>) : RankingUiState()
+    data class Success(val ranking: List<com.example.infohub_telas.network.models.RankingInfoCash>) : RankingUiState()
     data class Error(val message: String) : RankingUiState()
 }
 
@@ -57,8 +57,8 @@ class InfoCashViewModel : ViewModel() {
     val rankingState: StateFlow<RankingUiState> = _rankingState.asStateFlow()
 
     // Estados para resumo
-    private val _resumoState = MutableStateFlow<List<ResumoAcaoInfoCash>>(emptyList())
-    val resumoState: StateFlow<List<ResumoAcaoInfoCash>> = _resumoState.asStateFlow()
+    private val _resumoState = MutableStateFlow<List<com.example.infohub_telas.network.models.ResumoAcaoInfoCash>>(emptyList())
+    val resumoState: StateFlow<List<com.example.infohub_telas.network.models.ResumoAcaoInfoCash>> = _resumoState.asStateFlow()
 
     /**
      * Carrega o saldo do InfoCash para um usuário específico
@@ -74,14 +74,9 @@ class InfoCashViewModel : ViewModel() {
             repository.getSaldoInfoCash(token, idUsuario)
                 .onSuccess { response ->
                     Log.d("InfoCashViewModel", "✅ Saldo carregado com sucesso")
-                    Log.d("InfoCashViewModel", "💰 Saldo: ${response.saldoTotal}")
+                    Log.d("InfoCashViewModel", "💰 Saldo: ${response.data.saldoTotal}")
 
-                    val saldoInfoCash = SaldoInfoCash(
-                        idUsuario = response.idUsuario,
-                        saldoTotal = response.saldoTotal,
-                        ultimaAtualizacao = response.ultimaAtualizacao
-                    )
-                    _uiState.value = InfoCashUiState.Success(saldoInfoCash)
+                    _uiState.value = InfoCashUiState.Success(response.data)
                 }
                 .onFailure { exception ->
                     Log.e("InfoCashViewModel", "❌ Erro ao carregar saldo: ${exception.message}", exception)
@@ -122,13 +117,8 @@ class InfoCashViewModel : ViewModel() {
                 .onSuccess { response ->
                     val perfilData = response.data
 
-                    // Atualiza saldo
-                    val saldoInfoCash = SaldoInfoCash(
-                        idUsuario = perfilData.saldo.idUsuario,
-                        saldoTotal = perfilData.saldo.saldoTotal,
-                        ultimaAtualizacao = perfilData.saldo.ultimaAtualizacao
-                    )
-                    _uiState.value = InfoCashUiState.Success(saldoInfoCash)
+                    // Atualiza saldo (perfilData.saldo já é um SaldoInfoCash)
+                    _uiState.value = InfoCashUiState.Success(perfilData.saldo)
 
                     // Atualiza resumo
                     _resumoState.value = perfilData.resumo
@@ -198,7 +188,7 @@ class InfoCashViewModel : ViewModel() {
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val request = ConcederPontosRequest(
+                val request = ConcederPontosRequest(
                 idUsuario = idUsuario,
                 tipoAcao = tipoAcao,
                 pontos = pontos,

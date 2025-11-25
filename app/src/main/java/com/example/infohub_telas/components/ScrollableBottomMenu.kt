@@ -123,7 +123,8 @@ fun AnimatedScrollableBottomMenu(
     navController: NavController?,
     isAdmin: Boolean = false,
     isVisible: Boolean = true,
-    extraBottomPadding: Dp = 0.dp
+    extraBottomPadding: Dp = 0.dp,
+    userPerfil: String? = null
 ) {
     // Animação suave de translação Y
     val translationY by animateFloatAsState(
@@ -155,6 +156,10 @@ fun AnimatedScrollableBottomMenu(
             .padding(bottom = extraBottomPadding)
             .zIndex(10f)
     ) {
-        BottomMenu(navController = navController, isAdmin = isAdmin)
+        BottomMenu(
+            navController = navController,
+            isAdmin = isAdmin,
+            userPerfil = userPerfil
+        )
     }
 }

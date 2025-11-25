@@ -32,13 +32,13 @@ import com.example.infohub_telas.components.rememberMenuVisibility
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.platform.LocalContext
 import android.content.Context
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.infohub_telas.viewmodel.InfoCashViewModel
-import com.example.infohub_telas.viewmodel.InfoCashUiState
+
+
+
 
 // Define the main colors from the image for easy reuse
 val OrangeColor = Color(0xFFF9A01B)
-private val DarkOrangeColor = Color(0xFFF9A01B)
+
 private val LightGrayColor = Color(0xFFF7F7F7)
 private val TextGrayColor = Color(0xFF888888)
 private val GreenColor = Color(0xFF25992E)
@@ -272,10 +272,10 @@ fun ProfileHeader() {
 
 @Composable
 fun StatItem(
+    modifier: Modifier = Modifier,
     value: String,
     label: String,
-    valueColor: Color = Color.Unspecified,
-    modifier: Modifier = Modifier
+    valueColor: Color = Color.Unspecified
 ) {
     Card(
         modifier = modifier,
@@ -307,18 +307,10 @@ fun StatItem(
 }
 
 @Composable
-fun HubCoinCard(viewModel: InfoCashViewModel = viewModel()) {
-    val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
-    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val userId = prefs.getInt("user_id", 0)
-    val token = prefs.getString("token", "") ?: ""
-
-    LaunchedEffect(userId, token) {
-        if (userId > 0 && token.isNotEmpty()) {
-            viewModel.carregarSaldoInfoCash(token, userId)
-        }
-    }
+fun HubCoinCard() {
+    // Estados locais para simular dados do InfoCash
+    var saldoTotal by remember { mutableStateOf(1250) }
+    var isLoading by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -361,52 +353,33 @@ fun HubCoinCard(viewModel: InfoCashViewModel = viewModel()) {
             }
             Spacer(Modifier.height(16.dp))
 
-            when (val state = uiState) {
-                is InfoCashUiState.Loading -> {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = OrangeColor)
-                    }
+            if (isLoading) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = OrangeColor)
                 }
-                is InfoCashUiState.Error -> {
-                    Text(
-                        text = "Erro: ${state.message}",
-                        color = Color.Red,
-                        fontSize = 12.sp
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = {
-                        if (userId > 0 && token.isNotEmpty()) {
-                            viewModel.carregarSaldoInfoCash(token, userId)
-                        }
-                    }) {
-                        Text("Tentar novamente", color = OrangeColor)
-                    }
-                }
-                is InfoCashUiState.Success -> {
-                    val saldoInfoCash = state.saldoInfoCash
-                    Text(
-                        saldoInfoCash.getSaldoComVirgula(),
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 28.sp,
-                        color = OrangeColor
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    LinearProgressIndicator(
-                        progress = { saldoInfoCash.getProgressoAtual() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(5.dp)),
-                        color = OrangeColor,
-                        trackColor = Color(0xFFFFE4B5)
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        saldoInfoCash.getMensagemProximoNivel(),
-                        fontSize = 12.sp,
-                        color = TextGrayColor
-                    )
-                }
+            } else {
+                Text(
+                    "${saldoTotal} pts",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 28.sp,
+                    color = OrangeColor
+                )
+                Spacer(Modifier.height(12.dp))
+                LinearProgressIndicator(
+                    progress = { (saldoTotal % 1000) / 1000f },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(10.dp)
+                        .clip(RoundedCornerShape(5.dp)),
+                    color = OrangeColor,
+                    trackColor = Color(0xFFFFE4B5)
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Faltam ${1000 - (saldoTotal % 1000)} pontos para o próximo nível",
+                    fontSize = 12.sp,
+                    color = TextGrayColor
+                )
             }
         }
     }
@@ -454,14 +427,14 @@ fun FavoriteMarketsCard() {
             MarketItem(
                 "Supermercado Japão", "8 visitas"
             )
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier
                     .padding(vertical = 8.dp)
             )
             MarketItem(
                 "Supermercado Japão", "5 visitas"
             )
-            Divider(
+            HorizontalDivider(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             MarketItem(
@@ -598,7 +571,7 @@ fun SettingsCard() {
                 location = it
             }
             Spacer(Modifier.height(16.dp))
-            Divider()
+            HorizontalDivider()
             Spacer(Modifier.height(16.dp))
             SettingsButton(text = "Gerenciar Notificações", icon = Icons.Default.Notifications)
             Spacer(Modifier.height(8.dp))
@@ -610,7 +583,7 @@ fun SettingsCard() {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B6B)),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
+                Icon(Icons.Default.PowerSettingsNew, contentDescription = null, tint = Color.White)
                 Spacer(Modifier.width(8.dp))
                 Text("Sair da Conta", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
             }

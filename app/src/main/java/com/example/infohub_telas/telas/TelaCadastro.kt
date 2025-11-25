@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,19 +20,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.*
 import com.example.infohub_telas.navigation.Routes
-import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import androidx.compose.ui.platform.LocalContext
-import android.util.Log
-import android.content.Context
-import com.example.infohub_telas.model.Usuario
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.example.infohub_telas.utils.AppUtils
+import com.example.infohub_telas.viewmodel.AuthViewModel
 
 // ========================== FUNÇÕES DE FORMATAÇÃO ==========================
 fun formatarCPF(cpf: String): String {
@@ -145,9 +142,11 @@ fun validarConfirmacaoSenha(senha: String, confirmar: String): Pair<Boolean, Str
 // ========================== TELA ==========================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaCadastro(navController: NavController?) {
+fun TelaCadastro(
+    navController: NavController?,
+    authViewModel: AuthViewModel = viewModel()
+) {
     val context = LocalContext.current
-    val userApi = remember { RetrofitFactory().getInfoHub_UserService() }
 
     var isPessoaFisicaSelected by remember { mutableStateOf(true) }
     var nome by remember { mutableStateOf("") }
@@ -159,11 +158,30 @@ fun TelaCadastro(navController: NavController?) {
     var confirmarSenha by remember { mutableStateOf("") }
     var mostrarSenha by remember { mutableStateOf(false) }
     var mostrarConfirmarSenha by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
 
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showSuccessDialog by remember { mutableStateOf(false) }
+
+    // Observer dos estados do ViewModel
+    val isLoading by authViewModel.isLoading.observeAsState(false)
+    val cadastroResult by authViewModel.cadastroResult.observeAsState()
+    val vmErrorMessage by authViewModel.errorMessage.observeAsState()
+
+    // Efeitos para tratar resultados
+    LaunchedEffect(cadastroResult) {
+        cadastroResult?.onSuccess {
+            showSuccessDialog = true
+            authViewModel.clearResults()
+        }
+    }
+
+    LaunchedEffect(vmErrorMessage) {
+        if (vmErrorMessage != null) {
+            errorMessage = AppUtils.getErrorMessage(Exception(vmErrorMessage))
+            showErrorDialog = true
+        }
+    }
 
     fun validarCampos(): Boolean {
         if (nome.isBlank()) {
@@ -306,45 +324,17 @@ fun TelaCadastro(navController: NavController?) {
                         return@Button
                     }
 
-                    val usuario = Usuario(
+                    // Usar o AuthViewModel para cadastro
+                    authViewModel.cadastro(
                         nome = nome,
                         email = email,
-                        senha_hash = senha,
-                        perfil = if (isPessoaFisicaSelected) "consumidor" else "estabelecimento",
-                        cpf = if (isPessoaFisicaSelected) cpfState.text else null,
-                        cnpj = if (!isPessoaFisicaSelected) cnpjState.text else null,
-                        data_nascimento = "1900-01-01"
+                        senha = senha,
+                        confirmarSenha = confirmarSenha,
+                        dataNascimento = null, // Pode ser adicionado ao formulário se necessário
+                        telefone = telefoneState.text.ifBlank { null }
                     )
-
-                    isLoading = true
-                    userApi.cadastrarUsuario(usuario).enqueue(object : Callback<Usuario> {
-                        override fun onResponse(call: Call<Usuario>, response: Response<Usuario>) {
-                            isLoading = false
-                            if (response.isSuccessful) {
-                                Log.d("Cadastro", "Usuário cadastrado: ${response.body()}")
-                                // Persistir informações básicas
-                                val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-                                prefs.edit().apply {
-                                    putString("userEmail", email)
-                                    putBoolean("isAdmin", !isPessoaFisicaSelected)
-                                    apply()
-                                }
-                                showSuccessDialog = true
-                            } else {
-                                errorMessage = "Erro ao cadastrar: ${response.code()} ${response.message()}"
-                                showErrorDialog = true
-                            }
-                        }
-
-                        override fun onFailure(call: Call<Usuario>, t: Throwable) {
-                            isLoading = false
-                            errorMessage = "Falha na conexão. Verifique sua internet."
-                            Log.e("Cadastro", "Falha: ${t.message}")
-                            showErrorDialog = true
-                        }
-                    })
                 },
-                enabled = !isLoading,
+                enabled = isLoading.not(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

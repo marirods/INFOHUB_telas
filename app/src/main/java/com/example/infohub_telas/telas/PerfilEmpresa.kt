@@ -21,7 +21,31 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PerfilEmpresa(navController: NavController, empresa: Empresa) {
+fun PerfilEmpresa(navController: NavController) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
+
+    // Buscar dados do estabelecimento logado
+    val nomeEmpresa = prefs.getString("userName", "Minha Empresa") ?: "Minha Empresa"
+    val emailEmpresa = prefs.getString("userEmail", "") ?: ""
+
+    // Criar empresa temporária com dados do SharedPreferences
+    val empresa = Empresa(
+        nome = nomeEmpresa,
+        cnpj = "",
+        email = emailEmpresa,
+        telefone = "",
+        endereco = "",
+        setor = "Estabelecimento",
+        descricao = "Perfil do estabelecimento",
+        logoUrl = ""
+    )
+
+    PerfilEmpresaContent(navController = navController, empresa = empresa)
+}
+
+@Composable
+private fun PerfilEmpresaContent(navController: NavController, empresa: Empresa) {
     Scaffold(
         topBar = {
             AppTopBar(
@@ -77,19 +101,9 @@ fun PerfilEmpresa(navController: NavController, empresa: Empresa) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PerfilEmpresaPreview() {
-    val empresaSample = Empresa(
-        nome = "Tech Solutions Ltda",
-        cnpj = "12.345.678/0001-99",
-        email = "contato@techsolutions.com",
-        telefone = "(11) 99999-9999",
-        endereco = "Rua Exemplo, 123, São Paulo",
-        setor = "Tecnologia",
-        descricao = "Empresa de soluções tecnológicas.",
-        logoUrl = ""
-    )
     InfoHub_telasTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            PerfilEmpresa(navController = rememberNavController(), empresa = empresaSample)
+            PerfilEmpresa(navController = rememberNavController())
         }
     }
 }
