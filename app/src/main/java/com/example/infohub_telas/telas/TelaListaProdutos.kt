@@ -49,7 +49,8 @@ fun TelaListaProdutos(navController: NavController) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
-    
+    val isJuridico = prefs.getBoolean("isJuridico", false)
+
     // Estado para controlar rolagem e visibilidade do menu
     val lazyGridState = rememberLazyGridState()
     val isMenuVisible = lazyGridState.rememberMenuVisibility()
@@ -231,7 +232,7 @@ fun TelaListaProdutos(navController: NavController) {
             }
         },
         floatingActionButton = {
-            if (isAdmin) {
+            if (isAdmin || isJuridico) {
                 FloatingActionButton(
                     onClick = { navController.navigate(Routes.CADASTRO_PRODUTO) },
                     containerColor = MaterialTheme.colorScheme.primary
@@ -330,7 +331,7 @@ fun TelaListaProdutos(navController: NavController) {
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 AnimatedScrollableBottomMenu(
                     navController = navController,
-                    isAdmin = isAdmin,
+                    isAdmin = isAdmin || isJuridico,
                     isVisible = isMenuVisible
                 )
             }
