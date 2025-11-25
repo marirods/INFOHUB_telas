@@ -12,10 +12,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -29,13 +29,33 @@ import com.example.infohub_telas.components.AppTopBar
 import com.example.infohub_telas.model.Produto
 import com.example.infohub_telas.model.PromocaoProdutoRequest
 import com.example.infohub_telas.service.RetrofitFactory
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+// Função para validar formato de data YYYY-MM-DD
+private fun isValidDateFormat(date: String): Boolean {
+    return try {
+        val regex = Regex("""^\d{4}-\d{2}-\d{2}$""")
+        if (!regex.matches(date)) return false
+
+        val parts = date.split("-")
+        val year = parts[0].toInt()
+        val month = parts[1].toInt()
+        val day = parts[2].toInt()
+
+        // Validações básicas
+        when {
+            year < 2020 || year > 2030 -> false
+            month < 1 || month > 12 -> false
+            day < 1 || day > 31 -> false
+            else -> true
+        }
+        } catch (_: Exception) {
+            false
+        }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -142,15 +162,16 @@ fun TelaCadastroProduto(navController: NavController) {
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
             // Card de Informações do Produto
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -247,7 +268,7 @@ fun TelaCadastroProduto(navController: NavController) {
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor(),
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF25992E),
@@ -260,9 +281,26 @@ fun TelaCadastroProduto(navController: NavController) {
                             expanded = categoriaExpandida,
                             onDismissRequest = { categoriaExpandida = false }
                         ) {
-                            if (categorias.isEmpty()) {
+                            if (isLoadingData) {
                                 DropdownMenuItem(
-                                    text = { Text("Nenhuma categoria disponível") },
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                            Text("Carregando categorias...")
+                                        }
+                                    },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else if (categorias.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("❌ Nenhuma categoria disponível") },
                                     onClick = {},
                                     enabled = false
                                 )
@@ -311,7 +349,7 @@ fun TelaCadastroProduto(navController: NavController) {
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = estabelecimentoExpandido) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor(),
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = Color(0xFF25992E),
@@ -324,9 +362,26 @@ fun TelaCadastroProduto(navController: NavController) {
                             expanded = estabelecimentoExpandido,
                             onDismissRequest = { estabelecimentoExpandido = false }
                         ) {
-                            if (estabelecimentos.isEmpty()) {
+                            if (isLoadingData) {
                                 DropdownMenuItem(
-                                    text = { Text("Nenhum estabelecimento disponível") },
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                            Text("Carregando estabelecimentos...")
+                                        }
+                                    },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else if (estabelecimentos.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("❌ Nenhum estabelecimento disponível") },
                                     onClick = {},
                                     enabled = false
                                 )
@@ -355,25 +410,6 @@ fun TelaCadastroProduto(navController: NavController) {
                         onValueChange = { preco = it },
                         label = { Text("Preço (R$)*") },
                         placeholder = { Text("Ex: 19.90") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.AttachMoney,
-                                contentDescription = null
-                            )
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF25992E),
-                            focusedLabelColor = Color(0xFF25992E)
-                        )
-                    )
-
-                    OutlinedTextField(
-                        value = preco,
-                        onValueChange = { preco = it },
-                        label = { Text("Preço") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.AttachMoney,
@@ -536,18 +572,32 @@ fun TelaCadastroProduto(navController: NavController) {
 
             Button(
                 onClick = {
+                    // Validações mais robustas
                     when {
-                        nome.isBlank() -> errorMessage = "Nome é obrigatório"
-                        descricao.isBlank() -> errorMessage = "Descrição é obrigatória"
-                        idCategoria.isBlank() -> errorMessage = "ID Categoria é obrigatório"
-                        idEstabelecimento.isBlank() -> errorMessage = "ID Estabelecimento é obrigatório"
-                        preco.isBlank() -> errorMessage = "Preço é obrigatório"
-                        temPromocao && precoPromocional.isBlank() -> errorMessage = "Preço promocional é obrigatório"
-                        temPromocao && dataInicio.isBlank() -> errorMessage = "Data início é obrigatória"
-                        temPromocao && dataFim.isBlank() -> errorMessage = "Data fim é obrigatória"
+                        nome.isBlank() -> errorMessage = "📝 Nome do produto é obrigatório"
+                        nome.length < 2 -> errorMessage = "📝 Nome deve ter pelo menos 2 caracteres"
+                        descricao.isBlank() -> errorMessage = "📄 Descrição é obrigatória"
+                        descricao.length < 10 -> errorMessage = "📄 Descrição deve ter pelo menos 10 caracteres"
+                        idCategoria.isBlank() -> errorMessage = "🏷️ Selecione uma categoria"
+                        idEstabelecimento.isBlank() -> errorMessage = "🏪 Selecione um estabelecimento"
+                        preco.isBlank() -> errorMessage = "💰 Preço é obrigatório"
+                        preco.toDoubleOrNull() == null -> errorMessage = "💰 Preço deve ser um número válido"
+                        (preco.toDoubleOrNull() ?: 0.0) <= 0 -> errorMessage = "💰 Preço deve ser maior que zero"
+                        temPromocao && precoPromocional.isBlank() -> errorMessage = "🎯 Preço promocional é obrigatório"
+                        temPromocao && precoPromocional.toDoubleOrNull() == null -> errorMessage = "🎯 Preço promocional deve ser um número válido"
+                        temPromocao && (precoPromocional.toDoubleOrNull() ?: 0.0) <= 0 -> errorMessage = "🎯 Preço promocional deve ser maior que zero"
+                        temPromocao && (precoPromocional.toDoubleOrNull() ?: 0.0) >= (preco.toDoubleOrNull() ?: 0.0) -> errorMessage = "🎯 Preço promocional deve ser menor que o preço normal"
+                        temPromocao && dataInicio.isBlank() -> errorMessage = "📅 Data de início da promoção é obrigatória"
+                        temPromocao && dataFim.isBlank() -> errorMessage = "📅 Data de fim da promoção é obrigatória"
+                        temPromocao && !isValidDateFormat(dataInicio) -> errorMessage = "📅 Formato de data início inválido (use YYYY-MM-DD)"
+                        temPromocao && !isValidDateFormat(dataFim) -> errorMessage = "📅 Formato de data fim inválido (use YYYY-MM-DD)"
+                        temPromocao && isValidDateFormat(dataInicio) && isValidDateFormat(dataFim) && dataInicio >= dataFim -> errorMessage = "📅 Data de início deve ser anterior à data de fim"
                         else -> {
+                            // Limpar mensagem de erro anterior
+                            errorMessage = ""
                             isLoading = true
 
+                            // Criar objeto promocao se necessário
                             val promocao = if (temPromocao) {
                                 PromocaoProdutoRequest(
                                     precoPromocional = precoPromocional.toDoubleOrNull() ?: 0.0,
@@ -556,43 +606,74 @@ fun TelaCadastroProduto(navController: NavController) {
                                 )
                             } else null
 
+                            // Criar objeto produto
                             val produto = Produto(
-                                nome = nome,
-                                descricao = descricao,
+                                nome = nome.trim(),
+                                descricao = descricao.trim(),
                                 idCategoria = idCategoria.toIntOrNull() ?: 0,
                                 idEstabelecimento = idEstabelecimento.toIntOrNull() ?: 0,
                                 preco = preco.toDoubleOrNull() ?: 0.0,
                                 promocao = promocao
                             )
 
-                            Log.d("PRODUTO", "Cadastrando: $produto")
+                            Log.d("TelaCadastroProduto", "🚀 Cadastrando produto: $produto")
+                            Log.d("TelaCadastroProduto", "🔑 Token: Bearer ${token.take(20)}...")
 
-                            val authToken = "Bearer $token"
-                            produtoApi.cadastrarProduto(authToken, produto).enqueue(
-                                object : Callback<Produto> {
-                                    override fun onResponse(
-                                        call: Call<Produto>,
-                                        response: Response<Produto>
-                                    ) {
+                            // Fazer requisição usando corrotinas
+                            coroutineScope.launch {
+                                try {
+                                    val authToken = "Bearer $token"
+                                    val response = withContext(Dispatchers.IO) {
+                                        produtoApi.cadastrarProduto(authToken, produto).execute()
+                                    }
+
+                                    withContext(Dispatchers.Main) {
                                         isLoading = false
+
                                         if (response.isSuccessful) {
-                                            Log.d("PRODUTO", "Sucesso: ${response.body()}")
+                                            val produtoCadastrado = response.body()
+                                            Log.d("TelaCadastroProduto", "✅ Produto cadastrado com sucesso: $produtoCadastrado")
+
+                                            Toast.makeText(
+                                                context,
+                                                "✅ Produto '${produto.nome}' cadastrado com sucesso!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
                                             showSuccessDialog = true
                                         } else {
-                                            Log.e("PRODUTO", "Erro: ${response.code()} - ${response.errorBody()?.string()}")
-                                            errorMessage = "Erro ao cadastrar: ${response.message()}"
+                                            val errorBody = response.errorBody()?.string()
+                                            Log.e("TelaCadastroProduto", "❌ Erro HTTP ${response.code()}: $errorBody")
+
+                                            errorMessage = when (response.code()) {
+                                                400 -> "Dados inválidos. Verifique os campos preenchidos."
+                                                401 -> "Não autorizado. Faça login novamente."
+                                                403 -> "Sem permissão para cadastrar produtos."
+                                                409 -> "Produto já existe com esse nome."
+                                                422 -> "Erro de validação. Verifique os dados."
+                                                500 -> "Erro interno do servidor. Tente novamente."
+                                                else -> "Erro ao cadastrar produto (${response.code()})"
+                                            }
+
                                             showErrorDialog = true
                                         }
                                     }
+                                } catch (e: Exception) {
+                                    Log.e("TelaCadastroProduto", "💥 Exceção ao cadastrar produto: ${e.message}", e)
 
-                                    override fun onFailure(call: Call<Produto>, t: Throwable) {
+                                    withContext(Dispatchers.Main) {
                                         isLoading = false
-                                        Log.e("PRODUTO", "Falha: ${t.message}")
-                                        errorMessage = "Erro de conexão: ${t.message}"
+                                        errorMessage = when {
+                                            e.message?.contains("timeout", ignoreCase = true) == true ->
+                                                "Timeout na conexão. Verifique sua internet."
+                                            e.message?.contains("connection", ignoreCase = true) == true ->
+                                                "Erro de conexão. Verifique sua internet."
+                                            else -> "Erro inesperado: ${e.message}"
+                                        }
                                         showErrorDialog = true
                                     }
                                 }
-                            )
+                            }
                         }
                     }
 
@@ -649,6 +730,46 @@ fun TelaCadastroProduto(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Overlay de loading quando carregando dados iniciais
+        if (isLoadingData) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Card(
+                    modifier = Modifier.padding(32.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(40.dp),
+                            color = Color(0xFF25992E),
+                            strokeWidth = 4.dp
+                        )
+                        Text(
+                            "Carregando dados...",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "Buscando categorias e estabelecimentos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
         }
     }
 
