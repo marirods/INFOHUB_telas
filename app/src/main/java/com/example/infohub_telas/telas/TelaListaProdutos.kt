@@ -42,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
+import com.example.infohub_telas.utils.AzureBlobUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,6 +119,10 @@ fun TelaListaProdutos(navController: NavController) {
 
                     // Converter Produto para PromocaoProduto
                     produtosAPI.forEach { produto ->
+                        // Buscar URL da imagem do Azure ou usar placeholder
+                        val imagemUrl = AzureBlobUtils.getImageUrl(produto.imagem)
+                            ?: AzureBlobUtils.getPlaceholderImageUrl()
+
                         val promocaoProduto = PromocaoProduto(
                             id = produto.id?.toString() ?: "0",
                             nome = produto.nome,
@@ -126,9 +131,11 @@ fun TelaListaProdutos(navController: NavController) {
                             dataInicio = Date(),
                             dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
                             descricao = produto.descricao,
-                            imagemUrl = "https://picsum.photos/seed/${produto.nome.hashCode()}/300/200"
+                            imagemUrl = imagemUrl
                         )
                         produtos.add(promocaoProduto)
+
+                        Log.d("TelaListaProdutos", "📸 Produto: ${produto.nome}, Imagem: $imagemUrl")
                     }
 
                     // Se não houver produtos da API, adicionar produtos de exemplo

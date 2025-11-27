@@ -49,6 +49,7 @@ data class ProdutoSimples(
     @SerializedName("nome") val nome: String,
     @SerializedName("descricao") val descricao: String? = null,
     @SerializedName("preco") val preco: Double,
+    @SerializedName("imagem") val imagem: String? = null,
     @SerializedName("preco_promocional") val precoPromocional: Double? = null,
     @SerializedName("data_inicio_promocao") val dataInicioPromocao: String? = null,
     @SerializedName("data_fim_promocao") val dataFimPromocao: String? = null
@@ -79,6 +80,7 @@ data class Produto(
     @SerializedName("id_categoria") val idCategoria: Int,
     @SerializedName("categoria") val categoria: String? = null,
     @SerializedName("preco") val preco: Double,
+    @SerializedName("imagem") val imagem: String? = null,
     @SerializedName("id_estabelecimento") val idEstabelecimento: Int,
     @SerializedName("preco_promocional") val precoPromocional: Double? = null,
     @SerializedName("data_inicio") val dataInicio: String? = null,

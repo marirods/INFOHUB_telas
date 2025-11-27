@@ -24,6 +24,9 @@ data class Produto(
     @SerializedName("preco")
     val preco: Double,
     
+    @SerializedName("imagem")
+    val imagem: String? = null,
+
     @SerializedName("promocao")
     val promocao: PromocaoProdutoRequest? = null
 )
