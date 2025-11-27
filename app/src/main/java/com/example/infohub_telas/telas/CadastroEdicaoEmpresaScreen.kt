@@ -20,29 +20,31 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.model.Empresa
 import com.example.infohub_telas.model.Estabelecimento
 import com.example.infohub_telas.service.RetrofitFactory
 import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.ui.theme.PrimaryOrange
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import android.widget.Toast
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CadastroEdicaoEmpresaScreen(
     navController: NavController,
-    empresaId: Int? = null,
-    empresa: Empresa? = null
+    empresaId: Int? = null
 ) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
     val token = prefs.getString("token", "") ?: ""
 
-    var nome by remember { mutableStateOf(empresa?.nome ?: "") }
-    var cnpj by remember { mutableStateOf(empresa?.cnpj ?: "") }
-    var telefone by remember { mutableStateOf(empresa?.telefone ?: "") }
+    // Estados do formulário
+    var nome by remember { mutableStateOf("") }
+    var cnpj by remember { mutableStateOf("") }
+    var telefone by remember { mutableStateOf("") }
 
     // Estados de controle
     var isLoading by remember { mutableStateOf(false) }
@@ -56,6 +58,7 @@ fun CadastroEdicaoEmpresaScreen(
 
     val scrollState = rememberScrollState()
     val estabelecimentoApi = remember { RetrofitFactory().getInfoHub_EstabelecimentoService() }
+    val coroutineScope = rememberCoroutineScope()
 
     fun validarCampos(): Boolean {
         nomeError = nome.isBlank()
@@ -192,34 +195,68 @@ fun CadastroEdicaoEmpresaScreen(
                                     telefone = telefone.ifBlank { null }
                                 )
 
-                                Log.d("CadastroEmpresa", "📤 Enviando estabelecimento: $estabelecimento")
+                                Log.d("CadastroEstabelecimento", "🚀 Cadastrando estabelecimento conforme API: $estabelecimento")
 
-                                val authToken = "Bearer $token"
-                                estabelecimentoApi.cadastrarEstabelecimento(authToken, estabelecimento).enqueue(
-                                    object : Callback<Estabelecimento> {
-                                        override fun onResponse(
-                                            call: Call<Estabelecimento>,
-                                            response: Response<Estabelecimento>
-                                        ) {
+                                // Usar corrotinas para requisição conforme padrão moderno
+                                coroutineScope.launch {
+                                    try {
+                                        val authToken = "Bearer $token"
+                                        val response = withContext(Dispatchers.IO) {
+                                            estabelecimentoApi.cadastrarEstabelecimento(authToken, estabelecimento).execute()
+                                        }
+
+                                        withContext(Dispatchers.Main) {
                                             isLoading = false
+
                                             if (response.isSuccessful) {
-                                                Log.d("CadastroEmpresa", "✅ Estabelecimento cadastrado: ${response.body()}")
-                                                showSuccessDialog = true
+                                                val apiResponse = response.body()
+                                                Log.d("CadastroEstabelecimento", "📦 Resposta da API: $apiResponse")
+
+                                                if (apiResponse?.status == true) {
+                                                    Log.d("CadastroEstabelecimento", "✅ Estabelecimento cadastrado! ID: ${apiResponse.id}")
+
+                                                    Toast.makeText(
+                                                        context,
+                                                        "✅ ${apiResponse.message}",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+
+                                                    showSuccessDialog = true
+                                                } else {
+                                                    errorMessage = apiResponse?.message ?: "Erro na API"
+                                                    showErrorDialog = true
+                                                }
                                             } else {
-                                                Log.e("CadastroEmpresa", "❌ Erro: ${response.code()} - ${response.errorBody()?.string()}")
-                                                errorMessage = "Erro ao cadastrar: ${response.message()}"
+                                                Log.e("CadastroEstabelecimento", "❌ Erro HTTP: ${response.code()}")
+
+                                                errorMessage = when (response.code()) {
+                                                    400 -> "Dados inválidos. Verifique os campos."
+                                                    401 -> "Não autorizado. Faça login novamente."
+                                                    409 -> "CNPJ já cadastrado."
+                                                    422 -> "Erro de validação."
+                                                    500 -> "Erro do servidor."
+                                                    else -> "Erro ao cadastrar (${response.code()})"
+                                                }
+
                                                 showErrorDialog = true
                                             }
                                         }
+                                    } catch (e: Exception) {
+                                        Log.e("CadastroEstabelecimento", "💥 Exceção: ${e.message}", e)
 
-                                        override fun onFailure(call: Call<Estabelecimento>, t: Throwable) {
+                                        withContext(Dispatchers.Main) {
                                             isLoading = false
-                                            Log.e("CadastroEmpresa", "💥 Falha: ${t.message}", t)
-                                            errorMessage = "Erro de conexão: ${t.message}"
+                                            errorMessage = when {
+                                                e.message?.contains("timeout", ignoreCase = true) == true ->
+                                                    "Timeout. Verifique sua conexão."
+                                                e.message?.contains("connection", ignoreCase = true) == true ->
+                                                    "Erro de conexão."
+                                                else -> "Erro: ${e.message}"
+                                            }
                                             showErrorDialog = true
                                         }
                                     }
-                                )
+                                }
                             }
                         }
                     },

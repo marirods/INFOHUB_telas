@@ -11,10 +11,10 @@ interface InfoHub_EstabelecimentoService {
     fun cadastrarEstabelecimento(
         @Header("Authorization") token: String,
         @Body estabelecimento: Estabelecimento
-    ): Call<Estabelecimento>
+    ): Call<com.example.infohub_telas.model.EstabelecimentoResponse>
 
     @GET("estabelecimentos")
-    fun listarEstabelecimentos(): Call<List<Estabelecimento>>
+    fun listarEstabelecimentos(): Call<com.example.infohub_telas.model.EstabelecimentosResponse>
 
     @GET("estabelecimento/{id}")
     fun buscarEstabelecimentoPorId(

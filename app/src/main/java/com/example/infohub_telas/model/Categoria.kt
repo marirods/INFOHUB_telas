@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
  * Modelo de Categoria conforme API
  */
 data class Categoria(
-    @SerializedName("id")
+    @SerializedName("id_categoria")
     val id: Int? = null,
 
     @SerializedName("nome")
@@ -14,6 +14,9 @@ data class Categoria(
 
     @SerializedName("descricao")
     val descricao: String? = null,
+
+    @SerializedName("total_produtos")
+    val totalProdutos: Int? = null,
 
     @SerializedName("produtos")
     val produtos: List<Produto>? = null

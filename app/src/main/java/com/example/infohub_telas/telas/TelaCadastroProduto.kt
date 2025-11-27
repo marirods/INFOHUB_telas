@@ -1,5 +1,7 @@
 package com.example.infohub_telas.telas
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,383 +14,845 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.infohub_telas.components.AppTopBar
-import com.example.infohub_telas.utils.AppUtils
-import com.example.infohub_telas.viewmodel.ProdutoJuridicoViewModel
-import com.example.infohub_telas.viewmodel.EstabelecimentoViewModel
-import com.example.infohub_telas.network.models.PromocaoRequest
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.infohub_telas.model.Categoria
+import com.example.infohub_telas.model.Produto
+import com.example.infohub_telas.model.PromocaoProdutoRequest
+import com.example.infohub_telas.service.RetrofitFactory
+import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+// Função para validar formato de data YYYY-MM-DD
+private fun isValidDateFormat(date: String): Boolean {
+    return try {
+        val regex = Regex("""^\d{4}-\d{2}-\d{2}$""")
+        if (!regex.matches(date)) return false
+
+        val parts = date.split("-")
+        val year = parts[0].toInt()
+        val month = parts[1].toInt()
+        val day = parts[2].toInt()
+
+        // Validações básicas
+        when {
+            year < 2020 || year > 2030 -> false
+            month < 1 || month > 12 -> false
+            day < 1 || day > 31 -> false
+            else -> true
+        }
+        } catch (_: Exception) {
+            false
+        }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaCadastroProduto(
-    navController: NavController,
-    produtoId: String? = null,
-    produtoViewModel: ProdutoJuridicoViewModel = viewModel(),
-    estabelecimentoViewModel: EstabelecimentoViewModel = viewModel()
-) {
-    // Estados do formulário
-    var nomeProduto by remember { mutableStateOf("") }
-    var descricao by remember { mutableStateOf("") }
-    var preco by remember { mutableStateOf("") }
-    var categoriaSelecionada by remember { mutableStateOf<Int?>(null) }
-    var estabelecimentoSelecionado by remember { mutableStateOf<Int?>(null) }
+fun TelaCadastroProduto(navController: NavController) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+    val token = prefs.getString("token", "") ?: ""
 
-    // Estados da promoção (opcional)
-    var temPromocao by remember { mutableStateOf(false) }
+    // Log para verificar se o token está disponível
+    LaunchedEffect(Unit) {
+        Log.d("TelaCadastroProduto", "🔑 Token disponível: ${if (token.isNotEmpty()) "Sim (${token.take(20)}...)" else "NÃO - USUÁRIO NÃO LOGADO"}")
+        if (token.isEmpty()) {
+            Log.e("TelaCadastroProduto", "❌ ATENÇÃO: Token vazio! Usuário precisa fazer login.")
+        }
+    }
+
+    var nome by remember { mutableStateOf("") }
+    var descricao by remember { mutableStateOf("") }
+    var idCategoria by remember { mutableStateOf("") }
+    var idEstabelecimento by remember { mutableStateOf("") }
+    var preco by remember { mutableStateOf("") }
     var precoPromocional by remember { mutableStateOf("") }
     var dataInicio by remember { mutableStateOf("") }
     var dataFim by remember { mutableStateOf("") }
+    var temPromocao by remember { mutableStateOf(false) }
 
-    // Estados dos diálogos
+    var isLoading by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var showErrorDialog by remember { mutableStateOf(false) }
-    var dialogMessage by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
 
-    // Estados dos ViewModels
-    val isLoading by produtoViewModel.isLoading.observeAsState(false)
-    val createResult by produtoViewModel.createResult.observeAsState()
-    val errorMessage by produtoViewModel.errorMessage.observeAsState()
-    val categorias by produtoViewModel.categorias.observeAsState(emptyList())
-    val estabelecimentos by estabelecimentoViewModel.estabelecimentos.observeAsState(emptyList())
+    // Estados para categorias e estabelecimentos
+    var categorias by remember { mutableStateOf<List<Categoria>>(emptyList()) }
+    var estabelecimentos by remember { mutableStateOf<List<com.example.infohub_telas.model.Estabelecimento>>(emptyList()) }
+    var isLoadingData by remember { mutableStateOf(true) }
 
-    // Verificar se é edição
-    val isEditing = produtoId != null
+    val coroutineScope = rememberCoroutineScope()
+    val retrofitFactory = remember { RetrofitFactory() }
+    val produtoApi = remember { retrofitFactory.getInfoHub_ProdutoService() }
+    val categoriaApi = remember { retrofitFactory.getCategoriaApiService() }
+    val estabelecimentoApi = remember { retrofitFactory.getInfoHub_EstabelecimentoService() }
 
-    // Cores da UI
-    val lightGray = Color(0xFFF0F0F0)
-    val textFieldBackground = Color.White
-    val primaryGreen = Color(0xFF25992E)
+    // Buscar categorias e estabelecimentos ao carregar a tela
+    LaunchedEffect(Unit) {
+        Log.d("TelaCadastroProduto", "🚀 Buscando categorias e estabelecimentos...")
+        isLoadingData = true
 
-    // Tratar resultados
-    LaunchedEffect(createResult) {
-        createResult?.onSuccess {
-            dialogMessage = "Produto criado com sucesso!"
-            showSuccessDialog = true
-            produtoViewModel.clearResults()
-        }?.onFailure {
-            // Erro já tratado pelo errorMessage
+        coroutineScope.launch {
+            try {
+                // Buscar categorias da API
+                val categoriasResponse = withContext(Dispatchers.IO) {
+                    categoriaApi.listarCategorias().execute()
+                }
+
+                if (categoriasResponse.isSuccessful) {
+                    val apiResponse = categoriasResponse.body()
+                    if (apiResponse?.status == true) {
+                        categorias = apiResponse.categorias
+                        Log.d("TelaCadastroProduto", "✅ ${categorias.size} categorias carregadas")
+                    } else {
+                        Log.e("TelaCadastroProduto", "❌ API categorias retornou status false: ${apiResponse?.message}")
+                    }
+                } else {
+                    Log.e("TelaCadastroProduto", "❌ Erro ao buscar categorias: ${categoriasResponse.code()}")
+                }
+
+                // Buscar estabelecimentos da API
+                val estabelecimentosResponse = withContext(Dispatchers.IO) {
+                    estabelecimentoApi.listarEstabelecimentos().execute()
+                }
+
+                if (estabelecimentosResponse.isSuccessful) {
+                    val apiResponse = estabelecimentosResponse.body()
+                    if (apiResponse?.status == true) {
+                        estabelecimentos = apiResponse.estabelecimentos.toMutableList()
+                        Log.d("TelaCadastroProduto", "✅ ${estabelecimentos.size} estabelecimentos carregados")
+                    } else {
+                        Log.e("TelaCadastroProduto", "❌ API estabelecimentos retornou status false: ${apiResponse?.message}")
+                    }
+                } else {
+                    Log.e("TelaCadastroProduto", "❌ Erro ao buscar estabelecimentos: ${estabelecimentosResponse.code()}")
+                }
+
+            } catch (e: Exception) {
+                Log.e("TelaCadastroProduto", "❌ Erro ao buscar dados: ${e.message}", e)
+            } finally {
+                isLoadingData = false
+            }
         }
     }
 
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let { error ->
-            dialogMessage = error
-            showErrorDialog = true
+    Scaffold(
+        topBar = {
+            AppTopBar(
+                title = "Cadastrar Produto",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                onNavigationIconClick = { navController.popBackStack() }
+            )
         }
-    }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        AppTopBar(
-            title = if (isEditing) "Editar Produto" else "Cadastro de Produto",
-            navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-            onNavigationIconClick = { navController.popBackStack() }
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(lightGray)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 32.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = "Informações do Produto",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = primaryGreen,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            // Nome do produto
-            OutlinedTextField(
-                value = nomeProduto,
-                onValueChange = { nomeProduto = it },
-                label = { Text("Nome do Produto*") },
-                placeholder = { Text("Ex: iPhone 15 Pro Max") },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = primaryGreen,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedContainerColor = textFieldBackground,
-                    unfocusedContainerColor = textFieldBackground
-                )
-            )
-
-            // Descrição
-            OutlinedTextField(
-                value = descricao,
-                onValueChange = { descricao = it },
-                label = { Text("Descrição (opcional)") },
-                placeholder = { Text("Descreva as características do produto...") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3,
-                maxLines = 5,
-                shape = RoundedCornerShape(28.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = primaryGreen,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedContainerColor = textFieldBackground,
-                    unfocusedContainerColor = textFieldBackground
-                )
-            )
-
-            // Preço
-            OutlinedTextField(
-                value = preco,
-                onValueChange = { newValue ->
-                    // Permitir apenas números e ponto decimal
-                    val filtered = newValue.filter { it.isDigit() || it == '.' }
-                    if (filtered.count { it == '.' } <= 1) {
-                        preco = filtered
-                    }
-                },
-                label = { Text("Preço*") },
-                placeholder = { Text("99.90") },
-                leadingIcon = { Text("R$", color = primaryGreen, fontWeight = FontWeight.Bold) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = primaryGreen,
-                    unfocusedBorderColor = Color.Gray,
-                    focusedContainerColor = textFieldBackground,
-                    unfocusedContainerColor = textFieldBackground
-                )
-            )
-
-            // Seletor de categoria
-            var expandedCategoria by remember { mutableStateOf(false) }
-
-            ExposedDropdownMenuBox(
-                expanded = expandedCategoria,
-                onExpandedChange = { expandedCategoria = it }
+    ) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
-                    value = categorias.find { it.idCategoria == categoriaSelecionada }?.nome ?: "",
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Categoria*") },
-                    placeholder = { Text("Selecione uma categoria") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCategoria) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primaryGreen,
-                        unfocusedBorderColor = Color.Gray,
-                        focusedContainerColor = textFieldBackground,
-                        unfocusedContainerColor = textFieldBackground
-                    )
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expandedCategoria,
-                    onDismissRequest = { expandedCategoria = false }
-                ) {
-                    categorias.forEach { categoria ->
-                        DropdownMenuItem(
-                            text = { Text(categoria.nome) },
-                            onClick = {
-                                categoriaSelecionada = categoria.idCategoria
-                                expandedCategoria = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Seletor de estabelecimento
-            var expandedEst by remember { mutableStateOf(false) }
-
-            ExposedDropdownMenuBox(
-                expanded = expandedEst,
-                onExpandedChange = { expandedEst = it }
-            ) {
-                OutlinedTextField(
-                    value = estabelecimentos.find { it.idEstabelecimento == estabelecimentoSelecionado }?.nome ?: "",
-                    onValueChange = { },
-                    readOnly = true,
-                    label = { Text("Estabelecimento*") },
-                    placeholder = { Text("Selecione um estabelecimento") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedEst) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primaryGreen,
-                        unfocusedBorderColor = Color.Gray,
-                        focusedContainerColor = textFieldBackground,
-                        unfocusedContainerColor = textFieldBackground
-                    )
-                )
-
-
-                ExposedDropdownMenu(
-                    expanded = expandedEst,
-                    onDismissRequest = { expandedEst = false }
-                ) {
-                    estabelecimentos.forEach { estabelecimento ->
-                        DropdownMenuItem(
-                            text = { Text(estabelecimento.nome) },
-                            onClick = {
-                                estabelecimentoSelecionado = estabelecimento.idEstabelecimento
-                                expandedEst = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Seção de promoção (opcional)
+            // Card de Informações do Produto
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = textFieldBackground),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 shape = RoundedCornerShape(16.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingBag,
+                            contentDescription = null,
+                            tint = Color(0xFF25992E),
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Text(
+                            "Informações do Produto",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+
+                    OutlinedTextField(
+                        value = nome,
+                        onValueChange = { nome = it },
+                        label = { Text("Nome do Produto") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF25992E),
+                            focusedLabelColor = Color(0xFF25992E)
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = descricao,
+                        onValueChange = { descricao = it },
+                        label = { Text("Descrição") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Description,
+                                contentDescription = null
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF25992E),
+                            focusedLabelColor = Color(0xFF25992E)
+                        )
+                    )
+
+                    // Dropdown de Categorias
+                    var categoriaExpandida by remember { mutableStateOf(false) }
+                    var categoriaSelecionada by remember { mutableStateOf<Categoria?>(null) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = categoriaExpandida,
+                        onExpandedChange = { categoriaExpandida = !categoriaExpandida }
+                    ) {
+                        OutlinedTextField(
+                            value = categoriaSelecionada?.nome ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Categoria*") },
+                            placeholder = { Text("Selecione a categoria") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Category,
+                                    contentDescription = null
+                                )
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoriaExpandida) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF25992E),
+                                focusedLabelColor = Color(0xFF25992E)
+                            ),
+                            enabled = !isLoadingData
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = categoriaExpandida,
+                            onDismissRequest = { categoriaExpandida = false }
+                        ) {
+                            if (isLoadingData) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                            Text("Carregando categorias...")
+                                        }
+                                    },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else if (categorias.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Nenhuma categoria disponível") },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else {
+                                categorias.forEach { categoria ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(categoria.nome, fontWeight = FontWeight.Bold)
+                                                categoria.descricao?.let {
+                                                    Text(it, fontSize = 12.sp, color = Color.Gray)
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            categoriaSelecionada = categoria
+                                            idCategoria = categoria.id?.toString() ?: ""
+                                            categoriaExpandida = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Dropdown de Estabelecimentos
+                    var estabelecimentoExpandido by remember { mutableStateOf(false) }
+                    var estabelecimentoSelecionado by remember { mutableStateOf<com.example.infohub_telas.model.Estabelecimento?>(null) }
+
+                    ExposedDropdownMenuBox(
+                        expanded = estabelecimentoExpandido,
+                        onExpandedChange = { estabelecimentoExpandido = !estabelecimentoExpandido }
+                    ) {
+                        OutlinedTextField(
+                            value = estabelecimentoSelecionado?.nome ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Estabelecimento*") },
+                            placeholder = { Text("Selecione o estabelecimento") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Store,
+                                    contentDescription = null
+                                )
+                            },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = estabelecimentoExpandido) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF25992E),
+                                focusedLabelColor = Color(0xFF25992E)
+                            ),
+                            enabled = !isLoadingData
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = estabelecimentoExpandido,
+                            onDismissRequest = { estabelecimentoExpandido = false }
+                        ) {
+                            if (isLoadingData) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                            Text("Carregando estabelecimentos...")
+                                        }
+                                    },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else if (estabelecimentos.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Nenhum estabelecimento disponível") },
+                                    onClick = {},
+                                    enabled = false
+                                )
+                            } else {
+                                estabelecimentos.forEach { estab ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(estab.nome, fontWeight = FontWeight.Bold)
+                                                Text(estab.cnpj, fontSize = 12.sp, color = Color.Gray)
+                                            }
+                                        },
+                                        onClick = {
+                                            estabelecimentoSelecionado = estab
+                                            idEstabelecimento = estab.id?.toString() ?: ""
+                                            estabelecimentoExpandido = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = preco,
+                        onValueChange = { preco = it },
+                        label = { Text("Preço (R$)*") },
+                        placeholder = { Text("Ex: 19.90") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.AttachMoney,
+                                contentDescription = null
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        prefix = { Text("R$ ") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF25992E),
+                            focusedLabelColor = Color(0xFF25992E)
+                        )
+                    )
+                }
+            }
+
+            // Card de Promoção
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (temPromocao) 
+                        Color(0xFF25992E).copy(alpha = 0.1f)
+                    else MaterialTheme.colorScheme.surface
+                ),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.LocalOffer,
+                                contentDescription = null,
+                                tint = if (temPromocao) Color(0xFF25992E) else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Column {
+                                Text(
+                                    "Promoção",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                if (temPromocao) {
+                                    Text(
+                                        "Ativa",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF25992E),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
                         Switch(
                             checked = temPromocao,
                             onCheckedChange = { temPromocao = it },
-                            colors = SwitchDefaults.colors(checkedThumbColor = primaryGreen)
-                        )
-                        Text(
-                            text = "Produto em promoção",
-                            fontWeight = FontWeight.Medium
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Color(0xFF25992E),
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.outline
+                            )
                         )
                     }
 
                     if (temPromocao) {
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Preço promocional
-                        OutlinedTextField(
-                            value = precoPromocional,
-                            onValueChange = { newValue ->
-                                val filtered = newValue.filter { it.isDigit() || it == '.' }
-                                if (filtered.count { it == '.' } <= 1) {
-                                    precoPromocional = filtered
-                                }
-                            },
-                            label = { Text("Preço Promocional*") },
-                            placeholder = { Text("79.90") },
-                            leadingIcon = { Text("R$", color = primaryGreen, fontWeight = FontWeight.Bold) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Data de início
+                        OutlinedTextField(
+                            value = precoPromocional,
+                            onValueChange = { precoPromocional = it },
+                            label = { Text("Preço Promocional") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Discount,
+                                    contentDescription = null
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.fillMaxWidth(),
+                            prefix = { Text("R$ ") },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF25992E),
+                                focusedLabelColor = Color(0xFF25992E),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                            )
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
                         OutlinedTextField(
                             value = dataInicio,
                             onValueChange = { dataInicio = it },
-                            label = { Text("Data de Início") },
-                            placeholder = { Text("2024-01-01") },
+                            label = { Text("Data Início") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarToday,
+                                    contentDescription = null
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            placeholder = { Text("2025-10-01") },
+                            supportingText = { Text("Formato: YYYY-MM-DD", fontSize = 12.sp) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF25992E),
+                                focusedLabelColor = Color(0xFF25992E),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                            )
                         )
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        // Data de fim
                         OutlinedTextField(
                             value = dataFim,
                             onValueChange = { dataFim = it },
-                            label = { Text("Data de Fim") },
-                            placeholder = { Text("2024-12-31") },
+                            label = { Text("Data Fim") },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Event,
+                                    contentDescription = null
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
+                            placeholder = { Text("2025-10-31") },
+                            supportingText = { Text("Formato: YYYY-MM-DD", fontSize = 12.sp) },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF25992E),
+                                focusedLabelColor = Color(0xFF25992E),
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    // Validações mais robustas
+                    when {
+                        nome.isBlank() -> errorMessage = "📝 Nome do produto é obrigatório"
+                        nome.length < 2 -> errorMessage = "📝 Nome deve ter pelo menos 2 caracteres"
+                        descricao.isBlank() -> errorMessage = "📄 Descrição é obrigatória"
+                        descricao.length < 10 -> errorMessage = "📄 Descrição deve ter pelo menos 10 caracteres"
+                        idCategoria.isBlank() -> errorMessage = "🏷️ Selecione uma categoria"
+                        idEstabelecimento.isBlank() -> errorMessage = "🏪 Selecione um estabelecimento"
+                        preco.isBlank() -> errorMessage = "💰 Preço é obrigatório"
+                        preco.toDoubleOrNull() == null -> errorMessage = "💰 Preço deve ser um número válido"
+                        (preco.toDoubleOrNull() ?: 0.0) <= 0 -> errorMessage = "💰 Preço deve ser maior que zero"
+                        temPromocao && precoPromocional.isBlank() -> errorMessage = "🎯 Preço promocional é obrigatório"
+                        temPromocao && precoPromocional.toDoubleOrNull() == null -> errorMessage = "🎯 Preço promocional deve ser um número válido"
+                        temPromocao && (precoPromocional.toDoubleOrNull() ?: 0.0) <= 0 -> errorMessage = "🎯 Preço promocional deve ser maior que zero"
+                        temPromocao && (precoPromocional.toDoubleOrNull() ?: 0.0) >= (preco.toDoubleOrNull() ?: 0.0) -> errorMessage = "🎯 Preço promocional deve ser menor que o preço normal"
+                        temPromocao && dataInicio.isBlank() -> errorMessage = "📅 Data de início da promoção é obrigatória"
+                        temPromocao && dataFim.isBlank() -> errorMessage = "📅 Data de fim da promoção é obrigatória"
+                        temPromocao && !isValidDateFormat(dataInicio) -> errorMessage = "📅 Formato de data início inválido (use YYYY-MM-DD)"
+                        temPromocao && !isValidDateFormat(dataFim) -> errorMessage = "📅 Formato de data fim inválido (use YYYY-MM-DD)"
+                        temPromocao && isValidDateFormat(dataInicio) && isValidDateFormat(dataFim) && dataInicio >= dataFim -> errorMessage = "📅 Data de início deve ser anterior à data de fim"
+                        else -> {
+                            // Limpar mensagem de erro anterior
+                            errorMessage = ""
+                            isLoading = true
+
+                            // Criar objeto promocao se necessário
+                            val promocao = if (temPromocao) {
+                                PromocaoProdutoRequest(
+                                    precoPromocional = precoPromocional.toDoubleOrNull() ?: 0.0,
+                                    dataInicio = dataInicio,
+                                    dataFim = dataFim
+                                )
+                            } else null
+
+                            // Criar objeto produto
+                            val produto = Produto(
+                                nome = nome.trim(),
+                                descricao = descricao.trim(),
+                                idCategoria = idCategoria.toIntOrNull() ?: 0,
+                                idEstabelecimento = idEstabelecimento.toIntOrNull() ?: 0,
+                                preco = preco.toDoubleOrNull() ?: 0.0,
+                                promocao = promocao
+                            )
+
+                            Log.d("TelaCadastroProduto", "🚀 Cadastrando produto: $produto")
+                            Log.d("TelaCadastroProduto", "🔑 Token: Bearer ${token.take(20)}...")
+
+                            // Fazer requisição usando corrotinas
+                            coroutineScope.launch {
+                                try {
+                                    val authToken = "Bearer $token"
+                                    val response = withContext(Dispatchers.IO) {
+                                        produtoApi.cadastrarProduto(authToken, produto).execute()
+                                    }
+
+                                    withContext(Dispatchers.Main) {
+                                        isLoading = false
+
+                                        if (response.isSuccessful) {
+                                            val produtoCadastrado = response.body()
+                                            Log.d("TelaCadastroProduto", "✅ Produto cadastrado com sucesso: $produtoCadastrado")
+
+                                            Toast.makeText(
+                                                context,
+                                                "✅ Produto '${produto.nome}' cadastrado com sucesso!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
+                                            showSuccessDialog = true
+                                        } else {
+                                            val errorBody = response.errorBody()?.string()
+                                            Log.e("TelaCadastroProduto", "❌ Erro HTTP ${response.code()}: $errorBody")
+
+                                            errorMessage = when (response.code()) {
+                                                400 -> "Dados inválidos. Verifique os campos preenchidos."
+                                                401 -> "Não autorizado. Faça login novamente."
+                                                403 -> "Sem permissão para cadastrar produtos."
+                                                409 -> "Produto já existe com esse nome."
+                                                422 -> "Erro de validação. Verifique os dados."
+                                                500 -> "Erro interno do servidor. Tente novamente."
+                                                else -> "Erro ao cadastrar produto (${response.code()})"
+                                            }
+
+                                            showErrorDialog = true
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("TelaCadastroProduto", "💥 Exceção ao cadastrar produto: ${e.message}", e)
+
+                                    withContext(Dispatchers.Main) {
+                                        isLoading = false
+                                        errorMessage = when {
+                                            e.message?.contains("timeout", ignoreCase = true) == true ->
+                                                "Timeout na conexão. Verifique sua internet."
+                                            e.message?.contains("connection", ignoreCase = true) == true ->
+                                                "Erro de conexão. Verifique sua internet."
+                                            else -> "Erro inesperado: ${e.message}"
+                                        }
+                                        showErrorDialog = true
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (errorMessage.isNotEmpty() && !isLoading) {
+                        showErrorDialog = true
+                    }
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
+                shape = RoundedCornerShape(16.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 6.dp,
+                    pressedElevation = 8.dp
+                )
+            ) {
+                if (isLoading) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.5.dp
+                        )
+                        Text(
+                            "Cadastrando...",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                } else {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Text(
+                            "Cadastrar Produto",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
 
-            // Botão de cadastrar
-            Button(
-                onClick = {
-                    val promocao = if (temPromocao && precoPromocional.isNotBlank()) {
-                        PromocaoRequest(
-                            precoPromocional = precoPromocional.toDoubleOrNull() ?: 0.0,
-                            dataInicio = dataInicio.ifBlank { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) },
-                            dataFim = dataFim.ifBlank { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
-                        )
-                    } else null
-
-                    produtoViewModel.criarProduto(
-                        nome = nomeProduto,
-                        descricao = descricao.ifBlank { null },
-                        categoriaId = categoriaSelecionada ?: 0,
-                        estabelecimentoId = estabelecimentoSelecionado ?: 0,
-                        preco = preco.toDoubleOrNull() ?: 0.0,
-                        promocao = promocao
-                    )
-                },
+        // Overlay de loading quando carregando dados iniciais
+        if (isLoadingData) {
+            Box(
                 modifier = Modifier
-                    .width(220.dp)
-                    .height(56.dp),
-                enabled = !isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = primaryGreen),
-                shape = RoundedCornerShape(28.dp)
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.8f)),
+                contentAlignment = Alignment.Center
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                } else {
-                    Text(
-                        text = if (isEditing) "Atualizar Produto" else "Cadastrar Produto",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                Card(
+                    modifier = Modifier.padding(32.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(40.dp),
+                            color = Color(0xFF25992E),
+                            strokeWidth = 4.dp
+                        )
+                        Text(
+                            "Carregando dados...",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
         }
+        }
     }
 
-    // Diálogos
+    // Diálogo de sucesso
     if (showSuccessDialog) {
-        AppUtils.SuccessDialog(
-            message = dialogMessage,
-            onDismiss = {
-                showSuccessDialog = false
-                navController.popBackStack()
-            }
+        AlertDialog(
+            onDismissRequest = { },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.popBackStack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25992E)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("OK", fontWeight = FontWeight.Bold)
+                }
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF25992E),
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = { 
+                Text(
+                    "Sucesso!", 
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = { 
+                Text(
+                    "Produto cadastrado com sucesso!",
+                    style = MaterialTheme.typography.bodyLarge
+                ) 
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
+    // Diálogo de erro
     if (showErrorDialog) {
-        AppUtils.ErrorDialog(
-            message = dialogMessage,
-            onDismiss = {
-                showErrorDialog = false
-                produtoViewModel.clearErrorMessage()
-            }
+        AlertDialog(
+            onDismissRequest = { showErrorDialog = false },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showErrorDialog = false
+                        errorMessage = ""
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("OK", fontWeight = FontWeight.Bold)
+                }
+            },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Error,
+                    contentDescription = null,
+                    tint = Color(0xFFD32F2F),
+                    modifier = Modifier.size(48.dp)
+                )
+            },
+            title = { 
+                Text(
+                    "Erro", 
+                    fontWeight = FontWeight.Bold, 
+                    color = Color(0xFFD32F2F),
+                    style = MaterialTheme.typography.titleLarge
+                ) 
+            },
+            text = { 
+                Text(
+                    errorMessage,
+                    style = MaterialTheme.typography.bodyLarge
+                ) 
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp)
         )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun TelaCadastroProdutoPreview() {
+    MaterialTheme {
+        TelaCadastroProduto(navController = rememberNavController())
     }
 }

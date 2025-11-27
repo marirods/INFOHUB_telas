@@ -9,75 +9,167 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-
-import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
-
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.livedata.observeAsState
-
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
 import com.example.infohub_telas.components.rememberMenuVisibility
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import com.example.infohub_telas.model.PromocaoProduto
 import com.example.infohub_telas.navigation.Routes
-import com.example.infohub_telas.utils.AppUtils
-import com.example.infohub_telas.network.models.Produto
-import com.example.infohub_telas.network.models.Categoria
-import com.example.infohub_telas.viewmodel.ListaProdutosViewModel
-
+import com.example.infohub_telas.service.RetrofitFactory
+import android.util.Log
+import android.widget.Toast
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TelaListaProdutos(
-    navController: NavController,
-    viewModel: ListaProdutosViewModel = viewModel()
-) {
+fun TelaListaProdutos(navController: NavController) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("auth", android.content.Context.MODE_PRIVATE)
     val isAdmin = prefs.getBoolean("isAdmin", false)
-    val userPerfil = prefs.getString("perfil", null)
+    val isJuridico = prefs.getBoolean("isJuridico", false)
 
     // Estado para controlar rolagem e visibilidade do menu
     val lazyGridState = rememberLazyGridState()
     val isMenuVisible = lazyGridState.rememberMenuVisibility()
 
-    // Estados do ViewModel
-    val isLoading by viewModel.isLoading.observeAsState(false)
-    val produtos by viewModel.produtos.observeAsState(emptyList())
-    val categorias by viewModel.categorias.observeAsState(emptyList())
-    val errorMessage by viewModel.errorMessage.observeAsState()
-    val searchQuery by viewModel.searchQuery.observeAsState("")
-    val selectedCategoria by viewModel.selectedCategoria.observeAsState()
+    // Estados da API
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val produtos = remember { mutableStateListOf<PromocaoProduto>() }
+    val coroutineScope = rememberCoroutineScope()
 
+    val produtoApi = remember { RetrofitFactory().getInfoHub_ProdutoService() }
 
+    // Função auxiliar para produtos de exemplo (fallback)
+    fun getProdutosExemplo(): List<PromocaoProduto> {
+        return listOf(
+            PromocaoProduto(
+                id = "exemplo_1",
+                nome = "Arroz Branco 5kg",
+                categoria = "Grãos e Cereais",
+                precoPromocional = "18.90",
+                dataInicio = Date(),
+                dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
+                descricao = "Arroz branco tipo 1, grãos longos e soltos",
+                imagemUrl = "https://picsum.photos/seed/rice/300/200"
+            ),
+            PromocaoProduto(
+                id = "exemplo_2",
+                nome = "Feijão Preto 1kg",
+                categoria = "Grãos e Cereais",
+                precoPromocional = "7.50",
+                dataInicio = Date(),
+                dataTermino = Date(System.currentTimeMillis() + 86400000 * 5),
+                descricao = "Feijão preto selecionado, rico em proteínas",
+                imagemUrl = "https://picsum.photos/seed/beans/300/200"
+            ),
+            PromocaoProduto(
+                id = "exemplo_3",
+                nome = "Leite Integral 1L",
+                categoria = "Laticínios",
+                precoPromocional = "4.25",
+                dataInicio = Date(),
+                dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
+                descricao = "Leite integral pasteurizado, fonte de cálcio",
+                imagemUrl = "https://picsum.photos/seed/milk/300/200"
+            )
+        )
+    }
 
-    // Estado do diálogo de erro
-    var showErrorDialog by remember { mutableStateOf(false) }
-    var dialogErrorMessage by remember { mutableStateOf("") }
+    // Buscar produtos da API
+    LaunchedEffect(Unit) {
+        Log.d("TelaListaProdutos", "🚀 Iniciando busca de produtos da API...")
+        isLoading = true
 
-    // Tratar erros
-    LaunchedEffect(errorMessage) {
-        errorMessage?.let { error ->
-            dialogErrorMessage = error
-            showErrorDialog = true
+        coroutineScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    produtoApi.listarProdutos().execute()
+                }
+
+                if (response.isSuccessful) {
+                    val produtosAPI = response.body() ?: emptyList()
+                    Log.d("TelaListaProdutos", "✅ ${produtosAPI.size} produtos recebidos da API")
+
+                    produtos.clear()
+
+                    // Converter Produto para PromocaoProduto
+                    produtosAPI.forEach { produto ->
+                        val promocaoProduto = PromocaoProduto(
+                            id = produto.id?.toString() ?: "0",
+                            nome = produto.nome,
+                            categoria = "Categoria ${produto.idCategoria}",
+                            precoPromocional = produto.promocao?.precoPromocional?.toString() ?: produto.preco.toString(),
+                            dataInicio = Date(),
+                            dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
+                            descricao = produto.descricao,
+                            imagemUrl = "https://picsum.photos/seed/${produto.nome.hashCode()}/300/200"
+                        )
+                        produtos.add(promocaoProduto)
+                    }
+
+                    // Se não houver produtos da API, adicionar produtos de exemplo
+                    if (produtos.isEmpty()) {
+                        Log.w("TelaListaProdutos", "⚠️ Nenhum produto na API, adicionando produtos de exemplo...")
+                        produtos.addAll(getProdutosExemplo())
+                    }
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "✅ ${produtos.size} produtos carregados", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.e("TelaListaProdutos", "❌ Erro na API: ${response.code()} - ${response.errorBody()?.string()}")
+                    errorMessage = "Erro ao carregar produtos: ${response.code()}"
+
+                    // Usar produtos de exemplo em caso de erro
+                    produtos.addAll(getProdutosExemplo())
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "⚠️ Usando produtos de exemplo", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("TelaListaProdutos", "💥 Exceção ao buscar produtos: ${e.message}", e)
+                errorMessage = "Erro de conexão: ${e.message}"
+
+                // Usar produtos de exemplo em caso de erro
+                produtos.addAll(getProdutosExemplo())
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "⚠️ Erro ao conectar, usando produtos de exemplo", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                isLoading = false
+            }
         }
     }
+
+    val searchQuery = remember { mutableStateOf("") }
+    val selectedCategoria = remember { mutableStateOf<String?>(null) }
+    val categorias = produtos.map { it.categoria }.distinct()
 
     Scaffold(
         topBar = {
@@ -105,8 +197,8 @@ fun TelaListaProdutos(
 
                 // Barra de pesquisa
                 OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { viewModel.atualizarBusca(it) },
+                    value = searchQuery.value,
+                    onValueChange = { searchQuery.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
@@ -121,14 +213,13 @@ fun TelaListaProdutos(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(categorias.size) { index ->
-                            val categoria = categorias[index]
-                            val isSelected = selectedCategoria == categoria.idCategoria
+                        items(categorias) { categoria ->
+                            val isSelected = selectedCategoria.value == categoria
                             FilterChip(
                                 onClick = {
-                                    viewModel.selecionarCategoria(categoria.idCategoria)
+                                    selectedCategoria.value = if (isSelected) null else categoria
                                 },
-                                label = { Text(categoria.nome) },
+                                label = { Text(categoria) },
                                 selected = isSelected,
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primary,
@@ -141,7 +232,7 @@ fun TelaListaProdutos(
             }
         },
         floatingActionButton = {
-            if (isAdmin) {
+            if (isAdmin || isJuridico) {
                 FloatingActionButton(
                     onClick = { navController.navigate(Routes.CADASTRO_PRODUTO) },
                     containerColor = MaterialTheme.colorScheme.primary
@@ -173,7 +264,11 @@ fun TelaListaProdutos(
                     )
                 }
             } else {
-                val produtosFiltrados = viewModel.getProdutosFiltrados()
+                val produtosFiltrados = produtos.filter {
+                    val matchesSearch = it.nome.contains(searchQuery.value, ignoreCase = true)
+                    val matchesCategoria = selectedCategoria.value == null || it.categoria == selectedCategoria.value
+                    matchesSearch && matchesCategoria
+                }
 
                 if (produtosFiltrados.isEmpty()) {
                     // Estado vazio
@@ -193,38 +288,25 @@ fun TelaListaProdutos(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (searchQuery.isNotEmpty() || selectedCategoria != null) {
+                            text = if (isLoading) {
+                                "Carregando produtos..."
+                            } else if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
                                 "Nenhum produto encontrado"
                             } else {
-                                "Sem produtos por enquanto"
-                            },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = if (searchQuery.isNotEmpty() || selectedCategoria != null) {
-                                "Tente ajustar os filtros de busca"
-                            } else {
-                                "Aguarde enquanto os estabelecimentos adicionam produtos ou tente recarregar"
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        if (searchQuery.isEmpty() && selectedCategoria == null) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { viewModel.refresh() },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFF9A01B)
-                                )
-                            ) {
-                                Icon(Icons.Default.Refresh, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Recarregar")
-                            }
-                        }
+                                "Nenhum produto disponível no momento"
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
+                        "Tente ajustar os filtros de busca"
+                    } else {
+                        "Adicione produtos para começar"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             } else {
                 LazyVerticalGrid(
@@ -249,30 +331,18 @@ fun TelaListaProdutos(
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 AnimatedScrollableBottomMenu(
                     navController = navController,
-                    isAdmin = isAdmin,
-                    isVisible = isMenuVisible,
-                    userPerfil = userPerfil
+                    isAdmin = isAdmin || isJuridico,
+                    isVisible = isMenuVisible
                 )
             }
         } // Fecha Box principal
     } // Fecha Scaffold
-
-    // Diálogo de erro
-    if (showErrorDialog) {
-        AppUtils.ErrorDialog(
-            message = dialogErrorMessage,
-            onDismiss = {
-                showErrorDialog = false
-                viewModel.clearErrorMessage()
-            }
-        )
-    }
 } // Fecha TelaListaProdutos
 
 
 
 @Composable
-fun ProdutoCard(produto: Produto, navController: NavController) {
+fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val elevation by animateDpAsState(if (isPressed) 2.dp else 6.dp)
@@ -285,7 +355,7 @@ fun ProdutoCard(produto: Produto, navController: NavController) {
                 indication = null
             ) { 
                 // Navegar para TelaProduto passando o ID do produto
-                navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.idProduto?.toString() ?: "0"))
+                navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.id))
             },
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         shape = RoundedCornerShape(16.dp),
@@ -296,22 +366,19 @@ fun ProdutoCard(produto: Produto, navController: NavController) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Imagem do produto (placeholder)
-            Box(
+            // Imagem do produto
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(produto.imagemUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = produto.nome,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Image,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             // Conteúdo do card
             Column(
@@ -331,67 +398,41 @@ fun ProdutoCard(produto: Produto, navController: NavController) {
                 )
 
                 // Descrição
-                produto.descricao?.let { desc ->
-                    Text(
-                        text = desc,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                Text(
+                    text = produto.descricao,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                // Preço
+                Text(
+                    text = "R$ ${produto.precoPromocional}",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                }
-
-                // Preços
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Preço promocional ou normal
-                    produto.precoPromocional?.let { precoPromo ->
-                        Text(
-                            text = AppUtils.formatarMoeda(precoPromo),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4CAF50)
-                            )
-                        )
-                        Text(
-                            text = AppUtils.formatarMoeda(produto.preco),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
-                        )
-                    } ?: run {
-                        Text(
-                            text = AppUtils.formatarMoeda(produto.preco),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                }
-
+                )
+                
                 // Chip da categoria
-                produto.categoria?.let { categoria ->
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Text(
-                            text = categoria,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Text(
+                        text = produto.categoria,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
 
                 // Botão de comprar
                 Button(
                     onClick = {
                         // Ir para página do produto
-                        navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.idProduto?.toString() ?: "0"))
+                        navController.navigate(Routes.PRODUTO.replace("{produtoId}", produto.id))
                     },
                     modifier = Modifier
                         .fillMaxWidth()

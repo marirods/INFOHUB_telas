@@ -97,6 +97,7 @@ fun AppNavigation(
             JuridicoCadastroEmpresaScreen(navController)
         }
 
+
         composable(
             route = "${JuridicoRoutes.RELATORIOS}/{empresaId}",
             arguments = listOf(navArgument("empresaId") { 
