@@ -15,19 +15,19 @@ interface InfoHub_ProdutoService {
     @GET("produtos")
     fun listarProdutos(): Call<List<Produto>>
 
-    @GET("produto/{id}")
+    @GET("produtos/{id}")
     fun buscarProdutoPorId(
         @Path("id") id: Int
     ): Call<Produto>
 
-    @PUT("produto/{id}")
+    @PUT("produtos/{id}")
     fun atualizarProduto(
         @Header("Authorization") token: String,
         @Path("id") id: Int,
         @Body produto: Produto
     ): Call<Produto>
 
-    @DELETE("produto/{id}")
+    @DELETE("produtos/{id}")
     fun deletarProduto(
         @Header("Authorization") token: String,
         @Path("id") id: Int

@@ -55,9 +55,29 @@ import kotlinx.coroutines.withContext
 @Composable
 fun TelaProduto(navController: NavController, id: String) {
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
-    val token = prefs.getString("token", "") ?: ""
+    // CORRIGIDO: Usar "InfoHub_Prefs" onde o login realmente salva os dados
+    val prefs = context.getSharedPreferences("InfoHub_Prefs", Context.MODE_PRIVATE)
+    val token = prefs.getString("jwt_token", "") ?: ""  // CORRIGIDO: jwt_token, não token
     val userId = prefs.getInt("user_id", 0)
+
+    // Logs de debug para verificar autenticação
+    Log.d("TelaProduto", "═══════════════════════════════════════════")
+    Log.d("TelaProduto", "🔐 VERIFICAÇÃO DE AUTENTICAÇÃO")
+    Log.d("TelaProduto", "═══════════════════════════════════════════")
+    Log.d("TelaProduto", "📋 Dados do SharedPreferences:")
+    Log.d("TelaProduto", "   - user_id: $userId")
+    Log.d("TelaProduto", "   - token existe? ${token.isNotBlank()}")
+    Log.d("TelaProduto", "   - token: ${if (token.isNotBlank()) token.take(30) + "..." else "VAZIO"}")
+
+    // Verificar todas as chaves salvas
+    val allEntries = prefs.all
+    Log.d("TelaProduto", "   ")
+    Log.d("TelaProduto", "📦 Todas as chaves no SharedPreferences 'InfoHub_Prefs':")
+    allEntries.forEach { (key, value) ->
+        val displayValue = if (key == "jwt_token" && value is String) value.take(30) + "..." else value
+        Log.d("TelaProduto", "      - $key = $displayValue")
+    }
+    Log.d("TelaProduto", "═══════════════════════════════════════════")
 
     val carrinhoViewModel: CarrinhoViewModel = viewModel()
     val operationState by carrinhoViewModel.operationState.collectAsState()
@@ -71,23 +91,41 @@ fun TelaProduto(navController: NavController, id: String) {
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
-    val produtoApi = remember { RetrofitFactory().getInfoHub_ProdutoService() }
+
+    // Usar o novo repository com API correta
+    val produtoRepository = remember { com.example.infohub_telas.repository.ProdutoApiRepository() }
+
+    // Controlar navegação após adicionar ao carrinho
+    var navegarParaCheckout by remember { mutableStateOf(false) }
 
     LaunchedEffect(operationState) {
         when (val op = operationState) {
             is OperationUiState.Success -> {
-                Toast.makeText(context, op.message, Toast.LENGTH_SHORT).show()
+                Log.d("TelaProduto", "✅ Operação bem-sucedida: ${op.message}")
+
+                // Se estava aguardando para navegar, navega agora
+                if (navegarParaCheckout) {
+                    Log.d("TelaProduto", "🚀 Navegando para checkout...")
+                    navController.navigate(Routes.CHECKOUT)
+                    navegarParaCheckout = false
+                } else {
+                    // Só mostra toast se não for navegação (ex: adicionar sem comprar)
+                    Toast.makeText(context, op.message, Toast.LENGTH_SHORT).show()
+                }
+
                 carrinhoViewModel.resetOperationState()
             }
             is OperationUiState.Error -> {
-                Toast.makeText(context, "Erro: ${op.message}", Toast.LENGTH_LONG).show()
+                Log.e("TelaProduto", "❌ Erro na operação: ${op.message}")
+                Toast.makeText(context, "Erro ao adicionar produto: ${op.message}", Toast.LENGTH_LONG).show()
+                navegarParaCheckout = false
                 carrinhoViewModel.resetOperationState()
             }
             else -> {}
         }
     }
 
-    // Buscar produto da API
+    // Buscar produto da API usando o novo repository
     LaunchedEffect(id) {
         val idProduto = id.toIntOrNull()
         if (idProduto == null) {
@@ -96,22 +134,24 @@ fun TelaProduto(navController: NavController, id: String) {
             return@LaunchedEffect
         }
 
-        Log.d("TelaProduto", "🔍 Buscando produto com ID: $idProduto")
+        Log.d("TelaProduto", "🔍 Buscando produto com ID: $idProduto (novo formato)")
         isLoading = true
 
         coroutineScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    produtoApi.buscarProdutoPorId(idProduto).execute()
-                }
+                // Usar o novo repository com suspend function
+                val result = produtoRepository.buscarProdutoPorId(idProduto)
 
-                if (response.isSuccessful) {
-                    produto = response.body()
+                result.onSuccess { produtoRecebido ->
+                    produto = produtoRecebido
                     Log.d("TelaProduto", "✅ Produto encontrado: ${produto?.nome}")
-                    Log.d("TelaProduto", "📸 Imagem do produto: ${produto?.imagem}")
-                } else {
-                    errorMessage = "Erro ao carregar produto: ${response.code()}"
-                    Log.e("TelaProduto", "❌ Erro na API: ${response.code()}")
+
+                    // Debug detalhado da imagem do produto
+                    val imagemUrl = AzureBlobUtils.getImageUrl(produto?.imagem)
+                    AzureBlobUtils.logImageUrlDebug(produto?.nome, produto?.imagem, imagemUrl)
+                }.onFailure { exception ->
+                    errorMessage = "Erro ao carregar produto: ${exception.message}"
+                    Log.e("TelaProduto", "❌ Erro ao buscar produto: ${exception.message}", exception)
                 }
             } catch (e: Exception) {
                 errorMessage = "Erro de conexão: ${e.message}"
@@ -178,10 +218,25 @@ fun TelaProduto(navController: NavController, id: String) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    Icon(
+                        Icons.Default.ShoppingBag,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = errorMessage ?: "Erro desconhecido",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge
+                        text = "🎁 Produto em Destaque!",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Este produto está sendo preparado especialmente para você com os melhores preços da região!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 32.dp)
                     )
                 }
             } else if (produto != null) {
@@ -194,7 +249,41 @@ fun TelaProduto(navController: NavController, id: String) {
                     userId = userId,
                     idProduto = idProduto,
                     idEstabelecimento = idEstabelecimento,
-                    carrinhoViewModel = carrinhoViewModel
+                    carrinhoViewModel = carrinhoViewModel,
+                    onComprarAgora = {
+                        Log.d("TelaProduto", "🛒 Iniciando processo de compra rápida...")
+                        Log.d("TelaProduto", "📦 Adicionando produto ao carrinho - ID: $idProduto")
+
+                        // Salvar dados do produto no SharedPreferences para exibir no checkout
+                        produto?.let { prod ->
+                            Log.d("TelaProduto", "💾 Salvando dados do produto no SharedPreferences")
+                            with(prefs.edit()) {
+                                putInt("ultimo_produto_id", prod.id ?: idProduto)
+                                putString("ultimo_produto_nome", prod.nome)
+                                putFloat("ultimo_produto_preco", prod.preco.toFloat())
+                                putString("ultimo_produto_imagem", prod.imagem)
+
+                                // Se tiver promoção, salvar preço promocional
+                                val precoFinal = prod.promocao?.precoPromocional ?: prod.preco
+                                putFloat("ultimo_produto_preco_final", precoFinal.toFloat())
+
+                                apply()
+                            }
+                            Log.d("TelaProduto", "✅ Dados salvos: ${prod.nome} - R$ ${prod.preco}")
+                        }
+
+                        // Ativa flag para navegar após sucesso
+                        navegarParaCheckout = true
+
+                        // Adiciona ao carrinho automaticamente
+                        carrinhoViewModel.adicionarItem(
+                            token = token,
+                            idUsuario = userId,
+                            idProduto = idProduto,
+                            idEstabelecimento = idEstabelecimento,
+                            quantidade = 1
+                        )
+                    }
                 )
             }
             Spacer(modifier = Modifier.height(80.dp))
@@ -310,7 +399,8 @@ fun ProductCardPromocao(
     userId: Int,
     idProduto: Int,
     idEstabelecimento: Int,
-    carrinhoViewModel: CarrinhoViewModel
+    carrinhoViewModel: CarrinhoViewModel,
+    onComprarAgora: () -> Unit
 ) {
     // Obter URL da imagem do Azure
     val imagemUrl = AzureBlobUtils.getImageUrl(produto.imagem)
@@ -375,13 +465,19 @@ fun ProductCardPromocao(
                     model = ImageRequest.Builder(context)
                         .data(imagemUrl)
                         .crossfade(true)
+                        .placeholder(R.drawable.ic_launcher_foreground) // Imagem temporária
+                        .error(R.drawable.ic_launcher_foreground) // Imagem de erro
+                        .fallback(R.drawable.ic_launcher_foreground) // Fallback
                         .build(),
                     contentDescription = produto.nome,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
                         .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    onError = {
+                        Log.e("TelaProduto", "❌ Erro ao carregar imagem: $imagemUrl")
+                    }
                 )
             }
 
@@ -501,7 +597,7 @@ fun ProductCardPromocao(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botão Comprar Agora - Adiciona ao carrinho e navega
+            // Botão Comprar Agora - Adiciona ao carrinho e vai direto para checkout
             Button(
                 onClick = {
                     if (token.isBlank() || userId == 0) {
@@ -512,16 +608,9 @@ fun ProductCardPromocao(
                         Toast.makeText(context, "Produto inválido", Toast.LENGTH_LONG).show()
                         return@Button
                     }
-                    // Adiciona ao carrinho e navega para o carrinho
-                    carrinhoViewModel.adicionarItem(
-                        token = token,
-                        idUsuario = userId,
-                        idProduto = idProduto,
-                        idEstabelecimento = idEstabelecimento,
-                        quantidade = 1
-                    )
-                    // Navega para o carrinho após adicionar
-                    navController.navigate(Routes.CARRINHO)
+
+                    // Chama a função callback que vai ativar a flag e adicionar ao carrinho
+                    onComprarAgora()
                 },
                 modifier = Modifier
                     .fillMaxWidth()

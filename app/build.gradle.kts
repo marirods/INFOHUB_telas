@@ -18,6 +18,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true
@@ -94,7 +100,7 @@ dependencies {
     implementation("org.osmdroid:osmdroid-android:6.1.18")
 
     // Coil para carregamento de imagens (usado em várias telas)
-    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Debug - ferramentas de desenvolvimento
     debugImplementation("androidx.compose.ui:ui-tooling")

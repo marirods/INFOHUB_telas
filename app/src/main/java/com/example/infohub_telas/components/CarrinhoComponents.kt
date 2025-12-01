@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,8 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.infohub_telas.R
 import com.example.infohub_telas.navigation.Routes
+import com.example.infohub_telas.utils.AzureBlobUtils
 
 @Composable
 fun CarrinhoVazio(navController: NavController) {
@@ -35,19 +40,32 @@ fun CarrinhoVazio(navController: NavController) {
     ) {
         Icon(
             imageVector = Icons.Filled.ShoppingCart,
-            contentDescription = "Carrinho Vazio",
+            contentDescription = "Momento de Economizar",
             modifier = Modifier.size(100.dp),
-            tint = Color.Gray
+            tint = Color(0xFFF9A01B)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Seu carrinho está vazio", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "💰 Hora de Economizar!",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFF9A01B)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "🛍️ Explore nossas ofertas exclusivas e encontre os melhores preços para você!",
+            fontSize = 14.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            color = Color.Gray,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = { navController.navigate(Routes.HOME) },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9A01B)),
             modifier = Modifier.shadow(elevation = 4.dp, shape = RoundedCornerShape(8.dp))
         ) {
-            Text(text = "Continuar Comprando", color = Color.White)
+            Text(text = "🔍 Descobrir Ofertas", color = Color.White)
         }
     }
 }
@@ -61,6 +79,164 @@ fun CarrinhoCheio(navController: NavController) {
             }
         }
         ResumoPedido(navController)
+    }
+}
+
+@Composable
+fun ItemCarrinhoCard(
+    item: com.example.infohub_telas.model.CarrinhoItem,
+    onRemove: () -> Unit,
+    onUpdateQuantidade: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Imagem do produto
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (item.produto?.imagem != null) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(AzureBlobUtils.getImageUrl(item.produto.imagem))
+                            .crossfade(true)
+                            .placeholder(R.drawable.jara)
+                            .error(R.drawable.jara)
+                            .build(),
+                        contentDescription = item.produto.nome,
+                        modifier = Modifier.size(70.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(id = R.drawable.jara),
+                        contentDescription = "Produto",
+                        modifier = Modifier.size(70.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Informações do produto
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                // Nome do produto
+                Text(
+                    text = item.produto?.nome ?: "Produto",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF333333),
+                    maxLines = 2
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Preço unitário
+                Text(
+                    text = com.example.infohub_telas.utils.AppUtils.formatarMoeda(item.produto?.preco ?: 0.0),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF25992E)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Controles de quantidade
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Botão diminuir
+                    IconButton(
+                        onClick = {
+                            if (item.quantidade > 1) {
+                                onUpdateQuantidade(item.quantidade - 1)
+                            }
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Remove,
+                            contentDescription = "Diminuir",
+                            tint = Color(0xFF666666),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Quantidade
+                    Text(
+                        text = "${item.quantidade}",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+
+                    // Botão aumentar
+                    IconButton(
+                        onClick = { onUpdateQuantidade(item.quantidade + 1) },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Aumentar",
+                            tint = Color(0xFF25992E),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+
+            // Botão remover
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remover",
+                    tint = Color(0xFFF06339),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // Total do item
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFFF5F5F5))
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Subtotal:",
+                fontSize = 14.sp,
+                color = Color(0xFF666666)
+            )
+            Text(
+                text = com.example.infohub_telas.utils.AppUtils.formatarMoeda(
+                    (item.produto?.preco ?: 0.0) * item.quantidade
+                ),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF25992E)
+            )
+        }
     }
 }
 

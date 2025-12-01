@@ -248,5 +248,30 @@ fun AppNavigation(
                 relatorioId = backStackEntry.arguments?.getString("relatorioId") ?: "1"
             )
         }
+
+        // Rotas de Pagamento
+        composable("pagamento_dinheiro") {
+            TelaPagamentoDinheiro(navController)
+        }
+
+        composable("pagamento_pix") {
+            TelaPagamentoPix(navController)
+        }
+
+        // Rota para produtos do estabelecimento
+        composable(
+            route = "estabelecimento/{idEstabelecimento}/produtos",
+            arguments = listOf(
+                navArgument("idEstabelecimento") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val idEstabelecimento = backStackEntry.arguments?.getInt("idEstabelecimento") ?: 0
+            TelaProdutosEstabelecimento(
+                navController = navController,
+                idEstabelecimento = idEstabelecimento
+            )
+        }
     }
 }

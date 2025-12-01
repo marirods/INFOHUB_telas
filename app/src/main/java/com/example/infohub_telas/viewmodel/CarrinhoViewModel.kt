@@ -50,32 +50,51 @@ class CarrinhoViewModel : ViewModel() {
 
     /**
      * Adicionar item ao carrinho
+     * IMPLEMENTAÇÃO CONFORME DOCUMENTAÇÃO OFICIAL DA API
+     *
+     * Usa novo repository que segue exatamente a documentação:
+     * - POST /carrinho
+     * - Body: { id_usuario, id_produto, quantidade }
+     * - SEM id_estabelecimento (não está na documentação)
      */
     fun adicionarItem(
         token: String,
         idUsuario: Int,
         idProduto: Int,
-        idEstabelecimento: Int,
+        idEstabelecimento: Int, // Mantido para compatibilidade, mas não usado
         quantidade: Int
     ) {
         viewModelScope.launch {
+            android.util.Log.d("CarrinhoViewModel", "🔵 adicionarItem chamado")
+            android.util.Log.d("CarrinhoViewModel", "   - idUsuario: $idUsuario")
+            android.util.Log.d("CarrinhoViewModel", "   - idProduto: $idProduto")
+            android.util.Log.d("CarrinhoViewModel", "   - quantidade: $quantidade")
+
             _operationState.value = OperationUiState.Loading
 
-            val result = repository.adicionarItem(
+            // Usar novo repository conforme documentação
+            val novoRepository = com.example.infohub_telas.repository.AdicionarCarrinhoRepository()
+
+            val result = novoRepository.adicionarItem(
                 token = token,
                 idUsuario = idUsuario,
                 idProduto = idProduto,
-                idEstabelecimento = idEstabelecimento,
                 quantidade = quantidade
+                // Note: SEM id_estabelecimento conforme documentação
             )
 
             _operationState.value = result.fold(
                 onSuccess = { response ->
+                    android.util.Log.d("CarrinhoViewModel", "✅ Item adicionado com sucesso!")
+                    android.util.Log.d("CarrinhoViewModel", "   Message: ${response.message}")
+
                     // Recarregar carrinho após adicionar
                     carregarCarrinho(token, idUsuario)
-                    OperationUiState.Success(response.message)
+
+                    OperationUiState.Success(response.message ?: "Item adicionado com sucesso")
                 },
                 onFailure = { error ->
+                    android.util.Log.e("CarrinhoViewModel", "❌ Erro ao adicionar item: ${error.message}")
                     OperationUiState.Error(error.message ?: "Erro ao adicionar item")
                 }
             )

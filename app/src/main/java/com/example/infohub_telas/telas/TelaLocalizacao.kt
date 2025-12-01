@@ -47,6 +47,8 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.MapView
@@ -61,6 +63,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.content.Context
+import androidx.compose.material.icons.filled.Warning
 
 
 // Função para criar alfinete vermelho
@@ -324,6 +327,15 @@ fun TelaLocalizacao(navController: NavController) {
     var localizacaoUsuario by remember { mutableStateOf<GeoPoint?>(null) }
     var estabelecimentoSelecionado by remember { mutableStateOf<Estabelecimento?>(null) }
 
+    // ViewModel para estabelecimentos registrados
+    val estabelecimentoViewModel: com.example.infohub_telas.viewmodel.EstabelecimentoLocalizacaoViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val estabelecimentosState by estabelecimentoViewModel.estabelecimentosState.collectAsState()
+
+    // Carregar estabelecimentos registrados ao iniciar
+    LaunchedEffect(Unit) {
+        estabelecimentoViewModel.carregarEstabelecimentos()
+    }
+
     // Configurar OSMDroid
     LaunchedEffect(Unit) {
         org.osmdroid.config.Configuration.getInstance().apply {
@@ -552,6 +564,74 @@ fun TelaLocalizacao(navController: NavController) {
                     )
                 }
                 
+
+                // Seção de Estabelecimentos Registrados
+                Spacer(modifier = Modifier.height(16.dp))
+
+                when (val state = estabelecimentosState) {
+                    is com.example.infohub_telas.viewmodel.EstabelecimentosUiState.Loading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Color(0xFFF9A01B))
+                        }
+                    }
+                    is com.example.infohub_telas.viewmodel.EstabelecimentosUiState.Success -> {
+                        com.example.infohub_telas.components.EstabelecimentosRegistradosSection(
+                            estabelecimentos = state.estabelecimentos,
+                            onEstabelecimentoClick = { idEstabelecimento ->
+                                Log.d("TelaLocalizacao", "🏪 Navegando para produtos do estabelecimento ID: $idEstabelecimento")
+                                navController.navigate("estabelecimento/$idEstabelecimento/produtos")
+                            }
+                        )
+                    }
+                    is com.example.infohub_telas.viewmodel.EstabelecimentosUiState.Error -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFFFEBEE)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = null,
+                                        tint = Color(0xFFD32F2F)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Erro ao carregar estabelecimentos",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFD32F2F)
+                                        )
+                                        Text(
+                                            text = state.message,
+                                            fontSize = 12.sp,
+                                            color = Color(0xFF666666)
+                                        )
+                                    }
+                                    TextButton(onClick = { estabelecimentoViewModel.recarregar() }) {
+                                        Text("Tentar novamente")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 if (estabelecimentosEncontrados.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(16.dp))

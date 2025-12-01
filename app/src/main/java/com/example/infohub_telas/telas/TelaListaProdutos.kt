@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 import com.example.infohub_telas.utils.AzureBlobUtils
+import com.example.infohub_telas.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,57 +64,20 @@ fun TelaListaProdutos(navController: NavController) {
     val produtos = remember { mutableStateListOf<PromocaoProduto>() }
     val coroutineScope = rememberCoroutineScope()
 
-    val produtoApi = remember { RetrofitFactory().getInfoHub_ProdutoService() }
+    // Usar o novo repository com API correta
+    val produtoRepository = remember { com.example.infohub_telas.repository.ProdutoApiRepository() }
 
-    // Função auxiliar para produtos de exemplo (fallback)
-    fun getProdutosExemplo(): List<PromocaoProduto> {
-        return listOf(
-            PromocaoProduto(
-                id = "exemplo_1",
-                nome = "Arroz Branco 5kg",
-                categoria = "Grãos e Cereais",
-                precoPromocional = "18.90",
-                dataInicio = Date(),
-                dataTermino = Date(System.currentTimeMillis() + 86400000 * 7),
-                descricao = "Arroz branco tipo 1, grãos longos e soltos",
-                imagemUrl = "https://picsum.photos/seed/rice/300/200"
-            ),
-            PromocaoProduto(
-                id = "exemplo_2",
-                nome = "Feijão Preto 1kg",
-                categoria = "Grãos e Cereais",
-                precoPromocional = "7.50",
-                dataInicio = Date(),
-                dataTermino = Date(System.currentTimeMillis() + 86400000 * 5),
-                descricao = "Feijão preto selecionado, rico em proteínas",
-                imagemUrl = "https://picsum.photos/seed/beans/300/200"
-            ),
-            PromocaoProduto(
-                id = "exemplo_3",
-                nome = "Leite Integral 1L",
-                categoria = "Laticínios",
-                precoPromocional = "4.25",
-                dataInicio = Date(),
-                dataTermino = Date(System.currentTimeMillis() + 86400000 * 3),
-                descricao = "Leite integral pasteurizado, fonte de cálcio",
-                imagemUrl = "https://picsum.photos/seed/milk/300/200"
-            )
-        )
-    }
-
-    // Buscar produtos da API
+    // Buscar produtos da API usando o novo repository
     LaunchedEffect(Unit) {
-        Log.d("TelaListaProdutos", "🚀 Iniciando busca de produtos da API...")
+        Log.d("TelaListaProdutos", "🚀 Iniciando busca de produtos da API (novo formato)...")
         isLoading = true
 
         coroutineScope.launch {
             try {
-                val response = withContext(Dispatchers.IO) {
-                    produtoApi.listarProdutos().execute()
-                }
+                // Usar o novo repository com suspend function
+                val result = produtoRepository.listarProdutos()
 
-                if (response.isSuccessful) {
-                    val produtosAPI = response.body() ?: emptyList()
+                result.onSuccess { produtosAPI ->
                     Log.d("TelaListaProdutos", "✅ ${produtosAPI.size} produtos recebidos da API")
 
                     produtos.clear()
@@ -122,6 +87,9 @@ fun TelaListaProdutos(navController: NavController) {
                         // Buscar URL da imagem do Azure ou usar placeholder
                         val imagemUrl = AzureBlobUtils.getImageUrl(produto.imagem)
                             ?: AzureBlobUtils.getPlaceholderImageUrl()
+
+                        // Debug detalhado da URL da imagem
+                        AzureBlobUtils.logImageUrlDebug(produto.nome, produto.imagem, imagemUrl)
 
                         val promocaoProduto = PromocaoProduto(
                             id = produto.id?.toString() ?: "0",
@@ -135,39 +103,15 @@ fun TelaListaProdutos(navController: NavController) {
                         )
                         produtos.add(promocaoProduto)
 
-                        Log.d("TelaListaProdutos", "📸 Produto: ${produto.nome}, Imagem: $imagemUrl")
+                        Log.d("TelaListaProdutos", "✅ Produto adicionado: ${produto.nome} (ID: ${produto.id})")
                     }
-
-                    // Se não houver produtos da API, adicionar produtos de exemplo
-                    if (produtos.isEmpty()) {
-                        Log.w("TelaListaProdutos", "⚠️ Nenhum produto na API, adicionando produtos de exemplo...")
-                        produtos.addAll(getProdutosExemplo())
-                    }
-
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "✅ ${produtos.size} produtos carregados", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Log.e("TelaListaProdutos", "❌ Erro na API: ${response.code()} - ${response.errorBody()?.string()}")
-                    errorMessage = "Erro ao carregar produtos: ${response.code()}"
-
-                    // Usar produtos de exemplo em caso de erro
-                    produtos.addAll(getProdutosExemplo())
-
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "⚠️ Usando produtos de exemplo", Toast.LENGTH_SHORT).show()
-                    }
+                }.onFailure { exception ->
+                    Log.e("TelaListaProdutos", "❌ Erro ao buscar produtos: ${exception.message}", exception)
+                    errorMessage = "Erro ao carregar produtos: ${exception.message}"
                 }
             } catch (e: Exception) {
                 Log.e("TelaListaProdutos", "💥 Exceção ao buscar produtos: ${e.message}", e)
                 errorMessage = "Erro de conexão: ${e.message}"
-
-                // Usar produtos de exemplo em caso de erro
-                produtos.addAll(getProdutosExemplo())
-
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "⚠️ Erro ao conectar, usando produtos de exemplo", Toast.LENGTH_LONG).show()
-                }
             } finally {
                 isLoading = false
             }
@@ -295,25 +239,24 @@ fun TelaListaProdutos(navController: NavController) {
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = if (isLoading) {
-                                "Carregando produtos..."
-                            } else if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
-                                "Nenhum produto encontrado"
-                            } else {
-                                "Nenhum produto disponível no momento"
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = if (searchQuery.value.isNotEmpty() || selectedCategoria.value != null) {
-                        "Tente ajustar os filtros de busca"
-                    } else {
-                        "Adicione produtos para começar"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                            text = "💰 Grandes Ofertas em Breve!",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "🎯 Estamos preparando ofertas incríveis para você economizar ainda mais!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "⏰ Fique atento às próximas promoções e seja o primeiro a aproveitar os melhores preços da região!",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
                 }
             } else {
                 LazyVerticalGrid(
@@ -378,13 +321,19 @@ fun ProdutoCard(produto: PromocaoProduto, navController: NavController) {
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(produto.imagemUrl)
                     .crossfade(true)
+                    .placeholder(R.drawable.ic_launcher_foreground) // Imagem temporária
+                    .error(R.drawable.ic_launcher_foreground) // Imagem de erro
+                    .fallback(R.drawable.ic_launcher_foreground) // Fallback
                     .build(),
                 contentDescription = produto.nome,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
+                onError = {
+                    Log.e("TelaListaProdutos", "❌ Erro ao carregar imagem: ${produto.imagemUrl}")
+                }
             )
 
             // Conteúdo do card

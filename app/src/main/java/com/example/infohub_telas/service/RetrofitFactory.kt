@@ -94,6 +94,30 @@ class RetrofitFactory {
         return retrofitFactory.create(CategoriaApiService::class.java)
     }
 
+    /**
+     * Serviço para API de Produtos com formato correto da documentação
+     * Usa suspend functions e Response<ApiResponse<Produto>>
+     */
+    fun getProdutoApiService(): ProdutoApiService {
+        return retrofitFactory.create(ProdutoApiService::class.java)
+    }
+
+    /**
+     * Serviço para API de Carrinho V2 - CONFORME DOCUMENTAÇÃO OFICIAL
+     * Usa formato correto: POST /carrinho com body { id_usuario, id_produto, quantidade }
+     */
+    fun getCarrinhoApiServiceV2(): CarrinhoApiServiceV2 {
+        return retrofitFactory.create(CarrinhoApiServiceV2::class.java)
+    }
+
+    /**
+     * Serviço para API de Estabelecimentos - CONFORME DOCUMENTAÇÃO OFICIAL
+     * GET /estabelecimentos, /estabelecimento/{id}, etc.
+     */
+    fun getEstabelecimentoApiService(): EstabelecimentoApiService {
+        return retrofitFactory.create(EstabelecimentoApiService::class.java)
+    }
+
     fun getRetrofit(): Retrofit {
         return retrofitFactory
     }

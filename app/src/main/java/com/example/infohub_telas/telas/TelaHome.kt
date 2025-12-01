@@ -2,6 +2,7 @@ package com.example.infohub_telas.telas
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,6 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.foundation.lazy.items
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.infohub_telas.R
 import com.example.infohub_telas.components.BottomMenu
 import com.example.infohub_telas.components.AnimatedScrollableBottomMenu
@@ -35,6 +39,7 @@ import com.example.infohub_telas.ui.theme.InfoHub_telasTheme
 import com.example.infohub_telas.viewmodel.HomeViewModel
 import com.example.infohub_telas.network.models.Promocao
 import com.example.infohub_telas.utils.AppUtils
+import com.example.infohub_telas.utils.AzureBlobUtils
 
 // Paleta de cores
 val Laranja = Color(0xFFF9A01B)
@@ -251,7 +256,15 @@ fun TelaHome(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 items(promocoes) { promocao ->
-                                    CardProduto(promocao = promocao)
+                                    CardProduto(
+                                        promocao = promocao,
+                                        onClick = {
+                                            // Navegar para a página do produto
+                                            navController.navigate(
+                                                Routes.PRODUTO.replace("{produtoId}", promocao.idProduto.toString())
+                                            )
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -353,81 +366,128 @@ fun TelaHome(
 }
 
 @Composable
-fun CardProduto(promocao: Promocao) {
+fun CardProduto(promocao: Promocao, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .width(120.dp)
-            .height(160.dp),
-        shape = RoundedCornerShape(12.dp),
+            .width(140.dp)
+            .height(200.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier.fillMaxSize()
         ) {
-            // Tag "Oferta"
-            Box(
-                modifier = Modifier
-                    .background(Verde, RoundedCornerShape(4.dp))
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Text(
-                    text = "Oferta",
-                    color = Color.White,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                // Container da imagem com fundo suave
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .background(Color(0xFFF5F5F5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Imagem do produto
+                    if (promocao.produto?.imagem != null) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(AzureBlobUtils.getImageUrl(promocao.produto.imagem))
+                                .crossfade(true)
+                                .placeholder(R.drawable.jara)
+                                .error(R.drawable.jara)
+                                .build(),
+                            contentDescription = promocao.produto.nome ?: "Produto",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.jara),
+                            contentDescription = "Produto",
+                            modifier = Modifier
+                                .size(70.dp)
+                                .padding(8.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+
+                // Informações do produto
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Nome do produto
+                    Text(
+                        text = promocao.produto?.nome ?: "Produto",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF333333),
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        lineHeight = 14.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Preço - maior e centralizado
+                    Text(
+                        text = AppUtils.formatarMoeda(promocao.precoPromocional ?: 0.0),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Verde
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Imagem do produto (placeholder)
-            Image(
-                painter = painterResource(id = R.drawable.jara),
-                contentDescription = "Produto",
-                modifier = Modifier.size(60.dp)
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Desconto
+            // Badge de desconto no canto superior direito
             Box(
                 modifier = Modifier
-                    .background(Laranja, RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
             ) {
-                Text(
-                    text = "-${promocao.valorDesconto.toInt()}%",
-                    color = Color.White,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Laranja,
+                    shadowElevation = 2.dp
+                ) {
+                    Text(
+                        text = "-${promocao.valorDesconto.toInt()}%",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Preço
-            Text(
-                text = AppUtils.formatarMoeda(promocao.precoPromocional ?: 0.0),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Verde
-            )
-
-            // Botão adicionar
-            IconButton(
-                onClick = {},
-                modifier = Modifier.size(24.dp)
+            // Tag "Oferta" no canto superior esquerdo
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.adicionar),
-                    contentDescription = "Adicionar",
-                    tint = Vermelho,
-                    modifier = Modifier.size(20.dp)
-                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Verde
+                ) {
+                    Text(
+                        text = "OFERTA",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
+                    )
+                }
             }
         }
     }
