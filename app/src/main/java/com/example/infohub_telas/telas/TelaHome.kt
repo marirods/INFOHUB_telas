@@ -127,25 +127,43 @@ fun TelaHome(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Banner promocional
+                // Banner promocional com imagem
+                // Tamanho recomendado da imagem: 1080x540px (ratio 2:1) ou 1200x600px
+                // Formato: PNG ou JPG
+                // Nome do arquivo: banner_home.png (ou .jpg)
+                // Local: app/src/main/res/drawable/
+                // IMPORTANTE: Use apenas letras minúsculas, números e underscores no nome!
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp),
                     shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Laranja),
+                    colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                     elevation = CardDefaults.cardElevation(6.dp)
                 ) {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Text(
-                            text = "Banner Promocional",
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+                        // Imagem do banner
+                        // INSTRUÇÕES: Adicione sua imagem em app/src/main/res/drawable/
+                        // e nomeie como banner_home.png (SEM LETRAS MAIÚSCULAS!)
+                        Image(
+                            painter = painterResource(id = R.drawable.imgbanner), // <- Nome correto do arquivo
+                            contentDescription = "Banner Promocional",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop // A imagem preencherá todo o espaço mantendo proporção
                         )
+
+                        // Gradiente opcional para melhorar legibilidade de texto sobre a imagem
+                        // Box(
+                        //     modifier = Modifier
+                        //         .fillMaxSize()
+                        //         .background(
+                        //             Brush.verticalGradient(
+                        //                 colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f))
+                        //             )
+                        //         )
+                        // )
                     }
                 }
 
@@ -369,12 +387,12 @@ fun TelaHome(
 fun CardProduto(promocao: Promocao, onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .width(140.dp)
-            .height(200.dp)
+            .width(160.dp)
+            .height(230.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -382,12 +400,19 @@ fun CardProduto(promocao: Promocao, onClick: () -> Unit) {
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Container da imagem com fundo suave
+                // Container da imagem com fundo suave e gradiente
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp)
-                        .background(Color(0xFFF5F5F5)),
+                        .height(140.dp)
+                        .background(
+                            androidx.compose.ui.graphics.Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFFFFF9F0),
+                                    Color(0xFFFFF5E6)
+                                )
+                            )
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     // Imagem do produto
@@ -401,7 +426,7 @@ fun CardProduto(promocao: Promocao, onClick: () -> Unit) {
                                 .build(),
                             contentDescription = promocao.produto.nome ?: "Produto",
                             modifier = Modifier
-                                .fillMaxSize()
+                                .size(110.dp)
                                 .padding(8.dp),
                             contentScale = ContentScale.Fit
                         )
@@ -410,83 +435,114 @@ fun CardProduto(promocao: Promocao, onClick: () -> Unit) {
                             painter = painterResource(id = R.drawable.jara),
                             contentDescription = "Produto",
                             modifier = Modifier
-                                .size(70.dp)
+                                .size(110.dp)
                                 .padding(8.dp),
                             contentScale = ContentScale.Fit
                         )
                     }
                 }
 
+                // Linha divisória sutil
+                HorizontalDivider(
+                    thickness = 1.dp,
+                    color = Color(0xFFEEEEEE)
+                )
+
                 // Informações do produto
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .weight(1f)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     // Nome do produto
                     Text(
                         text = promocao.produto?.nome ?: "Produto",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF333333),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF2C2C2C),
                         maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        lineHeight = 14.sp
+                        lineHeight = 16.sp
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // Preço - maior e centralizado
-                    Text(
-                        text = AppUtils.formatarMoeda(promocao.precoPromocional ?: 0.0),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Verde
-                    )
+                    // Container de preço com fundo suave
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Preço em destaque
+                        Text(
+                            text = AppUtils.formatarMoeda(promocao.precoPromocional ?: 0.0),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Verde
+                        )
+
+                        // Ícone de seta indicando clique
+                        Icon(
+                            painter = painterResource(id = R.drawable.seta_direita),
+                            contentDescription = "Ver produto",
+                            tint = Laranja,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
-            // Badge de desconto no canto superior direito
+            // Badge de desconto no canto superior direito - mais destacado
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp)
+                    .padding(10.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Laranja,
-                    shadowElevation = 2.dp
+                    shape = RoundedCornerShape(12.dp),
+                    color = Vermelho,
+                    shadowElevation = 4.dp
                 ) {
                     Text(
                         text = "-${promocao.valorDesconto.toInt()}%",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.ExtraBold
                     )
                 }
             }
 
-            // Tag "Oferta" no canto superior esquerdo
+            // Tag "OFERTA" no canto superior esquerdo - redesenhada
             Box(
                 modifier = Modifier
                     .align(Alignment.TopStart)
-                    .padding(8.dp)
+                    .padding(10.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Verde
+                    shape = RoundedCornerShape(8.dp),
+                    color = Verde,
+                    shadowElevation = 3.dp
                 ) {
-                    Text(
-                        text = "OFERTA",
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text(
+                            text = "⚡",
+                            fontSize = 10.sp
+                        )
+                        Text(
+                            text = "OFERTA",
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.8.sp
+                        )
+                    }
                 }
             }
         }
